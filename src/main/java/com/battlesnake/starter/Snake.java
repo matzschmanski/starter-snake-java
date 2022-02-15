@@ -20,7 +20,7 @@ import static spark.Spark.get;
 
 /**
  * This is a simple Battlesnake server written in Java.
- * 
+ *
  * For instructions see
  * https://github.com/BattlesnakeOfficial/starter-snake-java/README.md
  */
@@ -95,7 +95,7 @@ public class Snake {
 
         /**
          * This method is called everytime your Battlesnake is entered into a game.
-         * 
+         *
          * Use this method to decide how your Battlesnake is going to look on the board.
          *
          * @return a response back to the engine containing the Battlesnake setup
@@ -104,7 +104,7 @@ public class Snake {
         public Map<String, String> index() {
             Map<String, String> response = new HashMap<>();
             response.put("apiversion", "1");
-            response.put("author", ""); // TODO: Your Battlesnake Username
+            response.put("author", "geig006"); // TODO: Your Battlesnake Username
             response.put("color", "#888888"); // TODO: Personalize
             response.put("head", "default"); // TODO: Personalize
             response.put("tail", "default"); // TODO: Personalize
@@ -113,7 +113,7 @@ public class Snake {
 
         /**
          * This method is called everytime your Battlesnake is entered into a game.
-         * 
+         *
          * Use this method to decide how your Battlesnake is going to look on the board.
          *
          * @param startRequest a JSON data map containing the information about the game
@@ -128,12 +128,12 @@ public class Snake {
         /**
          * This method is called on every turn of a game. It's how your snake decides
          * where to move.
-         * 
+         *
          * Use the information in 'moveRequest' to decide your next move. The
          * 'moveRequest' variable can be interacted with as
          * com.fasterxml.jackson.databind.JsonNode, and contains all of the information
          * about the Battlesnake board for each move of the game.
-         * 
+         *
          * For a full example of 'json', see
          * https://docs.battlesnake.com/references/api/sample-move-request
          *
@@ -152,11 +152,11 @@ public class Snake {
 
             /*
              * Example how to retrieve data from the request payload:
-             * 
+             *
              * String gameId = moveRequest.get("game").get("id").asText();
-             * 
+             *
              * int height = moveRequest.get("board").get("height").asInt();
-             * 
+             *
              */
 
             JsonNode head = moveRequest.get("you").get("head");
@@ -196,7 +196,7 @@ public class Snake {
 
         /**
          * Remove the 'neck' direction from the list of possible moves
-         * 
+         *
          * @param head          JsonNode of the head position e.g. {"x": 0, "y": 0}
          * @param body          JsonNode of x/y coordinates for every segment of a
          *                      Battlesnake. e.g. [ {"x": 0, "y": 0}, {"x": 1, "y": 0},
@@ -219,7 +219,7 @@ public class Snake {
 
         /**
          * This method is called when a game your Battlesnake was in ends.
-         * 
+         *
          * It is purely for informational purposes, you don't have to make any decisions
          * here.
          *
