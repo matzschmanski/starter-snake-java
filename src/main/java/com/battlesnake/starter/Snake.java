@@ -133,6 +133,13 @@ public class Snake {
             LOG.info("Creating board '{}' with height: {} and width: {}",id, height,width);
             boards.put(id, createBoard(height, width));
             LOG.info("START");
+            LOG.info("START");
+            LOG.info("START");
+            LOG.info("START");
+            LOG.info("START");
+            LOG.info("START");
+            LOG.info("START");
+            LOG.info("START");
             return EMPTY;
         }
 
