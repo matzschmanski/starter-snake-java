@@ -133,13 +133,6 @@ public class Snake {
             LOG.info("Creating board '{}' with height: {} and width: {}",id, height,width);
             boards.put(id, createBoard(height, width));
             LOG.info("START");
-            LOG.info("START");
-            LOG.info("START");
-            LOG.info("START");
-            LOG.info("START");
-            LOG.info("START");
-            LOG.info("START");
-            LOG.info("START");
             return EMPTY;
         }
 
@@ -169,7 +162,7 @@ public class Snake {
         public Map<String, String> move(JsonNode moveRequest) {
 
             try {
-                LOG.info("Data: {}", JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(moveRequest));
+                LOG.debug("Data: {}", JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(moveRequest));
             } catch (JsonProcessingException e) {
                 LOG.error("Error parsing payload", e);
             }
