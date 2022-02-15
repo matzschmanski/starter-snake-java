@@ -29,6 +29,8 @@ public class Snake {
     private static final Handler HANDLER = new Handler();
     private static final Logger LOG = LoggerFactory.getLogger(Snake.class);
 
+    private static final HashMap<String, char[][]> boards = new HashMap<>();
+
     /**
      * Main entry point.
      *
@@ -121,8 +123,23 @@ public class Snake {
          * @return responses back to the engine are ignored.
          */
         public Map<String, String> start(JsonNode startRequest) {
+
+
+
+
+            String id = startRequest.get("id").asText();
+            int height = startRequest.get("board").get("height").asInt();
+            int width = startRequest.get("board").get("width").asInt();
+            LOG.info("Creating board '{}' with height: {} and width: {}",id, height,width);
+            boards.put(id, createBoard(height, width));
             LOG.info("START");
             return EMPTY;
+        }
+
+        private char[][] createBoard(int height, int width){
+            char[][] board = new char[height][width];
+
+            return board;
         }
 
         /**
