@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -140,6 +141,21 @@ public class SnakeTest {
         handler.avoidMyNeck(testHead, testBody, possibleMoves);
 
         assertTrue(possibleMoves.size() == 3);
+        assertTrue(possibleMoves.equals(expectedResult));
+    }
+
+    @Test
+    void avoidSelfTest() throws IOException {
+        JsonNode testHead = OBJECT_MAPPER.readTree("{\"x\": 4, \"y\": 1}");
+        JsonNode testBody = OBJECT_MAPPER
+                .readTree("[{\"x\": 3, \"y\": 0}, {\"x\": 4, \"y\": 0}, {\"x\": 5, \"y\": 0}, {\"x\": 5, \"y\": 1}]");
+        ArrayList<String> possibleMoves = new ArrayList<>(Arrays.asList("up", "down", "left", "right"));
+        ArrayList<String> expectedResult = new ArrayList<>(Arrays.asList("up", "left"));
+
+
+            Map<String, Point> nextPositions = handler.generateNextPositions(testHead);
+            handler.avoidSelf(testHead,testBody,possibleMoves,nextPositions);
+        assertTrue(possibleMoves.size() == 2);
         assertTrue(possibleMoves.equals(expectedResult));
     }
 }

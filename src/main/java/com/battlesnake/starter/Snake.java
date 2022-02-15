@@ -8,11 +8,9 @@ import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.awt.*;
+import java.util.*;
+import java.util.List;
 
 import static spark.Spark.port;
 import static spark.Spark.post;
@@ -30,6 +28,7 @@ public class Snake {
     private static final Logger LOG = LoggerFactory.getLogger(Snake.class);
 
     private static final HashMap<String, char[][]> boards = new HashMap<>();
+    public static final String Y = "y";
 
 
     /**
@@ -65,6 +64,7 @@ public class Snake {
         public static final String RIGHT = "right";
         public static final String DOWN = "down";
         public static final String UP = "up";
+        public static final String X = "x";
 
         /**
          * Generic processor that prints out the request and response from the methods.
@@ -183,12 +183,13 @@ public class Snake {
 
             JsonNode head = moveRequest.get("you").get("head");
             JsonNode body = moveRequest.get("you").get("body");
+
             String gameId = moveRequest.get("game").get("id").asText();
             int height = moveRequest.get("board").get("height").asInt();
             int width = moveRequest.get("board").get("width").asInt();
 
             ArrayList<String> possibleMoves = new ArrayList<>(Arrays.asList("up", "down", "left", "right"));
-
+            Map<String, Point> nextPositions = generateNextPositions(head);
             // Don't allow your Battlesnake to move back in on it's own neck
             avoidMyNeck(head, body, possibleMoves);
 
@@ -200,6 +201,7 @@ public class Snake {
             // TODO Using information from 'moveRequest', don't let your Battlesnake pick a
             // move
             // that would hit its own body
+            avoidSelf(head, body, possibleMoves, nextPositions);
 
             // TODO: Using information from 'moveRequest', don't let your Battlesnake pick a
             // move
@@ -256,6 +258,33 @@ public class Snake {
             if(head.get("y").asInt()-1 <0){
                 possibleMoves.remove(DOWN);
             }
+        }
+        public Map<String, Point> generateNextPositions(JsonNode head){
+            int currentX = head.get(X).asInt();
+            int currentY = head.get(Y).asInt();
+            Point right = new Point(currentX+1,currentY);
+            Point left = new Point(currentX-1,currentY);
+            Point up = new Point(currentX,currentY+1);
+            Point down = new Point(currentX,currentY-1);
+            Map<String,Point> moves = Map.of(RIGHT,right,LEFT,left,DOWN,down,UP,up);
+            return moves;
+        }
+
+        public void avoidSelf(JsonNode head, JsonNode body,ArrayList<String> possibleMoves, Map<String, Point> nextPositions){
+
+            List<Point> noGoAreas = new ArrayList<>();
+            noGoAreas.add(new Point(head.get("x").asInt(),head.get("y").asInt()));
+            for (final JsonNode objNode : body) {
+                noGoAreas.add(new Point(objNode.get("x").asInt(),objNode.get("y").asInt()));
+            }
+
+            for (Map.Entry<String, Point> pair : nextPositions.entrySet()) {
+                if(noGoAreas.contains(pair.getValue())){
+                    possibleMoves.remove(pair.getKey());
+                }
+
+            }
+
         }
 
         /**
