@@ -11,6 +11,8 @@ import spark.Response;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static spark.Spark.port;
 import static spark.Spark.post;
@@ -28,7 +30,7 @@ public class Snake {
     private static final Logger LOG = LoggerFactory.getLogger(Snake.class);
 
     private static final HashMap<String, char[][]> boards = new HashMap<>();
-    public static final String Y = "y";
+
 
 
     /**
@@ -65,6 +67,16 @@ public class Snake {
         public static final String DOWN = "down";
         public static final String UP = "up";
         public static final String X = "x";
+        public static final String Y = "y";
+        public static final String BOARD = "board";
+        public static final String ID = "id";
+        public static final String HEIGHT = "height";
+        public static final String WIDTH = "width";
+        public static final String GAME = "game";
+        public static final String YOU = "you";
+        public static final String HEAD = "head";
+        public static final String BODY = "body";
+        public static final String SNAKES = "snakes";
 
         /**
          * Generic processor that prints out the request and response from the methods.
@@ -113,7 +125,7 @@ public class Snake {
             response.put("apiversion", "1.01");
             response.put("author", "geig006"); // TODO: Your Battlesnake Username
             response.put("color", "#888888"); // TODO: Personalize
-            response.put("head", "default"); // TODO: Personalize
+            response.put(HEAD, "default"); // TODO: Personalize
             response.put("tail", "default"); // TODO: Personalize
             return response;
         }
@@ -181,14 +193,18 @@ public class Snake {
              *
              */
 
-            JsonNode head = moveRequest.get("you").get("head");
-            JsonNode body = moveRequest.get("you").get("body");
+            JsonNode head = moveRequest.get(YOU).get(HEAD);
+            JsonNode body = moveRequest.get(YOU).get(BODY);
 
-            String gameId = moveRequest.get("game").get("id").asText();
-            int height = moveRequest.get("board").get("height").asInt();
-            int width = moveRequest.get("board").get("width").asInt();
+            String gameId = moveRequest.get(GAME).get(ID).asText();
 
-            ArrayList<String> possibleMoves = new ArrayList<>(Arrays.asList("up", "down", "left", "right"));
+
+            JsonNode board = moveRequest.get(BOARD);
+            int height = board.get(HEIGHT).asInt();
+            int width = board.get(WIDTH).asInt();
+            JsonNode snakes = board.get(SNAKES);
+
+            ArrayList<String> possibleMoves = new ArrayList<>(Arrays.asList(UP, DOWN, LEFT, RIGHT));
             Map<String, Point> nextPositions = generateNextPositions(head);
             // Don't allow your Battlesnake to move back in on it's own neck
             avoidMyNeck(head, body, possibleMoves);
@@ -206,6 +222,7 @@ public class Snake {
             // TODO: Using information from 'moveRequest', don't let your Battlesnake pick a
             // move
             // that would collide with another Battlesnake
+            avoidOthers(head, body, possibleMoves, nextPositions);
 
             // TODO: Using information from 'moveRequest', make your Battlesnake move
             // towards a
@@ -269,6 +286,18 @@ public class Snake {
             Map<String,Point> moves = Map.of(RIGHT,right,LEFT,left,DOWN,down,UP,up);
             return moves;
         }
+
+        public void avoidOthers(JsonNode snakes ,ArrayList<String> possibleMoves, Map<String, Point> nextPositions){
+            List<Point> noGoAreas = StreamSupport.stream(snakes.spliterator(),false).flatMap(jsonNode -> StreamSupport.stream(jsonNode.get(BODY).spliterator(),false)).map(coordinate -> new Point(coordinate.get(X).asInt(), coordinate.get(Y).asInt())).collect(Collectors.toList());
+            for (Map.Entry<String, Point> pair : nextPositions.entrySet()) {
+                if(noGoAreas.contains(pair.getValue())){
+                    possibleMoves.remove(pair.getKey());
+                }
+
+            }
+
+        }
+
 
         public void avoidSelf(JsonNode head, JsonNode body,ArrayList<String> possibleMoves, Map<String, Point> nextPositions){
 
