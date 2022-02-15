@@ -127,7 +127,7 @@ public class Snake {
 
 
 
-            String id = startRequest.get("id").asText();
+            String id = startRequest.get("game").get("id").asText();
             int height = startRequest.get("board").get("height").asInt();
             int width = startRequest.get("board").get("width").asInt();
             LOG.info("Creating board '{}' with height: {} and width: {}",id, height,width);
