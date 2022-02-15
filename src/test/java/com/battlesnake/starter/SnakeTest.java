@@ -158,4 +158,19 @@ public class SnakeTest {
         assertTrue(possibleMoves.size() == 2);
         assertTrue(possibleMoves.equals(expectedResult));
     }
+
+    @Test
+    void avoidOthersTest() throws IOException {
+        JsonNode testHead = OBJECT_MAPPER.readTree("{\"x\": 5, \"y\": 5}");
+        JsonNode testBody = OBJECT_MAPPER
+                .readTree("[{\"id\": \"snake-one\", \"body\": [{\"x\": 4, \"y\": 5},{\"x\": 5, \"y\": 4}, {\"x\": 5, \"y\": 6}]}]");
+        ArrayList<String> possibleMoves = new ArrayList<>(Arrays.asList("up", "down", "left", "right"));
+        ArrayList<String> expectedResult = new ArrayList<>(Arrays.asList("right"));
+
+
+        Map<String, Point> nextPositions = handler.generateNextPositions(testHead);
+        handler.avoidOthers(testBody,possibleMoves,nextPositions);
+        assertTrue(possibleMoves.size() == 1);
+        assertTrue(possibleMoves.equals(expectedResult));
+    }
 }
