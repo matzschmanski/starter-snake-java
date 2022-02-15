@@ -31,6 +31,7 @@ public class Snake {
 
     private static final HashMap<String, char[][]> boards = new HashMap<>();
 
+
     /**
      * Main entry point.
      *
@@ -60,6 +61,10 @@ public class Snake {
          * For the start/end request
          */
         private static final Map<String, String> EMPTY = new HashMap<>();
+        public static final String LEFT = "left";
+        public static final String RIGHT = "right";
+        public static final String DOWN = "down";
+        public static final String UP = "up";
 
         /**
          * Generic processor that prints out the request and response from the methods.
@@ -178,6 +183,9 @@ public class Snake {
 
             JsonNode head = moveRequest.get("you").get("head");
             JsonNode body = moveRequest.get("you").get("body");
+            String gameId = moveRequest.get("game").get("id").asText();
+            int height = moveRequest.get("board").get("height").asInt();
+            int width = moveRequest.get("board").get("width").asInt();
 
             ArrayList<String> possibleMoves = new ArrayList<>(Arrays.asList("up", "down", "left", "right"));
 
@@ -187,6 +195,7 @@ public class Snake {
             // TODO: Using information from 'moveRequest', find the edges of the board and
             // don't
             // let your Battlesnake move beyond them board_height = ? board_width = ?
+            avoidWalls();
 
             // TODO Using information from 'moveRequest', don't let your Battlesnake pick a
             // move
@@ -224,13 +233,28 @@ public class Snake {
             JsonNode neck = body.get(1);
 
             if (neck.get("x").asInt() < head.get("x").asInt()) {
-                possibleMoves.remove("left");
+                possibleMoves.remove(LEFT);
             } else if (neck.get("x").asInt() > head.get("x").asInt()) {
-                possibleMoves.remove("right");
+                possibleMoves.remove(RIGHT);
             } else if (neck.get("y").asInt() < head.get("y").asInt()) {
-                possibleMoves.remove("down");
+                possibleMoves.remove(DOWN);
             } else if (neck.get("y").asInt() > head.get("y").asInt()) {
-                possibleMoves.remove("up");
+                possibleMoves.remove(UP);
+            }
+        }
+
+        public void avoidWalls(JsonNode head, int boardHeight, int boardWidth, ArrayList<String> possibleMoves){
+            if(head.get("x").asInt()+1 == boardHeight){
+                possibleMoves.remove(RIGHT);
+            }
+            if(head.get("x").asInt()-1 <0){
+                possibleMoves.remove(LEFT);
+            }
+            if(head.get("y").asInt()+1 == boardWidth){
+                possibleMoves.remove(UP);
+            }
+            if(head.get("y").asInt()-1 <0){
+                possibleMoves.remove(DOWN);
             }
         }
 
@@ -245,7 +269,9 @@ public class Snake {
          * @return responses back to the engine are ignored.
          */
         public Map<String, String> end(JsonNode endRequest) {
-            LOG.info("END");
+            String gameId = endRequest.get("game").get("id").asText();
+            boards.remove(gameId);
+            LOG.info("ENDED ({})",gameId);
             return EMPTY;
         }
     }
