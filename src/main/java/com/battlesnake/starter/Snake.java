@@ -195,7 +195,7 @@ public class Snake {
             // TODO: Using information from 'moveRequest', find the edges of the board and
             // don't
             // let your Battlesnake move beyond them board_height = ? board_width = ?
-            avoidWalls();
+            avoidWalls(head,height,width,possibleMoves);
 
             // TODO Using information from 'moveRequest', don't let your Battlesnake pick a
             // move
