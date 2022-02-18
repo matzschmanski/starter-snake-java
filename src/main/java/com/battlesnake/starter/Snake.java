@@ -77,6 +77,7 @@ public class Snake {
         public static final String HEAD = "head";
         public static final String BODY = "body";
         public static final String SNAKES = "snakes";
+        public static final String FOOD = "food";
 
         /**
          * Generic processor that prints out the request and response from the methods.
@@ -144,9 +145,9 @@ public class Snake {
 
 
 
-            String id = startRequest.get("game").get("id").asText();
-            int height = startRequest.get("board").get("height").asInt();
-            int width = startRequest.get("board").get("width").asInt();
+            String id = startRequest.get(GAME).get(ID).asText();
+            int height = startRequest.get(BOARD).get(HEIGHT).asInt();
+            int width = startRequest.get(BOARD).get(WIDTH).asInt();
             LOG.info("Creating board '{}' with height: {} and width: {}",id, height,width);
             boards.put(id, createBoard(height, width));
             LOG.info("START");
@@ -189,7 +190,7 @@ public class Snake {
              *
              * String gameId = moveRequest.get("game").get("id").asText();
              *
-             * int height = moveRequest.get("board").get("height").asInt();
+             * int height = moveRequest.get(BOARD).get("height").asInt();
              *
              */
 
@@ -203,7 +204,7 @@ public class Snake {
             int height = board.get(HEIGHT).asInt();
             int width = board.get(WIDTH).asInt();
             JsonNode snakes = board.get(SNAKES);
-
+//            boardToArray(moveRequest);
             ArrayList<String> possibleMoves = new ArrayList<>(Arrays.asList(UP, DOWN, LEFT, RIGHT));
             Map<String, Point> nextPositions = generateNextPositions(head);
             // Don't allow your Battlesnake to move back in on it's own neck
@@ -242,37 +243,37 @@ public class Snake {
         /**
          * Remove the 'neck' direction from the list of possible moves
          *
-         * @param head          JsonNode of the head position e.g. {"x": 0, "y": 0}
+         * @param head          JsonNode of the head position e.g. {X: 0, Y: 0}
          * @param body          JsonNode of x/y coordinates for every segment of a
-         *                      Battlesnake. e.g. [ {"x": 0, "y": 0}, {"x": 1, "y": 0},
-         *                      {"x": 2, "y": 0} ]
+         *                      Battlesnake. e.g. [ {X: 0, Y: 0}, {X: 1, Y: 0},
+         *                      {X: 2, Y: 0} ]
          * @param possibleMoves ArrayList of String. Moves to pick from.
          */
         public void avoidMyNeck(JsonNode head, JsonNode body, ArrayList<String> possibleMoves) {
             JsonNode neck = body.get(1);
 
-            if (neck.get("x").asInt() < head.get("x").asInt()) {
+            if (neck.get(X).asInt() < head.get(X).asInt()) {
                 possibleMoves.remove(LEFT);
-            } else if (neck.get("x").asInt() > head.get("x").asInt()) {
+            } else if (neck.get(X).asInt() > head.get(X).asInt()) {
                 possibleMoves.remove(RIGHT);
-            } else if (neck.get("y").asInt() < head.get("y").asInt()) {
+            } else if (neck.get(Y).asInt() < head.get(Y).asInt()) {
                 possibleMoves.remove(DOWN);
-            } else if (neck.get("y").asInt() > head.get("y").asInt()) {
+            } else if (neck.get(Y).asInt() > head.get(Y).asInt()) {
                 possibleMoves.remove(UP);
             }
         }
 
         public void avoidWalls(JsonNode head, int boardHeight, int boardWidth, ArrayList<String> possibleMoves){
-            if(head.get("x").asInt()+1 == boardHeight){
+            if(head.get(X).asInt()+1 == boardHeight){
                 possibleMoves.remove(RIGHT);
             }
-            if(head.get("x").asInt()-1 <0){
+            if(head.get(X).asInt()-1 <0){
                 possibleMoves.remove(LEFT);
             }
-            if(head.get("y").asInt()+1 == boardWidth){
+            if(head.get(Y).asInt()+1 == boardWidth){
                 possibleMoves.remove(UP);
             }
-            if(head.get("y").asInt()-1 <0){
+            if(head.get(Y).asInt()-1 <0){
                 possibleMoves.remove(DOWN);
             }
         }
@@ -302,9 +303,9 @@ public class Snake {
         public void avoidSelf(JsonNode head, JsonNode body,ArrayList<String> possibleMoves, Map<String, Point> nextPositions){
 
             List<Point> noGoAreas = new ArrayList<>();
-            noGoAreas.add(new Point(head.get("x").asInt(),head.get("y").asInt()));
+            noGoAreas.add(new Point(head.get(X).asInt(),head.get(Y).asInt()));
             for (final JsonNode objNode : body) {
-                noGoAreas.add(new Point(objNode.get("x").asInt(),objNode.get("y").asInt()));
+                noGoAreas.add(new Point(objNode.get(X).asInt(),objNode.get(Y).asInt()));
             }
 
             for (Map.Entry<String, Point> pair : nextPositions.entrySet()) {
@@ -332,6 +333,70 @@ public class Snake {
             LOG.info("ENDED ({})",gameId);
             return EMPTY;
         }
+
+        public static int[][] boardToArray(JsonNode moveRequest){
+            JsonNode board = moveRequest.get("board");
+            int height = board.get(HEIGHT).asInt();
+            int width = board.get(WIDTH).asInt();
+            int[][] boardArray = new int[height][width];
+            //not reachable:
+            //self, other snakes, walls
+            StreamSupport.stream(board.get(SNAKES).spliterator(),false).flatMap(jsonNode -> StreamSupport.stream(jsonNode.get(BODY).spliterator(),false)).forEach(coordinate -> boardArray[coordinate.get(X).asInt()][coordinate.get(Y).asInt()] = -1);
+
+            // mark closest food as target
+            JsonNode food = board.get(FOOD);
+
+
+            return boardArray;
+        }
     }
+
+
+    static boolean isPath(int arr[][])
+    {
+        // set arr[0][0] = 1
+        arr[0][0] = 1;
+
+        // Mark reachable (from top left) nodes
+        // in first row and first column.
+        for (int i = 1; i < 5; i++)
+            if (arr[0][i] != -1)
+                arr[0][i] = arr[0][i - 1];
+        for (int j = 1; j < 5; j++)
+            if (arr[j][0] != -1)
+                arr[j][0] = arr[j - 1][0];
+
+        // Mark reachable nodes in
+        //  remaining matrix.
+        for (int i = 1; i < 5; i++)
+            for (int j = 1; j < 5; j++)
+                if (arr[i][j] != -1)
+                    arr[i][j] = Math.max(arr[i][j - 1],
+                            arr[i - 1][j]);
+
+        // return yes if right
+        // bottom index is 1
+        return (arr[5 - 1][5 - 1] == 1);
+    }
+
+
+
+    //Driver code
+//    public static void main(String[] args)
+//    {
+//        // Given array
+//        int arr[][] = { { 0, 0, 0, -1, 0 },
+//                { -1, 0, 0, -1, -1 },
+//                { 0, 0, 0, -1, 0 },
+//                { -1, 0, -1, 0, -1 },
+//                { 0, 0, -1, 0, 0 } };
+//
+//        // path from arr[0][0]
+//        // to arr[row][col]
+//        if (isPath(arr))
+//            System.out.println("Yes");
+//        else
+//            System.out.println("No");
+//    }
 
 }
