@@ -154,8 +154,8 @@ public class Snake {
         public Map<String, String> move(JsonNode moveRequest) {
             if(board == null){
                 JsonNode b = moveRequest.get("board");
-                Y = b.get("height").asInt()-1;
-                X = b.get("width").asInt()-1;
+                Y = b.get("height").asInt() - 1;
+                X = b.get("width").asInt() - 1;
                 board = new int[Y][X];
             }
 
@@ -186,18 +186,18 @@ public class Snake {
             int[] pos = getYX(head);
 
             if(state == 0) {
-                if (pos[0] < Y-1 && board[pos[0] + 1][pos[1]] == 0) {
+                if (pos[0] < Y && board[pos[0] + 1][pos[1]] == 0) {
                     move = U;
-                } else if (pos[1] < X-1 && board[pos[0]][pos[1] + 1] == 0) {
+                } else if (pos[1] < X && board[pos[0]][pos[1] + 1] == 0) {
                     move = R;
                 } else {
                     state = 1;
                 }
             }
             if(state == 1){
-                if (pos[0] > 1 && board[pos[0] - 1][pos[1]] == 0) {
+                if (pos[0] > 0 && board[pos[0] - 1][pos[1]] == 0) {
                     move = D;
-                } else if (pos[1] > 1 && board[pos[0]][pos[1] - 1] == 0) {
+                } else if (pos[1] > 0 && board[pos[0]][pos[1] - 1] == 0) {
                     move = L;
                 } else {
                     state = 0;
