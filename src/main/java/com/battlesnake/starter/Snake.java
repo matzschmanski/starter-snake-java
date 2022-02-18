@@ -25,6 +25,7 @@ import static spark.Spark.get;
  * https://github.com/BattlesnakeOfficial/starter-snake-java/README.md
  */
 public class Snake {
+
     private static final ObjectMapper JSON_MAPPER = new ObjectMapper();
     private static final Handler HANDLER = new Handler();
     private static final Logger LOG = LoggerFactory.getLogger(Snake.class);
@@ -83,9 +84,7 @@ public class Snake {
                 } else {
                     throw new IllegalAccessError("Strange call made to the snake: " + uri);
                 }
-
                 LOG.info("Responding with: {}", JSON_MAPPER.writeValueAsString(snakeResponse));
-
                 return snakeResponse;
             } catch (JsonProcessingException e) {
                 LOG.warn("Something went wrong!", e);
@@ -142,13 +141,29 @@ public class Snake {
          * @return a Map<String,String> response back to the engine the single move to
          *         make. One of "up", "down", "left" or "right".
          */
-        public Map<String, String> move(JsonNode moveRequest) {
 
-            try {
+        private static final String U = "up";
+        private static final String D = "down";
+        private static final String L = "left";
+        private static final String R = "right";
+
+
+        public static int[][] board;
+        public static int X,Y;
+        int state = 0;
+        public Map<String, String> move(JsonNode moveRequest) {
+            if(board == null){
+                JsonNode b = moveRequest.get("board");
+                Y = b.get("height").asInt();
+                X = b.get("width").asInt();
+                board = new int[Y][X];
+            }
+
+            /*try {
                 LOG.info("Data: {}", JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(moveRequest));
             } catch (JsonProcessingException e) {
                 LOG.error("Error parsing payload", e);
-            }
+            }*/
 
             /*
              * Example how to retrieve data from the request payload:
@@ -159,13 +174,44 @@ public class Snake {
              * 
              */
 
-            JsonNode head = moveRequest.get("you").get("head");
-            JsonNode body = moveRequest.get("you").get("body");
+            String move = D;
+            JsonNode you = moveRequest.get("you");
+            JsonNode body = you.get("body");
+            int len = body.size();
+            for (int i=1; i<len; i++){
+                int[] p = getYX(body.get(i));
+                board[p[0]][p[1]] = 1;
+            }
+            JsonNode head = you.get("head");
+            int[] pos = getYX(head);
 
-            ArrayList<String> possibleMoves = new ArrayList<>(Arrays.asList("up", "down", "left", "right"));
+            if(state == 0) {
+                if (pos[0] < Y && board[pos[0] + 1][pos[1]] == 0) {
+                    move = U;
+                } else if (pos[1] < X && board[pos[0]][pos[1] + 1] == 0) {
+                    move = R;
+                } else {
+                    state = 1;
+                }
+            }
+            if(state == 1){
+                if (pos[0] > 0 && board[pos[0] - 1][pos[1]] == 0) {
+                    move = D;
+                } else if (pos[1] < X && board[pos[0]][pos[1] - 1] == 0) {
+                    move = L;
+                } else {
+                    state = 0;
+                }
+            }
+
+
+
+            //JsonNode head = moveRequest.get("you").get("head");
+            //JsonNode body = moveRequest.get("you").get("body");
+
 
             // Don't allow your Battlesnake to move back in on it's own neck
-            avoidMyNeck(head, body, possibleMoves);
+            //avoidMyNeck(head, body, possibleMoves);
 
             // TODO: Using information from 'moveRequest', find the edges of the board and
             // don't
@@ -184,14 +230,18 @@ public class Snake {
             // piece of food on the board
 
             // Choose a random direction to move in
-            final int choice = new Random().nextInt(possibleMoves.size());
-            final String move = possibleMoves.get(choice);
+            //final int choice = new Random().nextInt(possibleMoves.size());
+            //final String move = possibleMoves.get(choice);
 
-            LOG.info("MOVE {}", move);
+            //LOG.info("MOVE {}", move);
 
             Map<String, String> response = new HashMap<>();
             response.put("move", move);
             return response;
+        }
+
+        private int[] getYX(JsonNode json) {
+            return new int[]{json.get("y").asInt(), json.get("x").asInt()};
         }
 
         /**
