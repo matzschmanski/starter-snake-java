@@ -177,6 +177,7 @@ public class Snake {
          * @return a Map<String,String> response back to the engine the single move to
          *         make. One of "up", "down", "left" or "right".
          */
+        static int mode = 0;
         public Map<String, String> move(JsonNode moveRequest) {
 
             try {
@@ -230,14 +231,60 @@ public class Snake {
             // piece of food on the board
 
             // Choose a random direction to move in
-            final int choice = new Random().nextInt(possibleMoves.size());
-            final String move = possibleMoves.get(choice);
+//            final int choice = new Random().nextInt(possibleMoves.size());
+//            final String move = possibleMoves.get(choice);
+            //aways go right, then always down
+
+            //calculate mode
+            if((head.get(Y).asInt() !=0 || head.get(X).asInt() != 0) && mode ==0){
+                mode =0;
+            }
+
+            String move = RIGHT;
+            if(mode==0) {
+                if (!possibleMoves.contains(RIGHT)) {
+                    move = DOWN;
+                    if (!possibleMoves.contains(DOWN)) {
+                        //we are bottom right,
+                        //start le snaking!
+                        mode=1;
+                    }
+                }
+            }
+
+            
+            if(mode == 1){
+                //go left until x =0;
+                move = LEFT;
+
+            }
+            if(mode ==2){
+                //go up
+                move= UP;
+            }
+            if( mode==3){
+                //go right until length -2
+                move = RIGHT;
+            }
+            if(mode==4){
+                //go right once more
+                move = RIGHT;
+            }
+
+
+
+
 
             LOG.info("MOVE {}", move);
 
             Map<String, String> response = new HashMap<>();
             response.put("move", move);
             return response;
+        }
+        private void moveToBottomRight(ArrayList<String> possibleMoves){
+            if(possibleMoves.size()>1){
+                //always go right, then go down
+            }
         }
 
         /**
@@ -334,150 +381,10 @@ public class Snake {
             return EMPTY;
         }
 
-        public static int[][] boardToArray(JsonNode moveRequest){
-            JsonNode board = moveRequest.get("board");
-            int height = board.get(HEIGHT).asInt();
-            int width = board.get(WIDTH).asInt();
-            int[][] boardArray = new int[height][width];
-            //not reachable:
-            //self, other snakes, walls
-
-            for(int[] toBeFilled : boardArray)
-                Arrays.fill(toBeFilled, 3);
-
-            StreamSupport.stream(board.get(SNAKES).spliterator(),false).flatMap(jsonNode -> StreamSupport.stream(jsonNode.get(BODY).spliterator(),false)).forEach(coordinate -> boardArray[coordinate.get(X).asInt()][coordinate.get(Y).asInt()] = 0);
 
 
-            return boardArray;
-        }
 
-        static boolean findPath(int M[][], int height, int width, Point destination)
-        {
-            // 1) Create BFS queue q
-            Queue<BFSElement> q = new LinkedList<>();
-
-            M[destination.x][destination.y] = 2;
-            // 2)scan the matrix
-            for (int i = 0; i < height; ++i)
-            {
-                for (int j = 0; j < width; ++j)
-                {
-                    // if there exists a cell in the matrix such
-                    // that its value is 1 then push it to q
-                    if (M[i][j] == 1) {
-                        q.add(new BFSElement(i, j));
-                        break;
-                    }
-                }
-            }
-            // 3) run BFS algorithm with q.
-            while (q.size() != 0)
-            {
-                BFSElement x = q.peek();
-                q.remove();
-                int i = x.i;
-                int j = x.j;
-                // skipping cells which are not valid.
-                // if outside the matrix bounds
-                if (i < 0 || i >= height || j < 0 || j >= width)
-                    continue;
-                // if they are walls (value is 0).
-                if (M[i][j] == 0)
-                    continue;
-
-                // 3.1) if in the BFS algorithm process there was a
-                // vertex x=(i,j) such that M[i][j] is 2 stop and
-                // return true
-                if (M[i][j] == 2)
-                    return true;
-
-                // marking as wall upon successful visitation
-                M[i][j] = 0;
-
-                // pushing to queue u=(i,j+1),u=(i,j-1)
-                // u=(i+1,j),u=(i-1,j)
-                for (int k = -1; k <= 1; k += 2)
-                {
-                    q.add(new BFSElement(i + k, j));
-                    q.add(new BFSElement(i, j + k));
-                }
-            }
-
-            // BFS algorithm terminated without returning true
-            // then there was no element M[i][j] which is 2, then
-            // return false
-            return false;
-
-        }
-
-        static List<Point> getFoodOnBoard(JsonNode board ){
-            return StreamSupport.stream(board.get(SNAKES).spliterator(), false).flatMap(jsonNode -> StreamSupport.stream(jsonNode.get(BODY).spliterator(), false)).map(coordinate -> new Point(coordinate.get(X).asInt(), coordinate.get(Y).asInt())).collect(Collectors.toList());
-        }
-
-        static boolean isPath(Point startPosition, JsonNode moveRequest, int boardArray[][])
-        {
-            JsonNode board = moveRequest.get("board");
-            boardArray[startPosition.x][startPosition.y] = 1;
-
-            //get closest food
-            List<Point> foodOnBoard = getFoodOnBoard(board);
-// mark closest food as target
-//            .forEach(coordinate -> boardArray[coordinate.get(X).asInt()][coordinate.get(Y).asInt()] = 3);
-            JsonNode head = moveRequest.get(YOU).get(HEAD);
-            boardArray[head.get(X).asInt()][head.get(Y).asInt()] = 1;
-            // Mark reachable (from top left) nodes
-            // in first row and first column.
-            for (int i = 1; i < 5; i++)
-                if (boardArray[0][i] != -1)
-                    boardArray[0][i] = boardArray[0][i - 1];
-            for (int j = 1; j < 5; j++)
-                if (boardArray[j][0] != -1)
-                    boardArray[j][0] = boardArray[j - 1][0];
-
-            // Mark reachable nodes in
-            //  remaining matrix.
-            for (int i = 1; i < 5; i++)
-                for (int j = 1; j < 5; j++)
-                    if (boardArray[i][j] != -1)
-                        boardArray[i][j] = Math.max(boardArray[i][j - 1],
-                                boardArray[i - 1][j]);
-
-            // return yes if right
-            // bottom index is 1
-            return (boardArray[5 - 1][5 - 1] == 1);
-        }
-    }
-    static class BFSElement
-    {
-        int i, j;
-        BFSElement(int i, int j)
-        {
-            this.i = i;
-            this.j = j;
-        }
     }
 
-
-
-
-
-
-    //Driver code
-//    public static void main(String[] args)
-//    {
-//        // Given array
-//        int arr[][] = { { 0, 0, 0, -1, 0 },
-//                { -1, 0, 0, -1, -1 },
-//                { 0, 0, 0, -1, 0 },
-//                { -1, 0, -1, 0, -1 },
-//                { 0, 0, -1, 0, 0 } };
-//
-//        // path from arr[0][0]
-//        // to arr[row][col]
-//        if (isPath(arr))
-//            System.out.println("Yes");
-//        else
-//            System.out.println("No");
-//    }
 
 }
