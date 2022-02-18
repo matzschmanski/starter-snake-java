@@ -160,7 +160,6 @@ public class Snake {
                 board = new int[Y][X];
             }
             board = new int[Y][X];
-            count++;
 
             /*try {
                 LOG.info("Data: {}", JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(moveRequest));
@@ -190,10 +189,13 @@ public class Snake {
             if(state == 0) {
                 move = moveUpOrRight(pos);
                 if(move == U && count%20 == 0){
-                    move = moveDownOrLeft(pos);
+                    move = L;
                 }
             } else if(state == 1){
                 move = moveDownOrLeft(pos);
+            }
+            if(move == U){
+                count++;
             }
 
             //JsonNode head = moveRequest.get("you").get("head");
