@@ -153,12 +153,24 @@ public class Snake {
         int state = 0;
         int count = 1;
         public Map<String, String> move(JsonNode moveRequest) {
-            if(board == null){
+            //if(board == null){
                 JsonNode b = moveRequest.get("board");
                 Y = b.get("height").asInt();
                 X = b.get("width").asInt();
-                board = new int[Y][X];
-            }
+
+                JsonNode s = b.get("snakes");
+                int slen = s.size();
+                for (int i=0; i<slen; i++){
+                    JsonNode body = s.get(i).get("body");
+                    int len = body.size();
+                    for (int j=1; j<len; j++){
+                        int[] p = getYX(body.get(j));
+                        board[p[0]][p[1]] = 1;
+                    }
+                }
+
+                //board = new int[Y][X];
+            //}
             board = new int[Y][X];
 
             /*try {
@@ -184,20 +196,22 @@ public class Snake {
                 int[] p = getYX(body.get(i));
                 board[p[0]][p[1]] = 1;
             }
+
+
             JsonNode head = you.get("head");
             int[] pos = getYX(head);
             if(state == 0) {
                 move = moveUpOrRight(pos);
-                if(move.equals(U) && pos[0] > 0 && count%20 == 0){
-                    move = R;
-                    count++;
-                }
+                //if(move.equals(U) && pos[0] > 0 && count%20 == 0){
+                    //move = R;
+                    //count++;
+                //}
             } else if(state == 1){
                 move = moveDownOrLeft(pos);
             }
-            if(move.equals(U)){
-                count++;
-            }
+            //if(move.equals(U)){
+                //count++;
+            //}
 
             //JsonNode head = moveRequest.get("you").get("head");
             //JsonNode body = moveRequest.get("you").get("body");
