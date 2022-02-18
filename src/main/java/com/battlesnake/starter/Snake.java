@@ -151,7 +151,7 @@ public class Snake {
         public int[][] board;
         public int X,Y;
         int state = 0;
-        int count = 0;
+        int count = 1;
         public Map<String, String> move(JsonNode moveRequest) {
             if(board == null){
                 JsonNode b = moveRequest.get("board");
