@@ -159,10 +159,10 @@ public class Snake {
                 X = b.get("width").asInt();
                 board = new int[Y][X];
 
-                JsonNode s = b.get("snakes");
-                int slen = s.size();
+                JsonNode snakes = b.get("snakes");
+                int slen = snakes.size();
                 for (int i=0; i<slen; i++){
-                    JsonNode body = s.get(i).get("body");
+                    JsonNode body = snakes.get(i).get("body");
                     int len = body.size();
                     for (int j=1; j<len; j++){
                         int[] p = getYX(body.get(j));
@@ -251,6 +251,7 @@ public class Snake {
             if (pos[0] < Y-1 && board[pos[0] + 1][pos[1]] == 0) {
                 return U;
             } else if (pos[1] < X-1 && board[pos[0]][pos[1] + 1] == 0) {
+LOG.info(pos[0]+" "+pos[1] +" - "+ board[pos[0]][pos[1] + 1]);
                 return R;
             } else {
                 state = 1;
