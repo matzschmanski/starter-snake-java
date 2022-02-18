@@ -158,6 +158,7 @@ public class Snake {
                 X = b.get("width").asInt();
                 board = new int[Y][X];
             }
+            board = new int[Y][X];
 
             /*try {
                 LOG.info("Data: {}", JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(moveRequest));
