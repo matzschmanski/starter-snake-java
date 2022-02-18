@@ -228,9 +228,9 @@ public class Snake {
         }
 
         private String moveUpOrRight(int[] pos) {
-            if (pos[0] < Y-1 && board[pos[0] + 1][pos[1]] == 0) {
+            if (pos[0] < Y-3 && board[pos[0] + 1][pos[1]] == 0) {
                 return U;
-            } else if (pos[1] < X-1 && board[pos[0]][pos[1] + 1] == 0) {
+            } else if (pos[1] < X-3 && board[pos[0]][pos[1] + 1] == 0) {
                 return R;
             } else {
                 state = 1;
@@ -239,9 +239,9 @@ public class Snake {
         }
 
         private String moveDownOrLeft(int[] pos) {
-            if (pos[0] > 0 && board[pos[0] - 1][pos[1]] == 0) {
+            if (pos[0] > 2 && board[pos[0] - 1][pos[1]] == 0) {
                 return D;
-            } else if (pos[1] > 0 && board[pos[0]][pos[1] - 1] == 0) {
+            } else if (pos[1] > 2 && board[pos[0]][pos[1] - 1] == 0) {
                 return L;
             } else {
                 state = 0;
