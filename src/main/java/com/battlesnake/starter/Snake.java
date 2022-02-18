@@ -151,6 +151,7 @@ public class Snake {
         public int[][] board;
         public int X,Y;
         int state = 0;
+        int count = 0;
         public Map<String, String> move(JsonNode moveRequest) {
             if(board == null){
                 JsonNode b = moveRequest.get("board");
@@ -159,6 +160,7 @@ public class Snake {
                 board = new int[Y][X];
             }
             board = new int[Y][X];
+            count++;
 
             /*try {
                 LOG.info("Data: {}", JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(moveRequest));
@@ -187,11 +189,12 @@ public class Snake {
             int[] pos = getYX(head);
             if(state == 0) {
                 move = moveUpOrRight(pos);
+                if(move == U && count%20 == 0){
+                    move = moveDownOrLeft(pos);
+                }
             } else if(state == 1){
                 move = moveDownOrLeft(pos);
             }
-
-
 
             //JsonNode head = moveRequest.get("you").get("head");
             //JsonNode body = moveRequest.get("you").get("body");
@@ -228,9 +231,9 @@ public class Snake {
         }
 
         private String moveUpOrRight(int[] pos) {
-            if (pos[0] < Y-3 && board[pos[0] + 1][pos[1]] == 0) {
+            if (pos[0] < Y-1 && board[pos[0] + 1][pos[1]] == 0) {
                 return U;
-            } else if (pos[1] < X-3 && board[pos[0]][pos[1] + 1] == 0) {
+            } else if (pos[1] < X-1 && board[pos[0]][pos[1] + 1] == 0) {
                 return R;
             } else {
                 state = 1;
@@ -239,9 +242,9 @@ public class Snake {
         }
 
         private String moveDownOrLeft(int[] pos) {
-            if (pos[0] > 2 && board[pos[0] - 1][pos[1]] == 0) {
+            if (pos[0] > 0 && board[pos[0] - 1][pos[1]] == 0) {
                 return D;
-            } else if (pos[1] > 2 && board[pos[0]][pos[1] - 1] == 0) {
+            } else if (pos[1] > 0 && board[pos[0]][pos[1] - 1] == 0) {
                 return L;
             } else {
                 state = 0;
