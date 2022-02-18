@@ -126,8 +126,8 @@ public class Snake {
             response.put("apiversion", "1");
             response.put("author", "geig006"); // TODO: Your Battlesnake Username
             response.put("color", "#cc33ff"); // TODO: Personalize
-            response.put(HEAD, "default"); // TODO: Personalize
-            response.put("tail", "default"); // TODO: Personalize
+            response.put(HEAD, "sand-worm"); // TODO: Personalize
+            response.put("tail", "skinny"); // TODO: Personalize
             return response;
         }
 
@@ -344,8 +344,7 @@ public class Snake {
             StreamSupport.stream(board.get(SNAKES).spliterator(),false).flatMap(jsonNode -> StreamSupport.stream(jsonNode.get(BODY).spliterator(),false)).forEach(coordinate -> boardArray[coordinate.get(X).asInt()][coordinate.get(Y).asInt()] = -1);
 
             // mark closest food as target
-            JsonNode food = board.get(FOOD);
-
+            StreamSupport.stream(board.get(FOOD).spliterator(),false).flatMap(jsonNode -> StreamSupport.stream(jsonNode.get(BODY).spliterator(),false)).forEach(coordinate -> boardArray[coordinate.get(X).asInt()][coordinate.get(Y).asInt()] = -1);
 
             return boardArray;
         }
