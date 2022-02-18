@@ -122,7 +122,7 @@ public class Snake {
          */
         public Map<String, String> index() {
             Map<String, String> response = new HashMap<>();
-            response.put("apiversion", "1.01");
+            response.put("apiversion", "1");
             response.put("author", "geig006"); // TODO: Your Battlesnake Username
             response.put("color", "#888888"); // TODO: Personalize
             response.put(HEAD, "default"); // TODO: Personalize
