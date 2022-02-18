@@ -157,6 +157,7 @@ public class Snake {
                 JsonNode b = moveRequest.get("board");
                 Y = b.get("height").asInt();
                 X = b.get("width").asInt();
+                board = new int[Y][X];
 
                 JsonNode s = b.get("snakes");
                 int slen = s.size();
@@ -171,7 +172,6 @@ public class Snake {
 
                 //board = new int[Y][X];
             //}
-            board = new int[Y][X];
 
             /*try {
                 LOG.info("Data: {}", JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(moveRequest));
