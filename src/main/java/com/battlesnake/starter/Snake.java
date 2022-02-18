@@ -148,8 +148,8 @@ public class Snake {
         private static final String R = "right";
 
 
-        public static int[][] board;
-        public static int X,Y;
+        public int[][] board;
+        public int X,Y;
         int state = 0;
         public Map<String, String> move(JsonNode moveRequest) {
             if(board == null){
