@@ -185,31 +185,9 @@ public class Snake {
             JsonNode head = you.get("head");
             int[] pos = getYX(head);
             if(state == 0) {
-                if (pos[0] < Y-1 && board[pos[0] + 1][pos[1]] == 0) {
-                    move = U;
-                } else if (pos[1] < X-1 && board[pos[0]][pos[1] + 1] == 0) {
-                    move = R;
-                } else {
-                    state = 1;
-                }
-            }
-
-            if(state == 1){
-                if (pos[0] > 0 && board[pos[0] - 1][pos[1]] == 0) {
-                    move = D;
-                } else if (pos[1] > 0 && board[pos[0]][pos[1] - 1] == 0) {
-                    move = L;
-                } else {
-                    state = 0;
-
-                    if (pos[0] < Y-1 && board[pos[0] + 1][pos[1]] == 0) {
-                        move = U;
-                    } else if (pos[1] < X-1 && board[pos[0]][pos[1] + 1] == 0) {
-                        move = R;
-                    } else {
-                        state = 1;
-                    }
-                }
+                move = moveUpOrRight(pos);
+            } else if(state == 1){
+                move = moveDownOrLeft(pos);
             }
 
 
@@ -246,6 +224,28 @@ public class Snake {
             Map<String, String> response = new HashMap<>();
             response.put("move", move);
             return response;
+        }
+
+        private String moveUpOrRight(int[] pos) {
+            if (pos[0] < Y-1 && board[pos[0] + 1][pos[1]] == 0) {
+                return U;
+            } else if (pos[1] < X-1 && board[pos[0]][pos[1] + 1] == 0) {
+                return R;
+            } else {
+                state = 1;
+                return moveDownOrLeft(pos);
+            }
+        }
+
+        private String moveDownOrLeft(int[] pos) {
+            if (pos[0] > 0 && board[pos[0] - 1][pos[1]] == 0) {
+                return D;
+            } else if (pos[1] > 0 && board[pos[0]][pos[1] - 1] == 0) {
+                return L;
+            } else {
+                state = 0;
+                return moveUpOrRight(pos);
+            }
         }
 
         private int[] getYX(JsonNode json) {
