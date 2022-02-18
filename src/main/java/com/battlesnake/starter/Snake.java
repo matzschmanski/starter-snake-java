@@ -195,9 +195,9 @@ public class Snake {
                 }
             }
             if(state == 1){
-                if (pos[0] > 0 && board[pos[0] - 1][pos[1]] == 0) {
+                if (pos[0] > 1 && board[pos[0] - 1][pos[1]] == 0) {
                     move = D;
-                } else if (pos[1] > 0 && board[pos[0]][pos[1] - 1] == 0) {
+                } else if (pos[1] > 1 && board[pos[0]][pos[1] - 1] == 0) {
                     move = L;
                 } else {
                     state = 0;
