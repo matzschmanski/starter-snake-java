@@ -190,6 +190,7 @@ public class Snake {
                 move = moveUpOrRight(pos);
                 if(move.equals(U) && pos[0] > 0 && count%20 == 0){
                     move = R;
+                    count++;
                 }
             } else if(state == 1){
                 move = moveDownOrLeft(pos);
