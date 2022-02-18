@@ -238,6 +238,11 @@ public class Snake {
             //calculate mode
             if((head.get(Y).asInt() !=0 || head.get(X).asInt() != 0) && mode ==0){
                 mode =0;
+            }else{
+                mode=1;
+            }
+            if(head.get(Y).asInt() ==0 && head.get(X).asInt()==0){
+                mode=2;
             }
 
             String move = RIGHT;
@@ -252,7 +257,7 @@ public class Snake {
                 }
             }
 
-            
+
             if(mode == 1){
                 //go left until x =0;
                 move = LEFT;
