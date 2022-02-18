@@ -164,7 +164,7 @@ public class Snake {
                 for (int i=0; i<slen; i++){
                     JsonNode body = snakes.get(i).get("body");
                     int len = body.size();
-                    for (int j=1; j<len; j++){
+                    for (int j=0; j<len; j++){
                         int[] p = getYX(body.get(j));
                         board[p[0]][p[1]] = 1;
                     }
