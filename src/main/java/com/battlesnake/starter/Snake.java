@@ -184,7 +184,6 @@ public class Snake {
             }
             JsonNode head = you.get("head");
             int[] pos = getYX(head);
-
             if(state == 0) {
                 if (pos[0] < Y-1 && board[pos[0] + 1][pos[1]] == 0) {
                     move = U;
@@ -194,6 +193,7 @@ public class Snake {
                     state = 1;
                 }
             }
+
             if(state == 1){
                 if (pos[0] > 0 && board[pos[0] - 1][pos[1]] == 0) {
                     move = D;
@@ -201,6 +201,14 @@ public class Snake {
                     move = L;
                 } else {
                     state = 0;
+
+                    if (pos[0] < Y-1 && board[pos[0] + 1][pos[1]] == 0) {
+                        move = U;
+                    } else if (pos[1] < X-1 && board[pos[0]][pos[1] + 1] == 0) {
+                        move = R;
+                    } else {
+                        state = 1;
+                    }
                 }
             }
 
