@@ -201,25 +201,25 @@ public class Snake {
 
                     JsonNode head = aSnake.get("head");
                     Point h = new Point(head);
-                    s.enemyHeads[h.y][h.x] = len;
+                    //s.enemyHeads[h.y][h.x] = len;
                     try {
                         if(s.enemyBodies[h.y - 1][h.x] == 0) {
-                            s.enemyHeads[h.y - 1][h.x] = 1;
+                            s.enemyHeads[h.y - 1][h.x] = len;
                         }
                     } catch (IndexOutOfBoundsException e) {}
                     try {
                         if(s.enemyBodies[h.y + 1][h.x] == 0) {
-                            s.enemyHeads[h.y + 1][h.x] = 1;
+                            s.enemyHeads[h.y + 1][h.x] = len;
                         }
                     } catch (IndexOutOfBoundsException e) {}
                     try {
                         if(s.enemyBodies[h.y][h.x - 1] == 0) {
-                            s.enemyHeads[h.y][h.x - 1] = 1;
+                            s.enemyHeads[h.y][h.x - 1] = len;
                         }
                     } catch (IndexOutOfBoundsException e) {}
                     try {
                         if(s.enemyBodies[h.y][h.x + 1] == 0) {
-                            s.enemyHeads[h.y][h.x + 1] = 1;
+                            s.enemyHeads[h.y][h.x + 1] = len;
                         }
                     } catch (IndexOutOfBoundsException e) {}
 
