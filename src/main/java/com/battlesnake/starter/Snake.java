@@ -473,7 +473,7 @@ public class Snake {
             boolean canMoveLeft = pos.x > Xmin;
             boolean isSpace = usedPlaces[pos.y][pos.x - 1] == 0;
 
-            if (canMoveLeft && isSpace) {
+            if (canMoveLeft && (isSpace || tPhase == 1)) {
                 if(pos.x == 1){
                     if(pos.y == Ymax){
                         tPhase = 1;
@@ -487,7 +487,11 @@ public class Snake {
                         return U;
                     }
                 } else {
-                    return L;
+                    if(isSpace) {
+                        return L;
+                    }else{
+                        return moveUp(pos, reset);
+                    }
                 }
             } else {
                 state = UP;
