@@ -40,6 +40,27 @@ public class Snake {
             return x+"|"+y;
         }
     }
+        /*public int[][] usedPlaces;
+        public int[][] myPlaces;
+        public ArrayList<P>foodPlaces;
+        public int X,Y, Xmin, Ymin, Xmax, Ymax;
+        int state = 0;
+        boolean patched = false;
+        int stateToRestore = -1;
+        int tPhase = 0;*/
+
+    private static class Session{
+        int state = 0;
+        int tPhase = 0;
+        int X = -1;
+        int Y = -1;
+        int[][] usedPlaces = null;
+        int[][] myPlaces = null;
+        ArrayList<P>foodPlaces = null;
+        boolean patched = false;
+        int stateToRestore = -1;
+        int Xmin, Ymin, Xmax, Ymax;
+    }
 
     /**
      * Main entry point.
@@ -123,6 +144,7 @@ public class Snake {
             return response;
         }
 
+        private HashMap<String, Session> sessions = new HashMap();
         /**
          * This method is called everytime your Battlesnake is entered into a game.
          * 
@@ -134,15 +156,8 @@ public class Snake {
          */
         public Map<String, String> start(JsonNode startRequest) {
             LOG.info("START");
-
-            state = 0;
-            tPhase = 0;
-            X = -1;
-            Y = -1;
-            usedPlaces = null;
-            myPlaces = null;
-            patched = false;
-            stateToRestore = -1;
+            String session = startRequest.get("game").get("id").asText();
+            sessions.put(session, new Session());
             return EMPTY;
         }
 
@@ -175,31 +190,25 @@ public class Snake {
         private static final String L = "left";
         private static final String R = "right";
 
-        public int[][] usedPlaces;
-        public int[][] myPlaces;
-        public ArrayList<P>foodPlaces;
-        public int X,Y, Xmin, Ymin, Xmax, Ymax;
-        int state = 0;
-        boolean patched = false;
-        int stateToRestore = -1;
-
-        int tPhase = 0;
 
         public Map<String, String> move(JsonNode moveRequest) {
+            String session = moveRequest.get("game").get("id").asText();
+            Session s = sessions.get(session);
+
             JsonNode board = moveRequest.get("board");
-            if(X == -1) {
-                Y = board.get("height").asInt();
-                X = board.get("width").asInt();
-                Ymin = 0;
-                Xmin = 0;
-                Ymax = Y-1;
-                Xmax = X-1;
+            if(s.X == -1) {
+                s.Y = board.get("height").asInt();
+                s.X = board.get("width").asInt();
+                s.Ymin = 0;
+                s.Xmin = 0;
+                s.Ymax = s.Y-1;
+                s.Xmax = s.X-1;
             }
 
             // clearing the used fields...
-            usedPlaces = new int[Y][X];
-            myPlaces = new int[Y][X];
-            foodPlaces = new ArrayList<>();
+            s.usedPlaces = new int[s.Y][s.X];
+            s.myPlaces = new int[s.Y][s.X];
+            s.foodPlaces = new ArrayList<>();
 
             // get OWN ID
             JsonNode you = moveRequest.get("you");
@@ -215,7 +224,7 @@ public class Snake {
                     int len = body.size();
                     for (int j = 0; j < len; j++) {
                         P p = new P(body.get(j));
-                        usedPlaces[p.y][p.x] = 1;
+                        s.usedPlaces[p.y][p.x] = 1;
                         // playing "avoid other Challenge" we need "myPlaces" in order to
                         // have only one pixel distance...
                         //myPlaces[p.y][p.x] = 1;
@@ -228,7 +237,7 @@ public class Snake {
                 int hlen = haz.size();
                 for (int i = 0; i < hlen; i++) {
                     P p = new P(haz.get(i));
-                    myPlaces[p.y][p.x] = 1;
+                    s.myPlaces[p.y][p.x] = 1;
                 }
             }
 
@@ -236,7 +245,7 @@ public class Snake {
             if(food != null) {
                 int flen = food.size();
                 for (int i = 0; i < flen; i++) {
-                    foodPlaces.add(new P(food.get(i)));
+                    s.foodPlaces.add(new P(food.get(i)));
                 }
             }
 
@@ -246,7 +255,7 @@ public class Snake {
             int len = body.size();
             for (int i=1; i<len; i++){
                 P p = new P(body.get(i));
-                myPlaces[p.y][p.x] = 1;
+                s.myPlaces[p.y][p.x] = 1;
             }
             JsonNode head = you.get("head");
             P pos = new P(head);
@@ -336,20 +345,20 @@ public class Snake {
 
 
             boolean huntForFood = false;
-            switch (state){
+            switch (s.state){
                 case UP:
-                    move = moveUp(pos, !huntForFood);
+                    move = moveUp(s, pos, !huntForFood);
                     //move = moveUpOrRight(pos);
                     break;
                 case RIGHT:
-                    move = moveRight(pos, !huntForFood);
+                    move = moveRight(s, pos, !huntForFood);
                     break;
                 case DOWN:
-                    move = moveDown(pos, !huntForFood);
+                    move = moveDown(s, pos, !huntForFood);
                     //move = moveDownOrLeft(pos);
                     break;
                 case LEFT:
-                    move = moveLeft(pos, !huntForFood);
+                    move = moveLeft(s, pos, !huntForFood);
                     break;
             }
 
@@ -428,107 +437,107 @@ public class Snake {
             }
         }*/
 
-        private String moveUp(P pos, boolean reset) {
-            if (pos.y < Ymax &&
-                    myPlaces[pos.y + 1][pos.x] == 0 &&
-                    usedPlaces[pos.y + 1][pos.x] == 0 &&
-                    (usedPlaces.length < pos.y + 2 || usedPlaces[pos.y + 2][pos.x] == 0)) {
+        private String moveUp(Session s, P pos, boolean reset) {
+            if (pos.y < s.Ymax &&
+                    s.myPlaces[pos.y + 1][pos.x] == 0 &&
+                    s.usedPlaces[pos.y + 1][pos.x] == 0 &&
+                    (s.usedPlaces.length < pos.y + 3 || s.usedPlaces[pos.y + 2][pos.x] == 0)) {
                 return U;
             }else{
-                state = RIGHT;
+                s.state = RIGHT;
                 if(reset) {
-                    patched = false;
-                    Ymax = Y - 1;
-                    Xmax = X - 1;
+                    s.patched = false;
+                    s.Ymax = s.Y - 1;
+                    s.Xmax = s.X - 1;
                 }
-                return moveRight(pos, reset);
+                return moveRight(s, pos, reset);
             }
         }
 
-        private String moveRight(P pos, boolean reset) {
-            if (pos.x < Xmax &&
-                    myPlaces[pos.y][pos.x + 1] == 0 &&
-                    usedPlaces[pos.y][pos.x + 1] == 0 &&
-                    (usedPlaces[pos.y].length < pos.x + 2 || usedPlaces[pos.y][pos.x + 2] == 0)) {
+        private String moveRight(Session s, P pos, boolean reset) {
+            if (pos.x < s.Xmax &&
+                    s.myPlaces[pos.y][pos.x + 1] == 0 &&
+                    s.usedPlaces[pos.y][pos.x + 1] == 0 &&
+                    (s.usedPlaces[pos.y].length < pos.x + 3 || s.usedPlaces[pos.y][pos.x + 2] == 0)) {
                 return R;
             } else {
-                if(pos.x == Xmax && tPhase == 1){
-                    state = LEFT;
+                if(pos.x == s.Xmax && s.tPhase == 1){
+                    s.state = LEFT;
                     // check if we can MOVE UP?!
-                    return moveUp(pos, reset);//U;
+                    return moveUp(s, pos, reset);//U;
                 } else {
-                    state = DOWN;
+                    s.state = DOWN;
                     if(reset) {
-                        patched = false;
-                        Ymax = Y - 1;
-                        Xmax = X - 1;
+                        s.patched = false;
+                        s.Ymax = s.Y - 1;
+                        s.Xmax = s.X - 1;
                     }
-                    return moveDown(pos, reset);
+                    return moveDown(s, pos, reset);
                 }
             }
         }
 
-        private String moveDown(P pos, boolean reset) {
-            if (pos.y > Ymin &&
-                    myPlaces[pos.y - 1][pos.x] == 0 &&
-                    usedPlaces[pos.y - 1][pos.x] == 0 &&
-                    (pos.y < 2 || usedPlaces[pos.y - 2][pos.x] == 0)) {
-                if(tPhase == 1 && pos.y == 1){
-                    state = RIGHT;
+        private String moveDown(Session s, P pos, boolean reset) {
+            if (pos.y > s.Ymin &&
+                    s.myPlaces[pos.y - 1][pos.x] == 0 &&
+                    s.usedPlaces[pos.y - 1][pos.x] == 0 &&
+                    (pos.y < 2 || s.usedPlaces[pos.y - 2][pos.x] == 0)) {
+                if(s.tPhase == 1 && pos.y == 1){
+                    s.state = RIGHT;
                     // check if we can MOVE RIGHT?!
-                    return moveRight(pos, reset); //R;
+                    return moveRight(s, pos, reset); //R;
                 }else {
                     return D;
                 }
             } else {
-                state = LEFT;
+                s.state = LEFT;
                 if(reset) {
-                    patched = false;
-                    Ymin = 0;
-                    Xmin = 0;
+                    s.patched = false;
+                    s.Ymin = 0;
+                    s.Xmin = 0;
                 }
-                return moveLeft(pos, reset);
+                return moveLeft(s, pos, reset);
             }
         }
 
-        private String moveLeft(P pos, boolean reset) {
-            boolean canMoveLeft = pos.x > Xmin;
-            boolean isSpace = myPlaces[pos.y][pos.x - 1] == 0 &&
-                    usedPlaces[pos.y][pos.x - 1] == 0 &&
-                    (pos.x < 2 || usedPlaces[pos.y][pos.x - 2] == 0);
+        private String moveLeft(Session s, P pos, boolean reset) {
+            boolean canMoveLeft = pos.x > s.Xmin;
+            boolean isSpace = s.myPlaces[pos.y][pos.x - 1] == 0 &&
+                    s.usedPlaces[pos.y][pos.x - 1] == 0 &&
+                    (pos.x < 2 || s.usedPlaces[pos.y][pos.x - 2] == 0);
 
-            if (canMoveLeft && (isSpace || tPhase == 1)) {
+            if (canMoveLeft && (isSpace || s.tPhase == 1)) {
                 if(pos.x == 1){
-                    if(pos.y == Ymax){
-                        tPhase = 1;
-                        state = DOWN;
+                    if(pos.y == s.Ymax){
+                        s.tPhase = 1;
+                        s.state = DOWN;
                         // TODO check if we can MOVE LEFT
                         return L;
                     }else {
-                        tPhase = 1;
-                        state = RIGHT;
+                        s.tPhase = 1;
+                        s.state = RIGHT;
                         // check if we can MOVE UP
-                        return moveUp(pos, reset);// U;
+                        return moveUp(s, pos, reset);// U;
                     }
                 } else {
                     if(isSpace) {
-                        if(tPhase == 1 && (Ymax - pos.y)%2 == 1){
-                            return moveUp(pos, reset);
+                        if(s.tPhase == 1 && (s.Ymax - pos.y)%2 == 1){
+                            return moveUp(s, pos, reset);
                         }else {
                             return L;
                         }
                     }else{
-                        return moveUp(pos, reset);
+                        return moveUp(s, pos, reset);
                     }
                 }
             } else {
-                state = UP;
+                s.state = UP;
                 if (reset) {
-                    patched = false;
-                    Ymin = 0;
-                    Xmin = 0;
+                    s.patched = false;
+                    s.Ymin = 0;
+                    s.Xmin = 0;
                 }
-                return moveUp(pos, reset);
+                return moveUp(s, pos, reset);
             }
         }
 
@@ -544,6 +553,8 @@ public class Snake {
          */
         public Map<String, String> end(JsonNode endRequest) {
             LOG.info("END");
+            String session = endRequest.get("game").get("id").asText();
+            sessions.remove(session);
             return EMPTY;
         }
     }
