@@ -139,6 +139,7 @@ public class Snake {
             X = -1;
             Y = -1;
             usedPlaces = null;
+            myPlaces = null;
             patched = false;
             stateToRestore = -1;
             return EMPTY;
@@ -174,6 +175,7 @@ public class Snake {
         private static final String R = "right";
 
         public int[][] usedPlaces;
+        public int[][] myPlaces;
         public ArrayList<P>foodPlaces;
         public int X,Y, Xmin, Ymin, Xmax, Ymax;
         int state = 0;
@@ -195,17 +197,25 @@ public class Snake {
 
             // clearing the used fields...
             usedPlaces = new int[Y][X];
+            myPlaces = new int[Y][X];
             foodPlaces = new ArrayList<>();
+
+            // get OWN ID
+            JsonNode you = moveRequest.get("you");
+            String mId = you.asText("id");
 
             // get the locations of all snakes...
             JsonNode snakes = board.get("snakes");
             int slen = snakes.size();
             for (int i = 0; i < slen; i++) {
-                JsonNode body = snakes.get(i).get("body");
-                int len = body.size();
-                for (int j = 0; j < len; j++) {
-                    P p = new P(body.get(j));
-                    usedPlaces[p.y][p.x] = 1;
+                JsonNode aSnake = snakes.get(i);
+                if(!aSnake.asText("id").equals(mId)){
+                    JsonNode body = aSnake.get("body");
+                    int len = body.size();
+                    for (int j = 0; j < len; j++) {
+                        P p = new P(body.get(j));
+                        usedPlaces[p.y][p.x] = 1;
+                    }
                 }
             }
 
@@ -214,7 +224,7 @@ public class Snake {
                 int hlen = haz.size();
                 for (int i = 0; i < hlen; i++) {
                     P p = new P(haz.get(i));
-                    usedPlaces[p.y][p.x] = 1;
+                    myPlaces[p.y][p.x] = 1;
                 }
             }
 
@@ -227,13 +237,12 @@ public class Snake {
             }
 
             String move = D;
-            JsonNode you = moveRequest.get("you");
             int health = you.get("health").asInt();
             JsonNode body = you.get("body");
             int len = body.size();
             for (int i=1; i<len; i++){
                 P p = new P(body.get(i));
-                usedPlaces[p.y][p.x] = 1;
+                myPlaces[p.y][p.x] = 1;
             }
             JsonNode head = you.get("head");
             P pos = new P(head);
@@ -416,7 +425,7 @@ public class Snake {
         }*/
 
         private String moveUp(P pos, boolean reset) {
-            if (pos.y < Ymax && usedPlaces[pos.y + 1][pos.x] == 0 && (usedPlaces.length < pos.y + 3 || usedPlaces[pos.y + 2][pos.x] == 0)) {
+            if (pos.y < Ymax && myPlaces[pos.y + 1][pos.x] == 0 &&  usedPlaces[pos.y + 1][pos.x] == 0 && (usedPlaces.length < pos.y + 3 || usedPlaces[pos.y + 2][pos.x] == 0)) {
                 return U;
             }else{
                 state = RIGHT;
@@ -430,7 +439,7 @@ public class Snake {
         }
 
         private String moveRight(P pos, boolean reset) {
-            if (pos.x < Xmax && usedPlaces[pos.y][pos.x + 1] == 0 && (usedPlaces[pos.y].length < pos.x + 3 || usedPlaces[pos.y][pos.x + 2] == 0)) {
+            if (pos.x < Xmax && myPlaces[pos.y][pos.x + 1] == 0 && usedPlaces[pos.y][pos.x + 1] == 0 && (usedPlaces[pos.y].length < pos.x + 3 || usedPlaces[pos.y][pos.x + 2] == 0)) {
                 return R;
             } else {
                 if(pos.x == Xmax && tPhase == 1){
@@ -450,7 +459,7 @@ public class Snake {
         }
 
         private String moveDown(P pos, boolean reset) {
-            if (pos.y > Ymin && usedPlaces[pos.y - 1][pos.x] == 0 && (pos.y < 2 || usedPlaces[pos.y - 2][pos.x] == 0)) {
+            if (pos.y > Ymin && myPlaces[pos.y - 1][pos.x] == 0 && usedPlaces[pos.y - 1][pos.x] == 0 && (pos.y < 2 || usedPlaces[pos.y - 2][pos.x] == 0)) {
                 if(tPhase == 1 && pos.y == 1){
                     state = RIGHT;
                     // check if we can MOVE RIGHT?!
@@ -471,7 +480,7 @@ public class Snake {
 
         private String moveLeft(P pos, boolean reset) {
             boolean canMoveLeft = pos.x > Xmin;
-            boolean isSpace = usedPlaces[pos.y][pos.x - 1] == 0 && (pos.x < 2 || usedPlaces[pos.y][pos.x - 2] == 0);
+            boolean isSpace = myPlaces[pos.y][pos.x - 1] == 0 && usedPlaces[pos.y][pos.x - 1] == 0 && (pos.x < 2 || usedPlaces[pos.y][pos.x - 2] == 0);
 
             if (canMoveLeft && (isSpace || tPhase == 1)) {
                 if(pos.x == 1){
