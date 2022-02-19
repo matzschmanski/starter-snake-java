@@ -202,19 +202,22 @@ public class Snake {
 
             // get OWN ID
             JsonNode you = moveRequest.get("you");
-            String mId = you.asText("id");
+            String myId = you.get("id").asText();
 
             // get the locations of all snakes...
             JsonNode snakes = board.get("snakes");
             int slen = snakes.size();
             for (int i = 0; i < slen; i++) {
                 JsonNode aSnake = snakes.get(i);
-                if(!aSnake.asText("id").equals(mId)){
+                if(!aSnake.get("id").asText().equals(myId)){
                     JsonNode body = aSnake.get("body");
                     int len = body.size();
                     for (int j = 0; j < len; j++) {
                         P p = new P(body.get(j));
                         usedPlaces[p.y][p.x] = 1;
+                        // playing "avoid other Challenge" we need "myPlaces" in order to
+                        // have only one pixel distance...
+                        //myPlaces[p.y][p.x] = 1;
                     }
                 }
             }
