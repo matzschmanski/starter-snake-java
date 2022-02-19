@@ -186,10 +186,14 @@ public class Session {
                             if (enemyBodies[y][x] == 1) {
                                 b.append('-');
                             }else{
-                                b.append('Z');
+                                b.append('+');
                             }
                         } else {
-                            b.append(' ');
+                            if(enemyHeads[y][x] ==1){
+                                b.append('o');
+                            }else{
+                                b.append(' ');
+                            }
                         }
                     }
                 }
