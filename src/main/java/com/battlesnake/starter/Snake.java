@@ -358,16 +358,16 @@ public class Snake {
             boolean huntForFood = false;
             switch (s.state){
                 case UP:
-                    move = s.moveUp(!huntForFood);
+                    move = s.moveUp(0, !huntForFood);
                     break;
                 case RIGHT:
-                    move = s.moveRight(!huntForFood);
+                    move = s.moveRight(0, !huntForFood);
                     break;
                 case DOWN:
-                    move = s.moveDown(!huntForFood);
+                    move = s.moveDown(0, !huntForFood);
                     break;
                 case LEFT:
-                    move = s.moveLeft(!huntForFood);
+                    move = s.moveLeft(0, !huntForFood);
                     break;
             }
 
