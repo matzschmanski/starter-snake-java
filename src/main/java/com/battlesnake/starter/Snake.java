@@ -9,10 +9,8 @@ import spark.Request;
 import spark.Response;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 import static spark.Spark.port;
 import static spark.Spark.post;
@@ -30,6 +28,19 @@ public class Snake {
     private static final Handler HANDLER = new Handler();
     private static final Logger LOG = LoggerFactory.getLogger(Snake.class);
 
+    private static class P {
+        int x,y;
+
+        public P(JsonNode p) {
+            y = p.get("y").asInt();
+            x = p.get("x").asInt();
+        }
+
+        public String toString(){
+            return x+"|"+y;
+        }
+    }
+
     /**
      * Main entry point.
      *
@@ -39,7 +50,7 @@ public class Snake {
         String port = System.getProperty("PORT");
         if (port == null) {
             LOG.info("Using default port: {}", port);
-            port = "8080";
+            port = "9191";
         } else {
             LOG.info("Found system provided port: {}", port);
         }
@@ -71,7 +82,7 @@ public class Snake {
             try {
                 JsonNode parsedRequest = JSON_MAPPER.readTree(req.body());
                 String uri = req.uri();
-                LOG.info("{} called with: {}", uri, req.body());
+                //LOG.info("{} called with: {}", uri, req.body());
                 Map<String, String> snakeResponse;
                 if (uri.equals("/")) {
                     snakeResponse = index();
@@ -103,8 +114,8 @@ public class Snake {
         public Map<String, String> index() {
             Map<String, String> response = new HashMap<>();
             response.put("apiversion", "1");
-            response.put("author", "marq24"); // TODO: Your Battlesnake Username
-            response.put("color", "#33FF33"); // TODO: Personalize
+            response.put("author", "marq24");
+            response.put("color", "#33FF33");
             response.put("head", "default"); // TODO: Personalize
             response.put("tail", "default"); // TODO: Personalize
             return response;
@@ -121,6 +132,14 @@ public class Snake {
          */
         public Map<String, String> start(JsonNode startRequest) {
             LOG.info("START");
+
+            state = 0;
+            tPhase = 0;
+            X = -1;
+            Y = -1;
+            usedPlaces = null;
+            patched = false;
+            stateToRestore = -1;
             return EMPTY;
         }
 
@@ -142,76 +161,196 @@ public class Snake {
          *         make. One of "up", "down", "left" or "right".
          */
 
+
+        private static final int UP = 0;
+        private static final int RIGHT = 1;
+        private static final int DOWN = 2;
+        private static final int LEFT = 3;
+
         private static final String U = "up";
         private static final String D = "down";
         private static final String L = "left";
         private static final String R = "right";
 
-
-        public int[][] board;
-        public int X,Y;
+        public int[][] usedPlaces;
+        public ArrayList<P>foodPlaces;
+        public int X,Y, Xmin, Ymin, Xmax, Ymax;
         int state = 0;
-        int count = 1;
+        boolean patched = false;
+        int stateToRestore = -1;
+
+        int tPhase = 0;
+
         public Map<String, String> move(JsonNode moveRequest) {
-            //if(board == null){
-                JsonNode b = moveRequest.get("board");
-                Y = b.get("height").asInt();
-                X = b.get("width").asInt();
-                board = new int[Y][X];
+            JsonNode board = moveRequest.get("board");
+            if(X == -1) {
+                Y = board.get("height").asInt();
+                X = board.get("width").asInt();
+                Ymin = 0;
+                Xmin = 0;
+                Ymax = Y-1;
+                Xmax = X-1;
+            }
 
-                JsonNode snakes = b.get("snakes");
-                int slen = snakes.size();
-                for (int i=0; i<slen; i++){
-                    JsonNode body = snakes.get(i).get("body");
-                    int len = body.size();
-                    for (int j=0; j<len; j++){
-                        int[] p = getYX(body.get(j));
-                        board[p[0]][p[1]] = 1;
-                    }
+            // clearing the used fields...
+            usedPlaces = new int[Y][X];
+            foodPlaces = new ArrayList<>();
+
+            // get the locations of all snakes...
+            JsonNode snakes = board.get("snakes");
+            int slen = snakes.size();
+            for (int i = 0; i < slen; i++) {
+                JsonNode body = snakes.get(i).get("body");
+                int len = body.size();
+                for (int j = 0; j < len; j++) {
+                    P p = new P(body.get(j));
+                    usedPlaces[p.y][p.x] = 1;
                 }
+            }
 
-                //board = new int[Y][X];
-            //}
+            JsonNode haz = board.get("hazards");
+            if(haz != null){
+                int hlen = haz.size();
+                for (int i = 0; i < hlen; i++) {
+                    P p = new P(haz.get(i));
+                    usedPlaces[p.y][p.x] = 1;
+                }
+            }
 
-            /*try {
-                LOG.info("Data: {}", JSON_MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(moveRequest));
-            } catch (JsonProcessingException e) {
-                LOG.error("Error parsing payload", e);
-            }*/
-
-            /*
-             * Example how to retrieve data from the request payload:
-             * 
-             * String gameId = moveRequest.get("game").get("id").asText();
-             * 
-             * int height = moveRequest.get("board").get("height").asInt();
-             * 
-             */
+            JsonNode food = board.get("food");
+            if(food != null) {
+                int flen = food.size();
+                for (int i = 0; i < flen; i++) {
+                    foodPlaces.add(new P(food.get(i)));
+                }
+            }
 
             String move = D;
             JsonNode you = moveRequest.get("you");
+            int health = you.get("health").asInt();
             JsonNode body = you.get("body");
             int len = body.size();
             for (int i=1; i<len; i++){
-                int[] p = getYX(body.get(i));
-                board[p[0]][p[1]] = 1;
+                P p = new P(body.get(i));
+                usedPlaces[p.y][p.x] = 1;
             }
-
-
             JsonNode head = you.get("head");
-            int[] pos = getYX(head);
-            if(state == 0) {
-                move = moveUpOrRight(pos);
-                //if(move.equals(U) && pos[0] > 0 && count%20 == 0){
-                    //move = R;
-                    //count++;
-                //}
-            } else if(state == 1){
-                move = moveDownOrLeft(pos);
+            P pos = new P(head);
+
+            /*if(!patched) {
+                if(Math.random() * 20 > 17) {
+                    patched = true;
+                    int addon1 = (int) (Math.random() * 3);
+                    int addon2 = (int) (Math.random() * 3);
+                    Ymin = addon1;
+                    Xmin = addon2;
+                    Ymax = Y - (1+addon1);
+                    Xmax = X - (1+addon2);
+                }
+            }*/
+
+//            boolean huntForFood = false;
+//            if(health == 100){
+//                // ok back on previous track!
+//                Ymin = 0;
+//                Xmin = 0;
+//                Ymax = Y-1;
+//                Xmax = X-1;
+//
+//                // after we got our food we need to find the closest wall (again?)
+//                // 1 | 2
+//                // -----
+//                // 3 | 4
+//                /*if( pos.x > Xmax/2 && pos.y > Ymax/2){
+//                    // -> we are IN Q2
+//                    if(pos.x > pos.y){
+//                        // we should move RIGHT
+//                        state = 1;
+//                    }else{
+//                        // we should move UP...
+//                        state = 0;
+//                    }
+//                } else if( pos.x <= Xmax/2 && pos.y <= Ymax/2){
+//                    // -> we are IN Q3
+//                    if(pos.x > pos.y){
+//                        // we should move LEFT
+//                        state = 3;
+//                    }else{
+//                        // we should move DOWN...
+//                        state = 2;
+//                    }
+//                } else if(pos.x <= Xmax/2){
+//                    // we are in Q1
+//                    state = 1;
+//                }else{
+//                    // we are in Q4
+//                    state = 3;
+//                }*/
+//                if(pos.x <= Xmax/2){
+//                    state = LEFT;
+//                }else if( pos.y <= Ymax/2){
+//                    state = DOWN;
+//                }else if( pos.x > pos.y ) {
+//                    state = RIGHT;
+//                }else{
+//                    state = UP;
+//                }
+//
+//                //state = stateToRestore;
+//
+//            } else if(health < 50){
+//                P closestFood = null;
+//                int minDist = Integer.MAX_VALUE;
+//                for(P f: foodPlaces){
+//                    int dist = Math.abs( f.x - pos.x) + Math.abs( f.y - pos.y);
+//                    minDist = Math.min(minDist, dist);
+//                    if(minDist == dist){
+//                        closestFood = f;
+//                    }
+//                }
+//
+//                if(closestFood != null){
+//                    Ymin = closestFood.y;
+//                    Xmin = closestFood.x;
+//                    Ymax = closestFood.y;
+//                    Xmax = closestFood.x;
+//                    stateToRestore = state;
+//                    huntForFood = true;
+//                    LOG.info("GOTO: -> "+closestFood);
+//                }
+//            }
+
+
+            boolean huntForFood = false;
+            switch (state){
+                case UP:
+                    move = moveUp(pos, !huntForFood);
+                    //move = moveUpOrRight(pos);
+                    break;
+                case RIGHT:
+                    move = moveRight(pos, !huntForFood);
+                    break;
+                case DOWN:
+                    move = moveDown(pos, !huntForFood);
+                    //move = moveDownOrLeft(pos);
+                    break;
+                case LEFT:
+                    move = moveLeft(pos, !huntForFood);
+                    break;
             }
-            //if(move.equals(U)){
-                //count++;
-            //}
+
+            /*int rand = (int) (Math.random() * 20);
+            if(rand > 18){
+                if(move.equals(U) && pos[0] > 2 && pos[0] < Y-3 ){
+                    move = R;
+                } else if(move.equals(L) && pos[1] > 2 && pos[1] < X-3 ){
+                    move = U;
+                } else if(move.equals(D) && pos[0] > 2 && pos[0] < Y-3 ){
+                    move = L;
+                } else if(move.equals(R) && pos[1] > 2 && pos[1] < X-3 ){
+                    move = D;
+                }
+            }*/
 
             //JsonNode head = moveRequest.get("you").get("head");
             //JsonNode body = moveRequest.get("you").get("body");
@@ -247,53 +386,113 @@ public class Snake {
             return response;
         }
 
-        private String moveUpOrRight(int[] pos) {
-            if (pos[0] < Y-1 && board[pos[0] + 1][pos[1]] == 0) {
+        private String moveUpOrRight(P pos) {
+            if (pos.y < Ymax && usedPlaces[pos.y + 1][pos.x] == 0) {
                 return U;
-            } else if (pos[1] < X-1 && board[pos[0]][pos[1] + 1] == 0) {
-LOG.info(pos[0]+" "+pos[1] +" - "+ board[pos[0]][pos[1] + 1]);
+            } else if (pos.x < Xmax && usedPlaces[pos.y][pos.x + 1] == 0) {
                 return R;
             } else {
-                state = 1;
+                state = DOWN;
+                patched = false;
+                Ymax = Y - 1;
+                Xmax = X - 1;
                 return moveDownOrLeft(pos);
             }
         }
 
-        private String moveDownOrLeft(int[] pos) {
-            if (pos[0] > 0 && board[pos[0] - 1][pos[1]] == 0) {
+        private String moveDownOrLeft(P pos) {
+            if (pos.y > Ymin && usedPlaces[pos.y - 1][pos.x] == 0) {
                 return D;
-            } else if (pos[1] > 0 && board[pos[0]][pos[1] - 1] == 0) {
+            } else if (pos.x > Xmin && usedPlaces[pos.y][pos.x - 1] == 0) {
                 return L;
             } else {
-                state = 0;
+                state = UP;
+                patched = false;
+                Ymin = 0;
+                Xmin = 0;
                 return moveUpOrRight(pos);
             }
         }
 
-        private int[] getYX(JsonNode json) {
-            return new int[]{json.get("y").asInt(), json.get("x").asInt()};
+        private String moveUp(P pos, boolean reset) {
+            if (pos.y < Ymax && usedPlaces[pos.y + 1][pos.x] == 0) {
+                return U;
+            }else{
+                state = RIGHT;
+                if(reset) {
+                    patched = false;
+                    Ymax = Y - 1;
+                    Xmax = X - 1;
+                }
+                return moveRight(pos, reset);
+            }
         }
 
-        /**
-         * Remove the 'neck' direction from the list of possible moves
-         * 
-         * @param head          JsonNode of the head position e.g. {"x": 0, "y": 0}
-         * @param body          JsonNode of x/y coordinates for every segment of a
-         *                      Battlesnake. e.g. [ {"x": 0, "y": 0}, {"x": 1, "y": 0},
-         *                      {"x": 2, "y": 0} ]
-         * @param possibleMoves ArrayList of String. Moves to pick from.
-         */
-        public void avoidMyNeck(JsonNode head, JsonNode body, ArrayList<String> possibleMoves) {
-            JsonNode neck = body.get(1);
+        private String moveRight(P pos, boolean reset) {
+            if (pos.x < Xmax && usedPlaces[pos.y][pos.x + 1] == 0) {
+                return R;
+            } else {
+                if(pos.x == Xmax && tPhase == 1){
+                    state = LEFT;
+                    // TODO check if we can MOVE UP?!
+                    return U;
+                } else {
+                    state = DOWN;
+                    if(reset) {
+                        patched = false;
+                        Ymax = Y - 1;
+                        Xmax = X - 1;
+                    }
+                    return moveDown(pos, reset);
+                }
+            }
+        }
 
-            if (neck.get("x").asInt() < head.get("x").asInt()) {
-                possibleMoves.remove("left");
-            } else if (neck.get("x").asInt() > head.get("x").asInt()) {
-                possibleMoves.remove("right");
-            } else if (neck.get("y").asInt() < head.get("y").asInt()) {
-                possibleMoves.remove("down");
-            } else if (neck.get("y").asInt() > head.get("y").asInt()) {
-                possibleMoves.remove("up");
+        private String moveDown(P pos, boolean reset) {
+            if (pos.y > Ymin && usedPlaces[pos.y - 1][pos.x] == 0) {
+                if(tPhase == 1 && pos.y == 1){
+                    state = RIGHT;
+                    // TODO check if we can MOVE RIGHT?!
+                    return R;
+                }else {
+                    return D;
+                }
+            } else {
+                state = LEFT;
+                if(reset) {
+                    patched = false;
+                    Ymin = 0;
+                    Xmin = 0;
+                }
+                return moveLeft(pos, reset);
+            }
+        }
+
+        private String moveLeft(P pos, boolean reset) {
+            if (pos.x > Xmin && (tPhase==1 || usedPlaces[pos.y][pos.x - 1] == 0)) {
+                if(pos.x == 1){
+                    if(pos.y == Ymax){
+                        tPhase = 1;
+                        state = DOWN;
+                        // TODO check if we can MOVE LEFT
+                        return L;
+                    }else {
+                        tPhase = 1;
+                        state = RIGHT;
+                        // TODO cehck if we can MOVE UP
+                        return U;
+                    }
+                } else {
+                    return L;
+                }
+            } else {
+                state = UP;
+                if(reset) {
+                    patched = false;
+                    Ymin = 0;
+                    Xmin = 0;
+                }
+                return moveUp(pos, reset);
             }
         }
 
