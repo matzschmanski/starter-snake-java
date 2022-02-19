@@ -387,7 +387,7 @@ public class Snake {
             return response;
         }
 
-        private String moveUpOrRight(P pos) {
+        /*private String moveUpOrRight(P pos) {
             if (pos.y < Ymax && usedPlaces[pos.y + 1][pos.x] == 0) {
                 return U;
             } else if (pos.x < Xmax && usedPlaces[pos.y][pos.x + 1] == 0) {
@@ -413,10 +413,10 @@ public class Snake {
                 Xmin = 0;
                 return moveUpOrRight(pos);
             }
-        }
+        }*/
 
         private String moveUp(P pos, boolean reset) {
-            if (pos.y < Ymax && usedPlaces[pos.y + 1][pos.x] == 0) {
+            if (pos.y < Ymax && usedPlaces[pos.y + 1][pos.x] == 0 && (usedPlaces.length < pos.y + 3 || usedPlaces[pos.y + 2][pos.x] == 0)) {
                 return U;
             }else{
                 state = RIGHT;
@@ -430,7 +430,7 @@ public class Snake {
         }
 
         private String moveRight(P pos, boolean reset) {
-            if (pos.x < Xmax && usedPlaces[pos.y][pos.x + 1] == 0) {
+            if (pos.x < Xmax && usedPlaces[pos.y][pos.x + 1] == 0 && (usedPlaces[pos.y].length < pos.x + 3 || usedPlaces[pos.y][pos.x + 2] == 0)) {
                 return R;
             } else {
                 if(pos.x == Xmax && tPhase == 1){
@@ -450,7 +450,7 @@ public class Snake {
         }
 
         private String moveDown(P pos, boolean reset) {
-            if (pos.y > Ymin && usedPlaces[pos.y - 1][pos.x] == 0) {
+            if (pos.y > Ymin && usedPlaces[pos.y - 1][pos.x] == 0 && (pos.y < 2 || usedPlaces[pos.y - 2][pos.x] == 0)) {
                 if(tPhase == 1 && pos.y == 1){
                     state = RIGHT;
                     // check if we can MOVE RIGHT?!
@@ -471,7 +471,7 @@ public class Snake {
 
         private String moveLeft(P pos, boolean reset) {
             boolean canMoveLeft = pos.x > Xmin;
-            boolean isSpace = usedPlaces[pos.y][pos.x - 1] == 0;
+            boolean isSpace = usedPlaces[pos.y][pos.x - 1] == 0 && (pos.x < 2 || usedPlaces[pos.y][pos.x - 2] == 0);
 
             if (canMoveLeft && (isSpace || tPhase == 1)) {
                 if(pos.x == 1){
@@ -488,7 +488,11 @@ public class Snake {
                     }
                 } else {
                     if(isSpace) {
-                        return L;
+                        if(tPhase == 1 && (Ymax - pos.y)%2 == 1){
+                            return moveUp(pos, reset);
+                        }else {
+                            return L;
+                        }
                     }else{
                         return moveUp(pos, reset);
                     }
