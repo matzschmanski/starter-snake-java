@@ -50,23 +50,17 @@ public class Snake {
             return x+"|"+y;
         }
     }
-        /*public int[][] usedPlaces;
-        public int[][] myPlaces;
-        public ArrayList<P>foodPlaces;
-        public int X,Y, Xmin, Ymin, Xmax, Ymax;
-        int state = 0;
-        boolean patched = false;
-        int stateToRestore = -1;
-        int tPhase = 0;*/
 
     private static class Session{
 
-        public P pos;
+        P pos;
+        int len;
+        int health;
         int state = 0;
         int tPhase = 0;
         int X = -1;
         int Y = -1;
-        int[][] usedPlaces = null;
+        int[][] enemyPlaces = null;
         int[][] myPlaces = null;
         ArrayList<P>foodPlaces = null;
         boolean patched = false;
@@ -76,8 +70,9 @@ public class Snake {
         private String moveUp(boolean reset) {
             if (pos.y < Ymax &&
                     myPlaces[pos.y + 1][pos.x] == 0 &&
-                    usedPlaces[pos.y + 1][pos.x] == 0 &&
-                    (usedPlaces.length < pos.y + 3 || usedPlaces[pos.y + 2][pos.x] == 0)) {
+                    enemyPlaces[pos.y + 1][pos.x] < len ||
+                    (enemyPlaces[pos.y + 1][pos.x] == 0 &&
+                    (enemyPlaces.length < pos.y + 3 || enemyPlaces[pos.y + 2][pos.x] == 0))) {
                 return U;
             }else{
                 state = RIGHT;
@@ -93,8 +88,9 @@ public class Snake {
         private String moveRight(boolean reset) {
             if (pos.x < Xmax &&
                     myPlaces[pos.y][pos.x + 1] == 0 &&
-                    usedPlaces[pos.y][pos.x + 1] == 0 &&
-                    (usedPlaces[pos.y].length < pos.x + 3 || usedPlaces[pos.y][pos.x + 2] == 0)) {
+                    enemyPlaces[pos.y][pos.x + 1] < len ||
+                    (enemyPlaces[pos.y][pos.x + 1] == 0 &&
+                    (enemyPlaces[pos.y].length < pos.x + 3 || enemyPlaces[pos.y][pos.x + 2] == 0))) {
                 return R;
             } else {
                 if(pos.x == Xmax && tPhase == 1){
@@ -116,8 +112,9 @@ public class Snake {
         private String moveDown(boolean reset) {
             if (pos.y > Ymin &&
                     myPlaces[pos.y - 1][pos.x] == 0 &&
-                    usedPlaces[pos.y - 1][pos.x] == 0 &&
-                    (pos.y < 2 || usedPlaces[pos.y - 2][pos.x] == 0)) {
+                    enemyPlaces[pos.y - 1][pos.x] < len  ||
+                    (enemyPlaces[pos.y - 1][pos.x] == 0 &&
+                    (pos.y < 2 || enemyPlaces[pos.y - 2][pos.x] == 0))) {
                 if(tPhase == 1 && pos.y == 1){
                     state = RIGHT;
                     // check if we can MOVE RIGHT?!
@@ -139,8 +136,9 @@ public class Snake {
         private String moveLeft(boolean reset) {
             boolean canMoveLeft = pos.x > Xmin;
             boolean isSpace = myPlaces[pos.y][pos.x - 1] == 0 &&
-                    usedPlaces[pos.y][pos.x - 1] == 0 &&
-                    (pos.x < 2 || usedPlaces[pos.y][pos.x - 2] == 0);
+                    enemyPlaces[pos.y][pos.x - 1] < len ||
+                    (enemyPlaces[pos.y][pos.x - 1] == 0 &&
+                    (pos.x < 2 || enemyPlaces[pos.y][pos.x - 2] == 0));
 
             if (canMoveLeft && (isSpace || tPhase == 1)) {
                 if(pos.x == 1){
@@ -308,7 +306,7 @@ public class Snake {
             }
 
             // clearing the used fields...
-            s.usedPlaces = new int[s.Y][s.X];
+            s.enemyPlaces = new int[s.Y][s.X];
             s.myPlaces = new int[s.Y][s.X];
             s.foodPlaces = new ArrayList<>();
 
@@ -322,11 +320,12 @@ public class Snake {
             for (int i = 0; i < slen; i++) {
                 JsonNode aSnake = snakes.get(i);
                 if(!aSnake.get("id").asText().equals(myId)){
+                    int len = aSnake.get("length").asInt();
                     JsonNode body = aSnake.get("body");
-                    int len = body.size();
-                    for (int j = 0; j < len; j++) {
+                    int size = body.size();
+                    for (int j = 0; j < size; j++) {
                         P p = new P(body.get(j));
-                        s.usedPlaces[p.y][p.x] = 1;
+                        s.enemyPlaces[p.y][p.x] = len;
                         // playing "avoid other Challenge" we need "myPlaces" in order to
                         // have only one pixel distance...
                         //myPlaces[p.y][p.x] = 1;
@@ -352,10 +351,11 @@ public class Snake {
             }
 
             String move = D;
-            int health = you.get("health").asInt();
+            s.health = you.get("health").asInt();
+            s.len = you.get("length").asInt();
             JsonNode body = you.get("body");
-            int len = body.size();
-            for (int i=1; i<len; i++){
+            int blen = body.size();
+            for (int i=1; i<blen; i++){
                 P p = new P(body.get(i));
                 s.myPlaces[p.y][p.x] = 1;
             }
