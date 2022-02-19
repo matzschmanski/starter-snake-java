@@ -222,9 +222,8 @@ public class Snake {
                             s.enemyHeads[h.y][h.x + 1] = len;
                     } catch (IndexOutOfBoundsException e) {
                     }*/
-
-                    s.enemyBodies[h.y][h.x] = 1;
-                    try {
+                    s.enemyBodies[h.y][h.x] = len;
+                    /*try {
                         s.enemyBodies[h.y - 1][h.x] = 1;
                     } catch (IndexOutOfBoundsException e) {
                     }
@@ -239,7 +238,7 @@ public class Snake {
                     try {
                         s.enemyBodies[h.y][h.x + 1] = 1;
                     } catch (IndexOutOfBoundsException e) {
-                    }
+                    }*/
                 }
             }
 
