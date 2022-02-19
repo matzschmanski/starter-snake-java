@@ -77,7 +77,7 @@ public class SnakeTest {
         ArrayList<String> possibleMoves = new ArrayList<>(Arrays.asList("up", "down", "left", "right"));
         ArrayList<String> expectedResult = new ArrayList<>(Arrays.asList("up", "down", "left", "right"));
 
-        handler.avoidMyNeck(testHead, testBody, possibleMoves);
+        //handler.avoidMyNeck(testHead, testBody, possibleMoves);
 
         assertTrue(possibleMoves.size() == 4);
         assertTrue(possibleMoves.equals(expectedResult));
@@ -92,7 +92,7 @@ public class SnakeTest {
         ArrayList<String> possibleMoves = new ArrayList<>(Arrays.asList("up", "down", "left", "right"));
         ArrayList<String> expectedResult = new ArrayList<>(Arrays.asList("up", "down", "right"));
 
-        handler.avoidMyNeck(testHead, testBody, possibleMoves);
+        //handler.avoidMyNeck(testHead, testBody, possibleMoves);
 
         assertTrue(possibleMoves.size() == 3);
         assertTrue(possibleMoves.equals(expectedResult));
@@ -107,7 +107,7 @@ public class SnakeTest {
         ArrayList<String> possibleMoves = new ArrayList<>(Arrays.asList("up", "down", "left", "right"));
         ArrayList<String> expectedResult = new ArrayList<>(Arrays.asList("up", "down", "left"));
 
-        handler.avoidMyNeck(testHead, testBody, possibleMoves);
+        //handler.avoidMyNeck(testHead, testBody, possibleMoves);
 
         assertTrue(possibleMoves.size() == 3);
         assertTrue(possibleMoves.equals(expectedResult));
@@ -122,7 +122,7 @@ public class SnakeTest {
         ArrayList<String> possibleMoves = new ArrayList<>(Arrays.asList("up", "down", "left", "right"));
         ArrayList<String> expectedResult = new ArrayList<>(Arrays.asList("down", "left", "right"));
 
-        handler.avoidMyNeck(testHead, testBody, possibleMoves);
+        //handler.avoidMyNeck(testHead, testBody, possibleMoves);
 
         assertTrue(possibleMoves.size() == 3);
         assertTrue(possibleMoves.equals(expectedResult));
@@ -137,7 +137,7 @@ public class SnakeTest {
         ArrayList<String> possibleMoves = new ArrayList<>(Arrays.asList("up", "down", "left", "right"));
         ArrayList<String> expectedResult = new ArrayList<>(Arrays.asList("up", "left", "right"));
 
-        handler.avoidMyNeck(testHead, testBody, possibleMoves);
+        //handler.avoidMyNeck(testHead, testBody, possibleMoves);
 
         assertTrue(possibleMoves.size() == 3);
         assertTrue(possibleMoves.equals(expectedResult));
