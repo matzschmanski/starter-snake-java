@@ -28,6 +28,16 @@ public class Snake {
     private static final Handler HANDLER = new Handler();
     private static final Logger LOG = LoggerFactory.getLogger(Snake.class);
 
+    private static final int UP = 0;
+    private static final int RIGHT = 1;
+    private static final int DOWN = 2;
+    private static final int LEFT = 3;
+
+    private static final String U = "up";
+    private static final String D = "down";
+    private static final String L = "left";
+    private static final String R = "right";
+
     private static class P {
         int x,y;
 
@@ -50,6 +60,8 @@ public class Snake {
         int tPhase = 0;*/
 
     private static class Session{
+
+        public P pos;
         int state = 0;
         int tPhase = 0;
         int X = -1;
@@ -60,6 +72,110 @@ public class Snake {
         boolean patched = false;
         int stateToRestore = -1;
         int Xmin, Ymin, Xmax, Ymax;
+
+        private String moveUp(boolean reset) {
+            if (pos.y < Ymax &&
+                    myPlaces[pos.y + 1][pos.x] == 0 &&
+                    usedPlaces[pos.y + 1][pos.x] == 0 &&
+                    (usedPlaces.length < pos.y + 3 || usedPlaces[pos.y + 2][pos.x] == 0)) {
+                return U;
+            }else{
+                state = RIGHT;
+                if(reset) {
+                    patched = false;
+                    Ymax = Y - 1;
+                    Xmax = X - 1;
+                }
+                return moveRight(reset);
+            }
+        }
+
+        private String moveRight(boolean reset) {
+            if (pos.x < Xmax &&
+                    myPlaces[pos.y][pos.x + 1] == 0 &&
+                    usedPlaces[pos.y][pos.x + 1] == 0 &&
+                    (usedPlaces[pos.y].length < pos.x + 3 || usedPlaces[pos.y][pos.x + 2] == 0)) {
+                return R;
+            } else {
+                if(pos.x == Xmax && tPhase == 1){
+                    state = LEFT;
+                    // check if we can MOVE UP?!
+                    return moveUp(reset);//U;
+                } else {
+                    state = DOWN;
+                    if(reset) {
+                        patched = false;
+                        Ymax = Y - 1;
+                        Xmax = X - 1;
+                    }
+                    return moveDown(reset);
+                }
+            }
+        }
+
+        private String moveDown(boolean reset) {
+            if (pos.y > Ymin &&
+                    myPlaces[pos.y - 1][pos.x] == 0 &&
+                    usedPlaces[pos.y - 1][pos.x] == 0 &&
+                    (pos.y < 2 || usedPlaces[pos.y - 2][pos.x] == 0)) {
+                if(tPhase == 1 && pos.y == 1){
+                    state = RIGHT;
+                    // check if we can MOVE RIGHT?!
+                    return moveRight(reset); //R;
+                }else {
+                    return D;
+                }
+            } else {
+                state = LEFT;
+                if(reset) {
+                    patched = false;
+                    Ymin = 0;
+                    Xmin = 0;
+                }
+                return moveLeft(reset);
+            }
+        }
+
+        private String moveLeft(boolean reset) {
+            boolean canMoveLeft = pos.x > Xmin;
+            boolean isSpace = myPlaces[pos.y][pos.x - 1] == 0 &&
+                    usedPlaces[pos.y][pos.x - 1] == 0 &&
+                    (pos.x < 2 || usedPlaces[pos.y][pos.x - 2] == 0);
+
+            if (canMoveLeft && (isSpace || tPhase == 1)) {
+                if(pos.x == 1){
+                    if(pos.y == Ymax){
+                        tPhase = 1;
+                        state = DOWN;
+                        // TODO check if we can MOVE LEFT
+                        return L;
+                    }else {
+                        tPhase = 1;
+                        state = RIGHT;
+                        // check if we can MOVE UP
+                        return moveUp(reset);// U;
+                    }
+                } else {
+                    if(isSpace) {
+                        if(tPhase == 1 && (Ymax - pos.y)%2 == 1){
+                            return moveUp(reset);
+                        }else {
+                            return L;
+                        }
+                    }else{
+                        return moveUp(reset);
+                    }
+                }
+            } else {
+                state = UP;
+                if (reset) {
+                    patched = false;
+                    Ymin = 0;
+                    Xmin = 0;
+                }
+                return moveUp(reset);
+            }
+        }
     }
 
     /**
@@ -91,6 +207,7 @@ public class Snake {
          * For the start/end request
          */
         private static final Map<String, String> EMPTY = new HashMap<>();
+        private HashMap<String, Session> sessions = new HashMap();
 
         /**
          * Generic processor that prints out the request and response from the methods.
@@ -144,7 +261,6 @@ public class Snake {
             return response;
         }
 
-        private HashMap<String, Session> sessions = new HashMap();
         /**
          * This method is called everytime your Battlesnake is entered into a game.
          * 
@@ -156,8 +272,7 @@ public class Snake {
          */
         public Map<String, String> start(JsonNode startRequest) {
             LOG.info("START");
-            String session = startRequest.get("game").get("id").asText();
-            sessions.put(session, new Session());
+            sessions.put(startRequest.get("game").get("id").asText(), new Session());
             return EMPTY;
         }
 
@@ -179,21 +294,8 @@ public class Snake {
          *         make. One of "up", "down", "left" or "right".
          */
 
-
-        private static final int UP = 0;
-        private static final int RIGHT = 1;
-        private static final int DOWN = 2;
-        private static final int LEFT = 3;
-
-        private static final String U = "up";
-        private static final String D = "down";
-        private static final String L = "left";
-        private static final String R = "right";
-
-
         public Map<String, String> move(JsonNode moveRequest) {
-            String session = moveRequest.get("game").get("id").asText();
-            Session s = sessions.get(session);
+            Session s = sessions.get(moveRequest.get("game").get("id").asText());
 
             JsonNode board = moveRequest.get("board");
             if(s.X == -1) {
@@ -258,7 +360,7 @@ public class Snake {
                 s.myPlaces[p.y][p.x] = 1;
             }
             JsonNode head = you.get("head");
-            P pos = new P(head);
+            s.pos = new P(head);
 
             /*if(!patched) {
                 if(Math.random() * 20 > 17) {
@@ -347,18 +449,16 @@ public class Snake {
             boolean huntForFood = false;
             switch (s.state){
                 case UP:
-                    move = moveUp(s, pos, !huntForFood);
-                    //move = moveUpOrRight(pos);
+                    move = s.moveUp(!huntForFood);
                     break;
                 case RIGHT:
-                    move = moveRight(s, pos, !huntForFood);
+                    move = s.moveRight(!huntForFood);
                     break;
                 case DOWN:
-                    move = moveDown(s, pos, !huntForFood);
-                    //move = moveDownOrLeft(pos);
+                    move = s.moveDown(!huntForFood);
                     break;
                 case LEFT:
-                    move = moveLeft(s, pos, !huntForFood);
+                    move = s.moveLeft(!huntForFood);
                     break;
             }
 
@@ -437,109 +537,6 @@ public class Snake {
             }
         }*/
 
-        private String moveUp(Session s, P pos, boolean reset) {
-            if (pos.y < s.Ymax &&
-                    s.myPlaces[pos.y + 1][pos.x] == 0 &&
-                    s.usedPlaces[pos.y + 1][pos.x] == 0 &&
-                    (s.usedPlaces.length < pos.y + 3 || s.usedPlaces[pos.y + 2][pos.x] == 0)) {
-                return U;
-            }else{
-                s.state = RIGHT;
-                if(reset) {
-                    s.patched = false;
-                    s.Ymax = s.Y - 1;
-                    s.Xmax = s.X - 1;
-                }
-                return moveRight(s, pos, reset);
-            }
-        }
-
-        private String moveRight(Session s, P pos, boolean reset) {
-            if (pos.x < s.Xmax &&
-                    s.myPlaces[pos.y][pos.x + 1] == 0 &&
-                    s.usedPlaces[pos.y][pos.x + 1] == 0 &&
-                    (s.usedPlaces[pos.y].length < pos.x + 3 || s.usedPlaces[pos.y][pos.x + 2] == 0)) {
-                return R;
-            } else {
-                if(pos.x == s.Xmax && s.tPhase == 1){
-                    s.state = LEFT;
-                    // check if we can MOVE UP?!
-                    return moveUp(s, pos, reset);//U;
-                } else {
-                    s.state = DOWN;
-                    if(reset) {
-                        s.patched = false;
-                        s.Ymax = s.Y - 1;
-                        s.Xmax = s.X - 1;
-                    }
-                    return moveDown(s, pos, reset);
-                }
-            }
-        }
-
-        private String moveDown(Session s, P pos, boolean reset) {
-            if (pos.y > s.Ymin &&
-                    s.myPlaces[pos.y - 1][pos.x] == 0 &&
-                    s.usedPlaces[pos.y - 1][pos.x] == 0 &&
-                    (pos.y < 2 || s.usedPlaces[pos.y - 2][pos.x] == 0)) {
-                if(s.tPhase == 1 && pos.y == 1){
-                    s.state = RIGHT;
-                    // check if we can MOVE RIGHT?!
-                    return moveRight(s, pos, reset); //R;
-                }else {
-                    return D;
-                }
-            } else {
-                s.state = LEFT;
-                if(reset) {
-                    s.patched = false;
-                    s.Ymin = 0;
-                    s.Xmin = 0;
-                }
-                return moveLeft(s, pos, reset);
-            }
-        }
-
-        private String moveLeft(Session s, P pos, boolean reset) {
-            boolean canMoveLeft = pos.x > s.Xmin;
-            boolean isSpace = s.myPlaces[pos.y][pos.x - 1] == 0 &&
-                    s.usedPlaces[pos.y][pos.x - 1] == 0 &&
-                    (pos.x < 2 || s.usedPlaces[pos.y][pos.x - 2] == 0);
-
-            if (canMoveLeft && (isSpace || s.tPhase == 1)) {
-                if(pos.x == 1){
-                    if(pos.y == s.Ymax){
-                        s.tPhase = 1;
-                        s.state = DOWN;
-                        // TODO check if we can MOVE LEFT
-                        return L;
-                    }else {
-                        s.tPhase = 1;
-                        s.state = RIGHT;
-                        // check if we can MOVE UP
-                        return moveUp(s, pos, reset);// U;
-                    }
-                } else {
-                    if(isSpace) {
-                        if(s.tPhase == 1 && (s.Ymax - pos.y)%2 == 1){
-                            return moveUp(s, pos, reset);
-                        }else {
-                            return L;
-                        }
-                    }else{
-                        return moveUp(s, pos, reset);
-                    }
-                }
-            } else {
-                s.state = UP;
-                if (reset) {
-                    s.patched = false;
-                    s.Ymin = 0;
-                    s.Xmin = 0;
-                }
-                return moveUp(s, pos, reset);
-            }
-        }
 
         /**
          * This method is called when a game your Battlesnake was in ends.
@@ -553,10 +550,8 @@ public class Snake {
          */
         public Map<String, String> end(JsonNode endRequest) {
             LOG.info("END");
-            String session = endRequest.get("game").get("id").asText();
-            sessions.remove(session);
+            sessions.remove(endRequest.get("game").get("id").asText());
             return EMPTY;
         }
     }
-
 }
