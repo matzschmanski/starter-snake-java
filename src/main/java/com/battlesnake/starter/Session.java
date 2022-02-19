@@ -174,6 +174,7 @@ public class Session {
         LOG.info(method + " " + tPhase + " [" + c + "]");
         for (int y = Ymax; y >= 0; y--) {
             StringBuffer b = new StringBuffer();
+
             for (int x = 0; x < X; x++) {
                 if (pos.x == x && pos.y == y) {
                     b.append("X");
@@ -188,9 +189,9 @@ public class Session {
                         }
                     }
                 }
-                LOG.info(b.toString());
             }
-            LOG.info("-------------------------------");
+            LOG.info(b.toString());
         }
+        LOG.info("-------------------------------");
     }
 }
