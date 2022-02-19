@@ -68,11 +68,12 @@ public class Snake {
         int Xmin, Ymin, Xmax, Ymax;
 
         private String moveUp(boolean reset) {
+            LOG.info("U");
             if (pos.y < Ymax &&
-                    myPlaces[pos.y + 1][pos.x] == 0 &&
-                    enemyPlaces[pos.y + 1][pos.x] < len ||
-                    (enemyPlaces[pos.y + 1][pos.x] == 0 &&
-                    (enemyPlaces.length < pos.y + 3 || enemyPlaces[pos.y + 2][pos.x] == 0))) {
+                    myPlaces[pos.y + 1][pos.x] == 0
+                    && enemyPlaces[pos.y + 1][pos.x] < len
+                    && (enemyPlaces.length < pos.y + 3 || enemyPlaces[pos.y + 2][pos.x] < len)
+            ) {
                 return U;
             }else{
                 state = RIGHT;
@@ -86,11 +87,12 @@ public class Snake {
         }
 
         private String moveRight(boolean reset) {
+            LOG.info("R");
             if (pos.x < Xmax &&
-                    myPlaces[pos.y][pos.x + 1] == 0 &&
-                    enemyPlaces[pos.y][pos.x + 1] < len ||
-                    (enemyPlaces[pos.y][pos.x + 1] == 0 &&
-                    (enemyPlaces[pos.y].length < pos.x + 3 || enemyPlaces[pos.y][pos.x + 2] == 0))) {
+                    myPlaces[pos.y][pos.x + 1] == 0
+                    && enemyPlaces[pos.y][pos.x + 1] < len
+                    && (enemyPlaces[pos.y].length < pos.x + 3 || enemyPlaces[pos.y][pos.x + 2] < len)
+            ) {
                 return R;
             } else {
                 if(pos.x == Xmax && tPhase == 1){
@@ -110,35 +112,40 @@ public class Snake {
         }
 
         private String moveDown(boolean reset) {
+            LOG.info("D");
             if (pos.y > Ymin &&
-                    myPlaces[pos.y - 1][pos.x] == 0 &&
-                    enemyPlaces[pos.y - 1][pos.x] < len  ||
-                    (enemyPlaces[pos.y - 1][pos.x] == 0 &&
-                    (pos.y < 2 || enemyPlaces[pos.y - 2][pos.x] == 0))) {
-                if(tPhase == 1 && pos.y == 1){
-                    state = RIGHT;
-                    // check if we can MOVE RIGHT?!
-                    return moveRight(reset); //R;
-                }else {
-                    return D;
-                }
+                    myPlaces[pos.y - 1][pos.x] == 0
+                    && enemyPlaces[pos.y - 1][pos.x] < len
+                    && (pos.y < 2 || enemyPlaces[pos.y - 2][pos.x] < len)
+            ) {
+                return D;
             } else {
-                state = LEFT;
-                if(reset) {
-                    patched = false;
-                    Ymin = 0;
-                    Xmin = 0;
+                if(tPhase == 1){
+                    state = RIGHT;
+                    if(reset) {
+                        patched = false;
+                        Ymin = 0;
+                        Xmin = 0;
+                    }
+                    return moveRight(reset);
+                }else {
+                    state = LEFT;
+                    if (reset) {
+                        patched = false;
+                        Ymin = 0;
+                        Xmin = 0;
+                    }
+                    return moveLeft(reset);
                 }
-                return moveLeft(reset);
             }
         }
 
         private String moveLeft(boolean reset) {
+            LOG.info("L minX:" +Xmin);
             boolean canMoveLeft = pos.x > Xmin;
-            boolean isSpace = myPlaces[pos.y][pos.x - 1] == 0 &&
-                    enemyPlaces[pos.y][pos.x - 1] < len ||
-                    (enemyPlaces[pos.y][pos.x - 1] == 0 &&
-                    (pos.x < 2 || enemyPlaces[pos.y][pos.x - 2] == 0));
+            boolean isSpace = myPlaces[pos.y][pos.x - 1] == 0
+                    && enemyPlaces[pos.y][pos.x - 1] < len
+                    && (pos.x < 2 || enemyPlaces[pos.y][pos.x - 2] < len);
 
             if (canMoveLeft && (isSpace || tPhase == 1)) {
                 if(pos.x == 1){
