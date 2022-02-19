@@ -182,8 +182,12 @@ public class Session {
                     if (myBody[y][x] == 1) {
                         b.append('x');
                     } else {
-                        if (enemyBodies[y][x] == 1) {
-                            b.append('-');
+                        if (enemyBodies[y][x] > 0) {
+                            if (enemyBodies[y][x] == 1) {
+                                b.append('-');
+                            }else{
+                                b.append('Z');
+                            }
                         } else {
                             b.append(' ');
                         }
