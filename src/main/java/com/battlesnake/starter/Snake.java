@@ -435,8 +435,8 @@ public class Snake {
             } else {
                 if(pos.x == Xmax && tPhase == 1){
                     state = LEFT;
-                    // TODO check if we can MOVE UP?!
-                    return U;
+                    // check if we can MOVE UP?!
+                    return moveUp(pos, reset);//U;
                 } else {
                     state = DOWN;
                     if(reset) {
@@ -453,8 +453,8 @@ public class Snake {
             if (pos.y > Ymin && usedPlaces[pos.y - 1][pos.x] == 0) {
                 if(tPhase == 1 && pos.y == 1){
                     state = RIGHT;
-                    // TODO check if we can MOVE RIGHT?!
-                    return R;
+                    // check if we can MOVE RIGHT?!
+                    return moveRight(pos, reset); //R;
                 }else {
                     return D;
                 }
@@ -483,8 +483,8 @@ public class Snake {
                     }else {
                         tPhase = 1;
                         state = RIGHT;
-                        // TODO check if we can MOVE UP
-                        return U;
+                        // check if we can MOVE UP
+                        return moveUp(pos, reset);// U;
                     }
                 } else {
                     if(isSpace) {
