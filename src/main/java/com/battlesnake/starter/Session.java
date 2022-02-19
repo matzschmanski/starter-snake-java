@@ -43,12 +43,16 @@ public class Session {
                 Ymax = Y - 1;
                 Xmax = X - 1;
             }
-            return moveRight(c++, reset);
+            return moveRight(++c, reset);
         }
     }
 
     public String moveRight(int c, boolean reset) {
-        LOG.info("R");
+        LOG.info("R " + c);
+        if(c > 4){
+            LOG.error("WE ARE DOOMED");
+            return Snake.L;
+        }
 
         if (pos.x < Xmax &&
             myBody[pos.y][pos.x + 1] == 0
@@ -60,7 +64,7 @@ public class Session {
             if(pos.x == Xmax && tPhase == 1){
                 state = Snake.LEFT;
                 // check if we can MOVE UP?!
-                return moveUp(c++, reset);//U;
+                return moveUp(++c, reset);//U;
             } else {
                 state = Snake.DOWN;
                 if(reset) {
@@ -68,13 +72,18 @@ public class Session {
                     Ymax = Y - 1;
                     Xmax = X - 1;
                 }
-                return moveDown(c++, reset);
+                return moveDown(++c, reset);
             }
         }
     }
 
     public String moveDown(int c, boolean reset) {
-        LOG.info("D");
+        LOG.info("D " + c);
+        if(c > 4){
+            LOG.error("WE ARE DOOMED");
+            return Snake.U;
+        }
+
         if (pos.y > Ymin &&
             myBody[pos.y - 1][pos.x] == 0
             && enemyBodies[pos.y - 1][pos.x] == 0
@@ -89,7 +98,7 @@ public class Session {
                     Ymin = 0;
                     Xmin = 0;
                 }
-                return moveRight(c++, reset);
+                return moveRight(++c, reset);
             }else {
                 state = Snake.LEFT;
                 if (reset) {
@@ -97,13 +106,18 @@ public class Session {
                     Ymin = 0;
                     Xmin = 0;
                 }
-                return moveLeft(c++, reset);
+                return moveLeft(++c, reset);
             }
         }
     }
 
     public String moveLeft(int c, boolean reset) {
-        LOG.info("L");
+        LOG.info("L " + c);
+        if(c > 4){
+            LOG.error("WE ARE DOOMED");
+            return Snake.R;
+        }
+
         boolean canMoveLeft = pos.x > Xmin;
         boolean isSpace = myBody[pos.y][pos.x - 1] == 0
                 && enemyBodies[pos.y][pos.x - 1] == 0
@@ -121,17 +135,17 @@ public class Session {
                     tPhase = 1;
                     state = Snake.RIGHT;
                     // check if we can MOVE UP
-                    return moveUp(c++, reset);// U;
+                    return moveUp(++c, reset);// U;
                 }
             } else {
                 if(isSpace) {
                     if(tPhase == 1 && (Ymax - pos.y)%2 == 1){
-                        return moveUp(c++, reset);
+                        return moveUp(++c, reset);
                     }else {
                         return Snake.L;
                     }
                 }else{
-                    return moveUp(c++, reset);
+                    return moveUp(++c, reset);
                 }
             }
         } else {
@@ -141,7 +155,7 @@ public class Session {
                 Ymin = 0;
                 Xmin = 0;
             }
-            return moveUp(c++, reset);
+            return moveUp(++c, reset);
         }
     }
 }
