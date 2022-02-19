@@ -82,7 +82,6 @@ public class Snake {
             try {
                 JsonNode parsedRequest = JSON_MAPPER.readTree(req.body());
                 String uri = req.uri();
-                //LOG.info("{} called with: {}", uri, req.body());
                 Map<String, String> snakeResponse;
                 if (uri.equals("/")) {
                     snakeResponse = index();
@@ -91,6 +90,7 @@ public class Snake {
                 } else if (uri.equals("/move")) {
                     snakeResponse = move(parsedRequest);
                 } else if (uri.equals("/end")) {
+                    LOG.info("{} called with: {}", uri, req.body());
                     snakeResponse = end(parsedRequest);
                 } else {
                     throw new IllegalAccessError("Strange call made to the snake: " + uri);
