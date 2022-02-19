@@ -33,6 +33,7 @@ public class Session {
         if (pos.y < Ymax &&
                 myBody[pos.y + 1][pos.x] == 0
                 && enemyBodies[pos.y + 1][pos.x] == 0
+                && enemyHeads[pos.y + 1][pos.x] == 0
             //&& (enemyHeads.length < pos.y + 3 || enemyHeads[pos.y + 2][pos.x] < len)
         ) {
             return Snake.U;
@@ -57,6 +58,7 @@ public class Session {
         if (pos.x < Xmax &&
                 myBody[pos.y][pos.x + 1] == 0
                 && enemyBodies[pos.y][pos.x + 1] == 0
+                && enemyHeads[pos.y][pos.x + 1] == 0
             //&& (enemyHeads[pos.y].length < pos.x + 3 || enemyHeads[pos.y][pos.x + 2] < len)
         ) {
             return Snake.R;
@@ -87,6 +89,7 @@ public class Session {
         if (pos.y > Ymin &&
                 myBody[pos.y - 1][pos.x] == 0
                 && enemyBodies[pos.y - 1][pos.x] == 0
+                && enemyHeads[pos.y - 1][pos.x] == 0
             //&& (pos.y < 2 || enemyHeads[pos.y - 2][pos.x] < len)
         ) {
             if (tPhase == 2 && pos.y == 1) {
@@ -127,6 +130,7 @@ public class Session {
         boolean canMoveLeft = pos.x > Xmin;
         boolean isSpace = myBody[pos.y][pos.x - 1] == 0
                 && enemyBodies[pos.y][pos.x - 1] == 0
+                && enemyHeads[pos.y][pos.x - 1] == 0
                 //&& (pos.x < 2 || enemyHeads[pos.y][pos.x - 2] < len)
                 ;
 
