@@ -179,7 +179,7 @@ public class Session {
                     b.append("X");
                 } else {
                     if (myBody[y][x] == 1) {
-                        b.append(x);
+                        b.append('x');
                     } else {
                         if (enemyBodies[y][x] == 1) {
                             b.append('-');
