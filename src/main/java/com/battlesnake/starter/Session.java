@@ -198,6 +198,7 @@ public class Session {
                     }
                 }
             }
+            b.append('|');
             LOG.info(b.toString());
         }
         LOG.info("-------------------------------");
