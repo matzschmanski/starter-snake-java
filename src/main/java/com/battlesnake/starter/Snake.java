@@ -116,8 +116,9 @@ public class Snake {
             response.put("apiversion", "1");
             response.put("author", "marq24");
             response.put("color", "#33FF33");
-            response.put("head", "default"); // TODO: Personalize
-            response.put("tail", "default"); // TODO: Personalize
+            // https://play.battlesnake.com/references/customizations/
+            response.put("head", "sand-worm"); // TODO: Personalize
+            response.put("tail", "block-bum"); // TODO: Personalize
             return response;
         }
 
@@ -469,7 +470,10 @@ public class Snake {
         }
 
         private String moveLeft(P pos, boolean reset) {
-            if (pos.x > Xmin && (tPhase==1 || usedPlaces[pos.y][pos.x - 1] == 0)) {
+            boolean canMoveLeft = pos.x > Xmin;
+            boolean isSpace = usedPlaces[pos.y][pos.x - 1] == 0;
+
+            if (canMoveLeft && isSpace) {
                 if(pos.x == 1){
                     if(pos.y == Ymax){
                         tPhase = 1;
@@ -479,7 +483,7 @@ public class Snake {
                     }else {
                         tPhase = 1;
                         state = RIGHT;
-                        // TODO cehck if we can MOVE UP
+                        // TODO check if we can MOVE UP
                         return U;
                     }
                 } else {
@@ -487,7 +491,7 @@ public class Snake {
                 }
             } else {
                 state = UP;
-                if(reset) {
+                if (reset) {
                     patched = false;
                     Ymin = 0;
                     Xmin = 0;
