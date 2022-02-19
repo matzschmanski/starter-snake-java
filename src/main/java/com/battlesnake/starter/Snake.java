@@ -116,6 +116,7 @@ public class Snake {
             response.put("apiversion", "1");
             response.put("author", "marq24");
             response.put("color", "#33FF33");
+            //response.put("color", "#FF1111");
             // https://play.battlesnake.com/references/customizations/
             response.put("head", "sand-worm"); // TODO: Personalize
             response.put("tail", "block-bum"); // TODO: Personalize
@@ -428,7 +429,10 @@ public class Snake {
         }*/
 
         private String moveUp(P pos, boolean reset) {
-            if (pos.y < Ymax && myPlaces[pos.y + 1][pos.x] == 0 &&  usedPlaces[pos.y + 1][pos.x] == 0 && (usedPlaces.length < pos.y + 3 || usedPlaces[pos.y + 2][pos.x] == 0)) {
+            if (pos.y < Ymax &&
+                    myPlaces[pos.y + 1][pos.x] == 0 &&
+                    usedPlaces[pos.y + 1][pos.x] == 0 &&
+                    (usedPlaces.length < pos.y + 2 || usedPlaces[pos.y + 2][pos.x] == 0)) {
                 return U;
             }else{
                 state = RIGHT;
@@ -442,7 +446,10 @@ public class Snake {
         }
 
         private String moveRight(P pos, boolean reset) {
-            if (pos.x < Xmax && myPlaces[pos.y][pos.x + 1] == 0 && usedPlaces[pos.y][pos.x + 1] == 0 && (usedPlaces[pos.y].length < pos.x + 3 || usedPlaces[pos.y][pos.x + 2] == 0)) {
+            if (pos.x < Xmax &&
+                    myPlaces[pos.y][pos.x + 1] == 0 &&
+                    usedPlaces[pos.y][pos.x + 1] == 0 &&
+                    (usedPlaces[pos.y].length < pos.x + 2 || usedPlaces[pos.y][pos.x + 2] == 0)) {
                 return R;
             } else {
                 if(pos.x == Xmax && tPhase == 1){
@@ -462,7 +469,10 @@ public class Snake {
         }
 
         private String moveDown(P pos, boolean reset) {
-            if (pos.y > Ymin && myPlaces[pos.y - 1][pos.x] == 0 && usedPlaces[pos.y - 1][pos.x] == 0 && (pos.y < 2 || usedPlaces[pos.y - 2][pos.x] == 0)) {
+            if (pos.y > Ymin &&
+                    myPlaces[pos.y - 1][pos.x] == 0 &&
+                    usedPlaces[pos.y - 1][pos.x] == 0 &&
+                    (pos.y < 2 || usedPlaces[pos.y - 2][pos.x] == 0)) {
                 if(tPhase == 1 && pos.y == 1){
                     state = RIGHT;
                     // check if we can MOVE RIGHT?!
@@ -483,7 +493,9 @@ public class Snake {
 
         private String moveLeft(P pos, boolean reset) {
             boolean canMoveLeft = pos.x > Xmin;
-            boolean isSpace = myPlaces[pos.y][pos.x - 1] == 0 && usedPlaces[pos.y][pos.x - 1] == 0 && (pos.x < 2 || usedPlaces[pos.y][pos.x - 2] == 0);
+            boolean isSpace = myPlaces[pos.y][pos.x - 1] == 0 &&
+                    usedPlaces[pos.y][pos.x - 1] == 0 &&
+                    (pos.x < 2 || usedPlaces[pos.y][pos.x - 2] == 0);
 
             if (canMoveLeft && (isSpace || tPhase == 1)) {
                 if(pos.x == 1){
