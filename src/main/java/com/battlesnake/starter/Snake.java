@@ -170,7 +170,7 @@ public class Snake {
             }
 
             // clearing the used fields...
-            s.enemeyBodies = new int[s.Y][s.X];
+            s.enemyBodies = new int[s.Y][s.X];
             s.enemyHeads = new int[s.Y][s.X];
             s.myBody = new int[s.Y][s.X];
             s.foodPlaces = new ArrayList<>();
@@ -193,7 +193,7 @@ public class Snake {
                     // later!!
                     for (int j = 1; j < blen; j++) {
                         Point p = new Point(body.get(j));
-                        s.enemeyBodies[p.y][p.x] = 1;
+                        s.enemyBodies[p.y][p.x] = 1;
                         // playing "avoid other Challenge" we need "myPlaces" in order to
                         // have only one pixel distance...
                         //myPlaces[p.y][p.x] = 1;
@@ -201,25 +201,43 @@ public class Snake {
 
                     JsonNode head = aSnake.get("head");
                     Point h = new Point(head);
-                    s.enemyHeads[h.y][h.x] = len;
-                    try {
-                        if(s.enemeyBodies[h.y - 1][h.x] == 0)
+                    //s.enemyHeads[h.y][h.x] = len;
+                    /*try {
+                        if(s.enemyBodies[h.y - 1][h.x] == 0)
                             s.enemyHeads[h.y - 1][h.x] = len;
                     } catch (IndexOutOfBoundsException e) {
                     }
                     try {
-                        if(s.enemeyBodies[h.y + 1][h.x] == 0)
+                        if(s.enemyBodies[h.y + 1][h.x] == 0)
                             s.enemyHeads[h.y + 1][h.x] = len;
                     } catch (IndexOutOfBoundsException e) {
                     }
                     try {
-                        if(s.enemeyBodies[h.y][h.x - 1] == 0)
+                        if(s.enemyBodies[h.y][h.x - 1] == 0)
                             s.enemyHeads[h.y][h.x - 1] = len;
                     } catch (IndexOutOfBoundsException e) {
                     }
                     try {
-                        if(s.enemeyBodies[h.y][h.x + 1] == 0)
+                        if(s.enemyBodies[h.y][h.x + 1] == 0)
                             s.enemyHeads[h.y][h.x + 1] = len;
+                    } catch (IndexOutOfBoundsException e) {
+                    }*/
+
+                    s.enemyBodies[h.y][h.x] = 1;
+                    try {
+                        s.enemyBodies[h.y - 1][h.x] = 1;
+                    } catch (IndexOutOfBoundsException e) {
+                    }
+                    try {
+                        s.enemyBodies[h.y + 1][h.x] = 1;
+                    } catch (IndexOutOfBoundsException e) {
+                    }
+                    try {
+                        s.enemyBodies[h.y][h.x - 1] = 1;
+                    } catch (IndexOutOfBoundsException e) {
+                    }
+                    try {
+                        s.enemyBodies[h.y][h.x + 1] = 1;
                     } catch (IndexOutOfBoundsException e) {
                     }
                 }
