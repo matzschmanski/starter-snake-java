@@ -162,10 +162,10 @@ public class Snake {
             if(s.X == -1) {
                 s.Y = board.get("height").asInt();
                 s.X = board.get("width").asInt();
-                s.Ymin = 0;
-                s.Xmin = 0;
-                s.Ymax = s.Y-1;
-                s.Xmax = s.X-1;
+                s.yMin = 0;
+                s.xMin = 0;
+                s.yMax = s.Y-1;
+                s.xMax = s.X-1;
             }
 
             // clearing the used fields...

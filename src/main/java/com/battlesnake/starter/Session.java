@@ -24,7 +24,7 @@ public class Session {
     ArrayList<Point> foodPlaces = null;
     boolean patched = false;
     int stateToRestore = -1;
-    int Xmin, Ymin, Xmax, Ymax;
+    int xMin, yMin, xMax, yMax;
 
     private boolean checkDoomed() {
         boolean ret = false;
@@ -56,10 +56,10 @@ public class Session {
 
     public String checkSpecialMoves(){
         // if we are in the UPPERROW and the x=0 is free, let's move to the LEFT!
-        if(tPhase > 0 && pos.y == Ymax && pos.x < Xmax/3){
+        if(tPhase > 0 && pos.y == yMax && pos.x < xMax /3){
             if(pos.x > 0) {
-                LOG.info("SPECIAL MOVE -> RIGHT CALLED");
-                return moveRight(false);
+                LOG.info("SPECIAL MOVE -> LEFT CALLED");
+                return moveLeft(false);
             }else{
                 LOG.info("SPECIAL MOVE -> DOWN CALLED");
                 return moveDown(false);
@@ -74,7 +74,7 @@ public class Session {
             return Snake.D;
         }
         logState("UP");
-        if (pos.y < Ymax &&
+        if (pos.y < yMax &&
                 myBody[pos.y + 1][pos.x] == 0
                 && enemyBodies[pos.y + 1][pos.x] == 0
                 && (enterDangerZone || enemyNextMovePossibleLocations[pos.y + 1][pos.x] < len)
@@ -87,8 +87,8 @@ public class Session {
             state = Snake.RIGHT;
             if (reset) {
                 patched = false;
-                Ymax = Y - 1;
-                Xmax = X - 1;
+                yMax = Y - 1;
+                xMax = X - 1;
             }
             return moveRight(reset);
         }
@@ -100,7 +100,7 @@ public class Session {
             return Snake.L;
         }
         logState("RIGHT");
-        if (pos.x < Xmax &&
+        if (pos.x < xMax &&
                 myBody[pos.y][pos.x + 1] == 0
                 && enemyBodies[pos.y][pos.x + 1] == 0
                 && (enterDangerZone || enemyNextMovePossibleLocations[pos.y][pos.x + 1] < len)
@@ -108,8 +108,8 @@ public class Session {
         ) {
             return Snake.R;
         } else {
-            if (pos.x == Xmax && tPhase > 0) {
-                if(pos.y == Ymax){
+            if (pos.x == xMax && tPhase > 0) {
+                if(pos.y == yMax){
                     // we should NEVER BE HERE!!
                     // we are in the UPPER/RIGHT Corner while in TraverseMode! (something failed before)
                     LOG.info("WE SHOULD NEVER BE HERE in T-PHASE >0");
@@ -125,8 +125,8 @@ public class Session {
                 state = Snake.DOWN;
                 if (reset) {
                     patched = false;
-                    Ymax = Y - 1;
-                    Xmax = X - 1;
+                    yMax = Y - 1;
+                    xMax = X - 1;
                 }
                 return moveDown(reset);
             }
@@ -140,7 +140,7 @@ public class Session {
         }
         logState("DOWN");
 
-        if (pos.y > Ymin &&
+        if (pos.y > yMin &&
                 myBody[pos.y - 1][pos.x] == 0
                 && enemyBodies[pos.y - 1][pos.x] == 0
                 && (enterDangerZone || enemyNextMovePossibleLocations[pos.y - 1][pos.x] < len)
@@ -159,8 +159,8 @@ public class Session {
                 state = Snake.RIGHT;
                 if (reset) {
                     patched = false;
-                    Ymin = 0;
-                    Xmin = 0;
+                    yMin = 0;
+                    xMin = 0;
                 }
                 return moveRight(reset);
             } else {
@@ -170,8 +170,8 @@ public class Session {
                 state = Snake.LEFT;
                 if (reset) {
                     patched = false;
-                    Ymin = 0;
-                    Xmin = 0;
+                    yMin = 0;
+                    xMin = 0;
                 }
                 return moveLeft(reset);
             }
@@ -185,7 +185,7 @@ public class Session {
         }
         logState("LEFT");
 
-        boolean canMoveLeft = pos.x > Xmin;
+        boolean canMoveLeft = pos.x > xMin;
         boolean isSpace = myBody[pos.y][pos.x - 1] == 0
                 && enemyBodies[pos.y][pos.x - 1] == 0
                 && (enterDangerZone || enemyNextMovePossibleLocations[pos.y][pos.x - 1] < len)
@@ -194,7 +194,7 @@ public class Session {
 
         if (canMoveLeft && (isSpace || tPhase > 0)) {
             if (pos.x == 1) {
-                if (pos.y == Ymax) {
+                if (pos.y == yMax) {
                     if (tPhase != 2) {
                         tPhase = 1;
                     }
@@ -211,7 +211,7 @@ public class Session {
                 }
             } else {
                 if (isSpace) {
-                    if (tPhase > 0 && (Ymax - pos.y) % 2 == 1) {
+                    if (tPhase > 0 && (yMax - pos.y) % 2 == 1) {
                         tPhase = 2;
                         return moveUp(reset);
                     } else {
@@ -225,8 +225,8 @@ public class Session {
             state = Snake.UP;
             if (reset) {
                 patched = false;
-                Ymin = 0;
-                Xmin = 0;
+                yMin = 0;
+                xMin = 0;
             }
             return moveUp(reset);
         }
@@ -236,7 +236,7 @@ public class Session {
         //new Thread(() -> {
             LOG.info(method + " " + tPhase + " "+ enterDangerZone +" {" + cmdChain.toString() + "}");
             LOG.info("____________________");
-            for (int y = Ymax; y >= 0; y--) {
+            for (int y = yMax; y >= 0; y--) {
                 StringBuffer b = new StringBuffer();
                 b.append('|');
                 for (int x = 0; x < X; x++) {
