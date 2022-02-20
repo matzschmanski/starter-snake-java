@@ -17,7 +17,7 @@ public class Session {
     int X = -1;
     int Y = -1;
     int[][] enemyBodies = null;
-    int[][] enemyHeads = null;
+    int[][] enemyNextMovePossibleLocations = null;
     int[][] myBody = null;
     ArrayList<Point> foodPlaces = null;
     boolean patched = false;
@@ -33,7 +33,7 @@ public class Session {
         if (pos.y < Ymax &&
                 myBody[pos.y + 1][pos.x] == 0
                 && enemyBodies[pos.y + 1][pos.x] == 0
-                && enemyHeads[pos.y + 1][pos.x] < len
+                && enemyNextMovePossibleLocations[pos.y + 1][pos.x] < len
             //&& (enemyHeads.length < pos.y + 3 || enemyHeads[pos.y + 2][pos.x] < len)
         ) {
             return Snake.U;
@@ -58,7 +58,7 @@ public class Session {
         if (pos.x < Xmax &&
                 myBody[pos.y][pos.x + 1] == 0
                 && enemyBodies[pos.y][pos.x + 1] == 0
-                && enemyHeads[pos.y][pos.x + 1] < len
+                && enemyNextMovePossibleLocations[pos.y][pos.x + 1] < len
             //&& (enemyHeads[pos.y].length < pos.x + 3 || enemyHeads[pos.y][pos.x + 2] < len)
         ) {
             return Snake.R;
@@ -89,7 +89,7 @@ public class Session {
         if (pos.y > Ymin &&
                 myBody[pos.y - 1][pos.x] == 0
                 && enemyBodies[pos.y - 1][pos.x] == 0
-                && enemyHeads[pos.y - 1][pos.x] < len
+                && enemyNextMovePossibleLocations[pos.y - 1][pos.x] < len
             //&& (pos.y < 2 || enemyHeads[pos.y - 2][pos.x] < len)
         ) {
             if (tPhase == 2 && pos.y == 1) {
@@ -130,7 +130,7 @@ public class Session {
         boolean canMoveLeft = pos.x > Xmin;
         boolean isSpace = myBody[pos.y][pos.x - 1] == 0
                 && enemyBodies[pos.y][pos.x - 1] == 0
-                && enemyHeads[pos.y][pos.x - 1] < len
+                && enemyNextMovePossibleLocations[pos.y][pos.x - 1] < len
                 //&& (pos.x < 2 || enemyHeads[pos.y][pos.x - 2] < len)
                 ;
 
@@ -174,37 +174,40 @@ public class Session {
         }
     }
 
-    private void logState(String method, int c) {
-        LOG.info(method + " " + tPhase + " [" + c + "]");
-        for (int y = Ymax; y >= 0; y--) {
-            StringBuffer b = new StringBuffer();
-
-            for (int x = 0; x < X; x++) {
-                if (pos.x == x && pos.y == y) {
-                    b.append("X");
-                } else {
-                    if (myBody[y][x] == 1) {
-                        b.append('x');
+    private void logState(final String method, final int c) {
+        //new Thread(() -> {
+            LOG.info(method + " " + tPhase + " [" + c + "]");
+            LOG.info("____________________");
+            for (int y = Ymax; y >= 0; y--) {
+                StringBuffer b = new StringBuffer();
+                b.append('|');
+                for (int x = 0; x < X; x++) {
+                    if (pos.x == x && pos.y == y) {
+                        b.append("X");
                     } else {
-                        if (enemyBodies[y][x] > 0) {
-                            if (enemyBodies[y][x] == 1) {
-                                b.append('-');
-                            }else{
-                                b.append('+');
-                            }
+                        if (myBody[y][x] == 1) {
+                            b.append('x');
                         } else {
-                            if(enemyHeads[y][x] > 0){
-                                b.append('o');
-                            }else{
-                                b.append(' ');
+                            if (enemyBodies[y][x] > 0) {
+                                if (enemyBodies[y][x] == 1) {
+                                    b.append('-');
+                                }else{
+                                    b.append('+');
+                                }
+                            } else {
+                                if(enemyNextMovePossibleLocations[y][x] > 0){
+                                    b.append('o');
+                                }else{
+                                    b.append(' ');
+                                }
                             }
                         }
                     }
                 }
+                b.append('|');
+                LOG.info(b.toString());
             }
-            b.append('|');
-            LOG.info(b.toString());
-        }
-        LOG.info("-------------------------------");
+            LOG.info("--------------------");
+        //}).start();
     }
 }

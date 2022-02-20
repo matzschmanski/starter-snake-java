@@ -39,7 +39,6 @@ public class Snake {
     static final String R = "right";
 
 
-
     /**
      * Main entry point.
      *
@@ -171,7 +170,7 @@ public class Snake {
 
             // clearing the used fields...
             s.enemyBodies = new int[s.Y][s.X];
-            s.enemyHeads = new int[s.Y][s.X];
+            s.enemyNextMovePossibleLocations = new int[s.Y][s.X];
             s.myBody = new int[s.Y][s.X];
             s.foodPlaces = new ArrayList<>();
 
@@ -204,43 +203,26 @@ public class Snake {
                     //s.enemyHeads[h.y][h.x] = len;
                     try {
                         if(s.enemyBodies[h.y - 1][h.x] == 0) {
-                            s.enemyHeads[h.y - 1][h.x] = len;
+                            s.enemyNextMovePossibleLocations[h.y - 1][h.x] = len;
                         }
                     } catch (IndexOutOfBoundsException e) {}
                     try {
                         if(s.enemyBodies[h.y + 1][h.x] == 0) {
-                            s.enemyHeads[h.y + 1][h.x] = len;
+                            s.enemyNextMovePossibleLocations[h.y + 1][h.x] = len;
                         }
                     } catch (IndexOutOfBoundsException e) {}
                     try {
                         if(s.enemyBodies[h.y][h.x - 1] == 0) {
-                            s.enemyHeads[h.y][h.x - 1] = len;
+                            s.enemyNextMovePossibleLocations[h.y][h.x - 1] = len;
                         }
                     } catch (IndexOutOfBoundsException e) {}
                     try {
                         if(s.enemyBodies[h.y][h.x + 1] == 0) {
-                            s.enemyHeads[h.y][h.x + 1] = len;
+                            s.enemyNextMovePossibleLocations[h.y][h.x + 1] = len;
                         }
                     } catch (IndexOutOfBoundsException e) {}
 
-
                     s.enemyBodies[h.y][h.x] = len;
-                    /*try {
-                        s.enemyBodies[h.y - 1][h.x] = 1;
-                    } catch (IndexOutOfBoundsException e) {
-                    }
-                    try {
-                        s.enemyBodies[h.y + 1][h.x] = 1;
-                    } catch (IndexOutOfBoundsException e) {
-                    }
-                    try {
-                        s.enemyBodies[h.y][h.x - 1] = 1;
-                    } catch (IndexOutOfBoundsException e) {
-                    }
-                    try {
-                        s.enemyBodies[h.y][h.x + 1] = 1;
-                    } catch (IndexOutOfBoundsException e) {
-                    }*/
                 }
             }
 
