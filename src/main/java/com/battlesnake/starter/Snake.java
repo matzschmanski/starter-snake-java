@@ -156,7 +156,8 @@ public class Snake {
          */
 
         public Map<String, String> move(JsonNode moveRequest) {
-            Session s = sessions.get(moveRequest.get("game").get("id").asText());
+            String sessId = moveRequest.get("game").get("id").asText();
+            Session s = sessions.get(sessId);
             if(s != null) {
                 JsonNode board = moveRequest.get("board");
                 if (s.X == -1) {
@@ -405,6 +406,7 @@ public class Snake {
                 return response;
             }else{
                 // session is null ?!
+                LOG.error("SESSION was not available?! -> "+sessId+" could not be found in: "+sessions);
                 Map<String, String> response = new HashMap<>();
                 response.put("move", R);
                 return response;
