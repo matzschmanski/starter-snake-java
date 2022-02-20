@@ -42,18 +42,6 @@ public class Session {
         return ret;
     }
 
-    private boolean checkCmdChain(int cmdToSearch, int pos){
-        int len = cmdChain.size();
-        if(len > pos - 1){
-            int cmdAtPos = cmdChain.get(len - pos);
-            LOG.info("Compare Type: "+cmdChain+" search: "+cmdToSearch+" found: "+cmdAtPos);
-            if(cmdAtPos == cmdToSearch){
-                return true;
-            }
-        }
-        return false;
-    }
-
     public String checkSpecialMoves(){
         // if we are in the UPPERROW and the x=0 is free, let's move to the LEFT!
         if(tPhase > 0 && pos.y == yMax && pos.x < xMax /3){
@@ -69,91 +57,112 @@ public class Session {
     }
 
     public String moveUp(boolean reset) {
-        cmdChain.add(Snake.UP);
-        if(checkDoomed()){
-            return Snake.D;
-        }
-        logState("UP");
-        if (pos.y < yMax &&
-                myBody[pos.y + 1][pos.x] == 0
-                && enemyBodies[pos.y + 1][pos.x] == 0
-                && (enterDangerZone || enemyNextMovePossibleLocations[pos.y + 1][pos.x] < len)
-            //&& (enemyHeads.length < pos.y + 3 || enemyHeads[pos.y + 2][pos.x] < len)
-        ) {
-            return Snake.U;
-        } else {
+        if(cmdChain.contains(Snake.UP)){
             if(pos.x < xMax/2) {
-                state = Snake.RIGHT;
-                if (reset) {
-                    patched = false;
-                    yMax = Y - 1;
-                    xMax = X - 1;
-                }
                 return moveRight(reset);
-            } else {
-                state = Snake.LEFT;
-                if (reset) {
-                    patched = false;
-                    yMax = Y - 1;
-                    xMax = X - 1;
-                }
+            }else{
                 return moveLeft(reset);
+            }
+        } else {
+            cmdChain.add(Snake.UP);
+            if (checkDoomed()) {
+                return Snake.D;
+            }
+            logState("UP");
+            if (pos.y < yMax &&
+                    myBody[pos.y + 1][pos.x] == 0
+                    && enemyBodies[pos.y + 1][pos.x] == 0
+                    && (enterDangerZone || enemyNextMovePossibleLocations[pos.y + 1][pos.x] < len)
+                //&& (enemyHeads.length < pos.y + 3 || enemyHeads[pos.y + 2][pos.x] < len)
+            ) {
+                return Snake.U;
+            } else {
+                // can't move...
+                if (pos.x < xMax / 2) {
+                    state = Snake.RIGHT;
+                    if (reset) {
+                        patched = false;
+                        yMax = Y - 1;
+                        xMax = X - 1;
+                    }
+                    return moveRight(reset);
+                } else {
+                    state = Snake.LEFT;
+                    if (reset) {
+                        patched = false;
+                        yMax = Y - 1;
+                        xMax = X - 1;
+                    }
+                    return moveLeft(reset);
+                }
             }
         }
     }
 
     public String moveRight(boolean reset) {
-        cmdChain.add(Snake.RIGHT);
-        if(checkDoomed()){
-            return Snake.L;
-        }
-        logState("RIGHT");
-        if (pos.x < xMax &&
-                myBody[pos.y][pos.x + 1] == 0
-                && enemyBodies[pos.y][pos.x + 1] == 0
-                && (enterDangerZone || enemyNextMovePossibleLocations[pos.y][pos.x + 1] < len)
-            //&& (enemyHeads[pos.y].length < pos.x + 3 || enemyHeads[pos.y][pos.x + 2] < len)
-        ) {
-            return Snake.R;
-        } else {
-            if (pos.x == xMax && tPhase > 0) {
-                if(pos.y == yMax){
-                    // we should NEVER BE HERE!!
-                    // we are in the UPPER/RIGHT Corner while in TraverseMode! (something failed before)
-                    LOG.info("WE SHOULD NEVER BE HERE in T-PHASE >0");
-                    tPhase = 0;
-                    state = Snake.DOWN;
-                    return moveDown(reset);
-                }else {
-                    state = Snake.LEFT;
-                    // check if we can MOVE UP?!
-                    return moveUp(reset);//U;
-                }
+        if(cmdChain.contains(Snake.RIGHT)){
+            if(pos.y < yMax/2) {
+                return moveUp(reset);
+            }else{
+                return moveDown(reset);
+            }
+        }else {
+            cmdChain.add(Snake.RIGHT);
+            if (checkDoomed()) {
+                return Snake.L;
+            }
+            logState("RIGHT");
+            if (pos.x < xMax &&
+                    myBody[pos.y][pos.x + 1] == 0
+                    && enemyBodies[pos.y][pos.x + 1] == 0
+                    && (enterDangerZone || enemyNextMovePossibleLocations[pos.y][pos.x + 1] < len)
+                //&& (enemyHeads[pos.y].length < pos.x + 3 || enemyHeads[pos.y][pos.x + 2] < len)
+            ) {
+                return Snake.R;
             } else {
-                // ok we can't move right since "something" is blocking us... the question is,
-                // if just moving down is smart here?!
-                if(pos.y < yMax/2) {
-                    state = Snake.UP;
-                    if (reset) {
-                        patched = false;
-                        yMax = Y - 1;
-                        xMax = X - 1;
+                if (pos.x == xMax && tPhase > 0) {
+                    if (pos.y == yMax) {
+                        // we should NEVER BE HERE!!
+                        // we are in the UPPER/RIGHT Corner while in TraverseMode! (something failed before)
+                        LOG.info("WE SHOULD NEVER BE HERE in T-PHASE >0");
+                        tPhase = 0;
+                        state = Snake.DOWN;
+                        return moveDown(reset);
+                    } else {
+                        state = Snake.LEFT;
+                        return moveUp(reset);//U;
                     }
-                    return moveUp(reset);
                 } else {
-                    state = Snake.DOWN;
-                    if (reset) {
-                        patched = false;
-                        yMax = Y - 1;
-                        xMax = X - 1;
+                    if (pos.y < yMax / 2) {
+                        state = Snake.UP;
+                        if (reset) {
+                            patched = false;
+                            yMax = Y - 1;
+                            xMax = X - 1;
+                        }
+                        return moveUp(reset);
+                    } else {
+                        state = Snake.DOWN;
+                        if (reset) {
+                            patched = false;
+                            yMax = Y - 1;
+                            xMax = X - 1;
+                        }
+                        return moveDown(reset);
                     }
-                    return moveDown(reset);
                 }
             }
         }
     }
 
     public String moveDown(boolean reset) {
+        if(cmdChain.contains(Snake.DOWN)){
+            if(pos.x < xMax/2) {
+                return moveRight(reset);
+            }else{
+                return moveLeft(reset);
+            }
+        }
         cmdChain.add(Snake.DOWN);
         if(checkDoomed()){
             return Snake.U;
@@ -174,8 +183,8 @@ public class Session {
                 return Snake.D;
             }
         } else {
-            boolean wasRightBefore = checkCmdChain(Snake.RIGHT, 2);
-            if (tPhase > 0 && !wasRightBefore) {
+            // can't move...
+            if (tPhase > 0) {
                 state = Snake.RIGHT;
                 if (reset) {
                     patched = false;
@@ -184,80 +193,96 @@ public class Session {
                 }
                 return moveRight(reset);
             } else {
-                if(wasRightBefore){
-                    tPhase = 0;
+                if (pos.x < xMax / 2) {
+                    state = Snake.RIGHT;
+                    if (reset) {
+                        patched = false;
+                        yMax = Y - 1;
+                        xMax = X - 1;
+                    }
+                    return moveRight(reset);
+                } else {
+                    state = Snake.LEFT;
+                    if (reset) {
+                        patched = false;
+                        yMax = Y - 1;
+                        xMax = X - 1;
+                    }
+                    return moveLeft(reset);
                 }
-                state = Snake.LEFT;
-                if (reset) {
-                    patched = false;
-                    yMin = 0;
-                    xMin = 0;
-                }
-                return moveLeft(reset);
             }
         }
     }
 
     public String moveLeft(boolean reset) {
-        cmdChain.add(Snake.LEFT);
-        if(checkDoomed()){
-            return Snake.R;
-        }
-        logState("LEFT");
-
-        boolean canMoveLeft = pos.x > xMin;
-        boolean isSpace = myBody[pos.y][pos.x - 1] == 0
-                && enemyBodies[pos.y][pos.x - 1] == 0
-                && (enterDangerZone || enemyNextMovePossibleLocations[pos.y][pos.x - 1] < len)
-                //&& (pos.x < 2 || enemyHeads[pos.y][pos.x - 2] < len)
-                ;
-
-        if (canMoveLeft && (isSpace || tPhase > 0)) {
-            if (pos.x == 1) {
-                if (pos.y == yMax) {
-                    if (tPhase != 2) {
-                        tPhase = 1;
-                    }
-                    state = Snake.DOWN;
-                    // TODO check if we can MOVE LEFT
-                    return Snake.L;
-                } else {
-                    if (tPhase != 2) {
-                        tPhase = 1;
-                    }
-                    state = Snake.RIGHT;
-                    // check if we can MOVE UP
-                    return moveUp(reset);// U;
-                }
-            } else {
-                if (isSpace) {
-                    if (tPhase > 0 && (yMax - pos.y) % 2 == 1) {
-                        tPhase = 2;
-                        return moveUp(reset);
-                    } else {
-                        return Snake.L;
-                    }
-                } else {
-                    return moveUp(reset);
-                }
-            }
-        } else {
+        if(cmdChain.contains(Snake.LEFT)){
             if(pos.y < yMax/2) {
-                state = Snake.UP;
-                if (reset) {
-                    patched = false;
-                    yMax = Y - 1;
-                    xMax = X - 1;
-                }
                 return moveUp(reset);
-            } else {
-                state = Snake.DOWN;
-                if (reset) {
-                    patched = false;
-                    yMax = Y - 1;
-                    xMax = X - 1;
-                }
+            }else{
                 return moveDown(reset);
+            }
+        }else {
+            cmdChain.add(Snake.LEFT);
+            if (checkDoomed()) {
+                return Snake.R;
+            }
+            logState("LEFT");
+
+            boolean canMoveLeft = pos.x > xMin;
+            boolean isSpace = myBody[pos.y][pos.x - 1] == 0
+                    && enemyBodies[pos.y][pos.x - 1] == 0
+                    && (enterDangerZone || enemyNextMovePossibleLocations[pos.y][pos.x - 1] < len)
+                    //&& (pos.x < 2 || enemyHeads[pos.y][pos.x - 2] < len)
+                    ;
+
+            if (canMoveLeft && (isSpace || tPhase > 0)) {
+                if (pos.x == 1) {
+                    if (pos.y == yMax) {
+                        if (tPhase != 2) {
+                            tPhase = 1;
+                        }
+                        state = Snake.DOWN;
+                        // TODO check if we can MOVE LEFT
+                        return Snake.L;
+                    } else {
+                        if (tPhase != 2) {
+                            tPhase = 1;
+                        }
+                        state = Snake.RIGHT;
+                        // check if we can MOVE UP
+                        return moveUp(reset);// U;
+                    }
+                } else {
+                    if (isSpace) {
+                        if (tPhase > 0 && (yMax - pos.y) % 2 == 1) {
+                            tPhase = 2;
+                            return moveUp(reset);
+                        } else {
+                            return Snake.L;
+                        }
+                    } else {
+                        return moveUp(reset);
+                    }
+                }
+            } else {
+                // can't move...
+                if (pos.y < yMax / 2) {
+                    state = Snake.UP;
+                    if (reset) {
+                        patched = false;
+                        yMax = Y - 1;
+                        xMax = X - 1;
+                    }
+                    return moveUp(reset);
+                } else {
+                    state = Snake.DOWN;
+                    if (reset) {
+                        patched = false;
+                        yMax = Y - 1;
+                        xMax = X - 1;
+                    }
+                    return moveDown(reset);
+                }
             }
         }
     }
