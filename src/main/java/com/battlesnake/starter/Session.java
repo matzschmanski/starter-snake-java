@@ -58,15 +58,7 @@ public class Session {
 
     public String moveUp(boolean reset) {
         if(cmdChain.contains(Snake.UP)){
-            if(pos.x < xMax/2 || cmdChain.contains(Snake.LEFT)) {
-                if(cmdChain.contains(Snake.LEFT)) {
-                    return moveRight(reset);
-                }else{
-                    return moveLeft(reset);
-                }
-            }else{
-                return moveLeft(reset);
-            }
+            return moveRight(reset);
         } else {
             cmdChain.add(Snake.UP);
             if (checkDoomed()) {
@@ -105,15 +97,7 @@ public class Session {
 
     public String moveRight(boolean reset) {
         if(cmdChain.contains(Snake.RIGHT)){
-            if(pos.y < yMax/2 || cmdChain.contains(Snake.DOWN)) {
-                if(cmdChain.contains(Snake.DOWN)) {
-                    return moveUp(reset);
-                }else{
-                    return moveDown(reset);
-                }
-            }else{
-                return moveDown(reset);
-            }
+            return moveDown(reset);
         }else {
             cmdChain.add(Snake.RIGHT);
             if (checkDoomed()) {
@@ -165,15 +149,7 @@ public class Session {
 
     public String moveDown(boolean reset) {
         if(cmdChain.contains(Snake.DOWN)){
-            if(pos.x < xMax/2 || cmdChain.contains(Snake.LEFT)) {
-                if(cmdChain.contains(Snake.LEFT)) {
-                    return moveRight(reset);
-                }else{
-                    return moveLeft(reset);
-                }
-            }else{
-                return moveLeft(reset);
-            }
+            return moveLeft(reset);
         }
         cmdChain.add(Snake.DOWN);
         if(checkDoomed()){
@@ -228,15 +204,7 @@ public class Session {
 
     public String moveLeft(boolean reset) {
         if(cmdChain.contains(Snake.LEFT)){
-            if(pos.y < yMax/2 || cmdChain.contains(Snake.DOWN)) {
-                if(cmdChain.contains(Snake.DOWN)) {
-                    return moveUp(reset);
-                }else{
-                    return moveDown(reset);
-                }
-            } else {
-                return moveDown(reset);
-            }
+            return moveUp(reset);
         }else {
             cmdChain.add(Snake.LEFT);
             if (checkDoomed()) {
