@@ -14,6 +14,8 @@ public class Session {
     int health;
     int state = 0;
     int tPhase = 0;
+    int moveCalcCount = 0;
+    boolean enterDangerZone = false;
     int X = -1;
     int Y = -1;
     int[][] enemyBodies = null;
@@ -24,16 +26,30 @@ public class Session {
     int stateToRestore = -1;
     int Xmin, Ymin, Xmax, Ymax;
 
-    public String moveUp(int c, boolean reset) {
-        logState("UP", c);
-        if (c > 4) {
-            LOG.error("WE ARE DOOMED");
+    private boolean checkDoomed() {
+        boolean ret = false;
+        moveCalcCount++;
+        if(moveCalcCount > 4){
+            if(!enterDangerZone){
+                enterDangerZone = true;
+                moveCalcCount = 0;
+            }else {
+                LOG.error("DOOMED!");
+                ret = true;
+            }
+        }
+        return ret;
+    }
+
+    public String moveUp(boolean reset) {
+        if(checkDoomed()){
             return Snake.D;
         }
+        logState("UP");
         if (pos.y < Ymax &&
                 myBody[pos.y + 1][pos.x] == 0
                 && enemyBodies[pos.y + 1][pos.x] == 0
-                && enemyNextMovePossibleLocations[pos.y + 1][pos.x] < len
+                && (enterDangerZone || enemyNextMovePossibleLocations[pos.y + 1][pos.x] < len)
             //&& (enemyHeads.length < pos.y + 3 || enemyHeads[pos.y + 2][pos.x] < len)
         ) {
             return Snake.U;
@@ -44,21 +60,19 @@ public class Session {
                 Ymax = Y - 1;
                 Xmax = X - 1;
             }
-            return moveRight(++c, reset);
+            return moveRight(reset);
         }
     }
 
-    public String moveRight(int c, boolean reset) {
-        logState("RIGHT", c);
-        if (c > 4) {
-            LOG.error("WE ARE DOOMED");
+    public String moveRight(boolean reset) {
+        if(checkDoomed()){
             return Snake.L;
         }
-
+        logState("RIGHT");
         if (pos.x < Xmax &&
                 myBody[pos.y][pos.x + 1] == 0
                 && enemyBodies[pos.y][pos.x + 1] == 0
-                && enemyNextMovePossibleLocations[pos.y][pos.x + 1] < len
+                && (enterDangerZone || enemyNextMovePossibleLocations[pos.y][pos.x + 1] < len)
             //&& (enemyHeads[pos.y].length < pos.x + 3 || enemyHeads[pos.y][pos.x + 2] < len)
         ) {
             return Snake.R;
@@ -66,7 +80,7 @@ public class Session {
             if (pos.x == Xmax && tPhase > 0) {
                 state = Snake.LEFT;
                 // check if we can MOVE UP?!
-                return moveUp(++c, reset);//U;
+                return moveUp(reset);//U;
             } else {
                 state = Snake.DOWN;
                 if (reset) {
@@ -74,28 +88,27 @@ public class Session {
                     Ymax = Y - 1;
                     Xmax = X - 1;
                 }
-                return moveDown(++c, reset);
+                return moveDown(reset);
             }
         }
     }
 
-    public String moveDown(int c, boolean reset) {
-        logState("DOWN", c);
-        if (c > 4) {
-            LOG.error("WE ARE DOOMED");
+    public String moveDown(boolean reset) {
+        if(checkDoomed()){
             return Snake.U;
         }
+        logState("DOWN");
 
         if (pos.y > Ymin &&
                 myBody[pos.y - 1][pos.x] == 0
                 && enemyBodies[pos.y - 1][pos.x] == 0
-                && enemyNextMovePossibleLocations[pos.y - 1][pos.x] < len
+                && (enterDangerZone || enemyNextMovePossibleLocations[pos.y - 1][pos.x] < len)
             //&& (pos.y < 2 || enemyHeads[pos.y - 2][pos.x] < len)
         ) {
             if (tPhase == 2 && pos.y == 1) {
                 tPhase = 1;
                 state = Snake.RIGHT;
-                return moveRight(++c, reset);
+                return moveRight(reset);
             } else {
                 return Snake.D;
             }
@@ -107,7 +120,7 @@ public class Session {
                     Ymin = 0;
                     Xmin = 0;
                 }
-                return moveRight(++c, reset);
+                return moveRight(reset);
             } else {
                 state = Snake.LEFT;
                 if (reset) {
@@ -115,22 +128,21 @@ public class Session {
                     Ymin = 0;
                     Xmin = 0;
                 }
-                return moveLeft(++c, reset);
+                return moveLeft(reset);
             }
         }
     }
 
-    public String moveLeft(int c, boolean reset) {
-        logState("LEFT", c);
-        if (c > 4) {
-            LOG.error("WE ARE DOOMED");
+    public String moveLeft(boolean reset) {
+        if(checkDoomed()){
             return Snake.R;
         }
+        logState("LEFT");
 
         boolean canMoveLeft = pos.x > Xmin;
         boolean isSpace = myBody[pos.y][pos.x - 1] == 0
                 && enemyBodies[pos.y][pos.x - 1] == 0
-                && enemyNextMovePossibleLocations[pos.y][pos.x - 1] < len
+                && (enterDangerZone || enemyNextMovePossibleLocations[pos.y][pos.x - 1] < len)
                 //&& (pos.x < 2 || enemyHeads[pos.y][pos.x - 2] < len)
                 ;
 
@@ -149,18 +161,18 @@ public class Session {
                     }
                     state = Snake.RIGHT;
                     // check if we can MOVE UP
-                    return moveUp(++c, reset);// U;
+                    return moveUp(reset);// U;
                 }
             } else {
                 if (isSpace) {
                     if (tPhase == 1 && (Ymax - pos.y) % 2 == 1) {
                         tPhase = 2;
-                        return moveUp(++c, reset);
+                        return moveUp(reset);
                     } else {
                         return Snake.L;
                     }
                 } else {
-                    return moveUp(++c, reset);
+                    return moveUp(reset);
                 }
             }
         } else {
@@ -170,13 +182,13 @@ public class Session {
                 Ymin = 0;
                 Xmin = 0;
             }
-            return moveUp(++c, reset);
+            return moveUp(reset);
         }
     }
 
-    private void logState(final String method, final int c) {
+    private void logState(final String method) {
         //new Thread(() -> {
-            LOG.info(method + " " + tPhase + " [" + c + "]");
+            LOG.info(method + " " + tPhase + " "+ enterDangerZone +" [" + moveCalcCount + "]");
             LOG.info("____________________");
             for (int y = Ymax; y >= 0; y--) {
                 StringBuffer b = new StringBuffer();

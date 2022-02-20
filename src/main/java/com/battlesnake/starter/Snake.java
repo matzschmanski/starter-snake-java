@@ -169,6 +169,8 @@ public class Snake {
             }
 
             // clearing the used fields...
+            s.enterDangerZone = false;
+            s.moveCalcCount = 0;
             s.enemyBodies = new int[s.Y][s.X];
             s.enemyNextMovePossibleLocations = new int[s.Y][s.X];
             s.myBody = new int[s.Y][s.X];
@@ -342,16 +344,16 @@ public class Snake {
             boolean huntForFood = false;
             switch (s.state){
                 case UP:
-                    move = s.moveUp(0, !huntForFood);
+                    move = s.moveUp(!huntForFood);
                     break;
                 case RIGHT:
-                    move = s.moveRight(0, !huntForFood);
+                    move = s.moveRight(!huntForFood);
                     break;
                 case DOWN:
-                    move = s.moveDown(0, !huntForFood);
+                    move = s.moveDown(!huntForFood);
                     break;
                 case LEFT:
-                    move = s.moveLeft(0, !huntForFood);
+                    move = s.moveLeft(!huntForFood);
                     break;
             }
 
