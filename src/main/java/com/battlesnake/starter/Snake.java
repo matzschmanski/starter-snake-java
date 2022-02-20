@@ -169,7 +169,7 @@ public class Snake {
                     s.xMax = s.X - 1;
                 }
 
-                // clearing the used fields...
+                // clearing the used session fields...
                 s.enterDangerZone = false;
                 s.cmdChain = new ArrayList<>();
                 s.enemyBodies = new int[s.Y][s.X];
@@ -177,7 +177,7 @@ public class Snake {
                 s.myBody = new int[s.Y][s.X];
                 s.foodPlaces = new ArrayList<>();
 
-                // get OWN ID
+                // get OWN SnakeID
                 JsonNode you = moveRequest.get("you");
                 String myId = you.get("id").asText();
 
@@ -190,20 +190,18 @@ public class Snake {
                         int len = aSnake.get("length").asInt();
 
                         JsonNode body = aSnake.get("body");
-                        int blen = body.size();
-                        // we start from j=1 here - since we handle the HEAD's
+                        int bLen = body.size();
+
+                        // we start from j=1 here - since we handle the other SneakHEAD's
                         // later!!
-                        for (int j = 1; j < blen; j++) {
+                        for (int j = 1; j < bLen; j++) {
                             Point p = new Point(body.get(j));
                             s.enemyBodies[p.y][p.x] = 1;
-                            // playing "avoid other Challenge" we need "myPlaces" in order to
-                            // have only one pixel distance...
-                            //myPlaces[p.y][p.x] = 1;
                         }
 
                         JsonNode head = aSnake.get("head");
                         Point h = new Point(head);
-                        //s.enemyHeads[h.y][h.x] = len;
+                        s.enemyBodies[h.y][h.x] = len;
                         try {
                             if (s.enemyBodies[h.y - 1][h.x] == 0) {
                                 s.enemyNextMovePossibleLocations[h.y - 1][h.x] = len;
@@ -228,122 +226,28 @@ public class Snake {
                             }
                         } catch (IndexOutOfBoundsException e) {
                         }
-
-                        s.enemyBodies[h.y][h.x] = len;
                     }
                 }
 
                 JsonNode haz = board.get("hazards");
                 if (haz != null) {
-                    int hlen = haz.size();
-                    for (int i = 0; i < hlen; i++) {
+                    int hLen = haz.size();
+                    for (int i = 0; i < hLen; i++) {
                         Point p = new Point(haz.get(i));
                         s.myBody[p.y][p.x] = 1;
-                    }
-                }
-
-                JsonNode food = board.get("food");
-                if (food != null) {
-                    int flen = food.size();
-                    for (int i = 0; i < flen; i++) {
-                        s.foodPlaces.add(new Point(food.get(i)));
                     }
                 }
 
                 s.health = you.get("health").asInt();
                 s.len = you.get("length").asInt();
                 JsonNode body = you.get("body");
-                int blen = body.size();
-                for (int i = 1; i < blen; i++) {
+                int bLen = body.size();
+                for (int i = 1; i < bLen; i++) {
                     Point p = new Point(body.get(i));
                     s.myBody[p.y][p.x] = 1;
                 }
                 JsonNode head = you.get("head");
                 s.pos = new Point(head);
-
-                /*if(!patched) {
-                    if(Math.random() * 20 > 17) {
-                        patched = true;
-                        int addon1 = (int) (Math.random() * 3);
-                        int addon2 = (int) (Math.random() * 3);
-                        Ymin = addon1;
-                        Xmin = addon2;
-                        Ymax = Y - (1+addon1);
-                        Xmax = X - (1+addon2);
-                    }
-                }*/
-
-                //            boolean huntForFood = false;
-                //            if(health == 100){
-                //                // ok back on previous track!
-                //                Ymin = 0;
-                //                Xmin = 0;
-                //                Ymax = Y-1;
-                //                Xmax = X-1;
-                //
-                //                // after we got our food we need to find the closest wall (again?)
-                //                // 1 | 2
-                //                // -----
-                //                // 3 | 4
-                //                /*if( pos.x > Xmax/2 && pos.y > Ymax/2){
-                //                    // -> we are IN Q2
-                //                    if(pos.x > pos.y){
-                //                        // we should move RIGHT
-                //                        state = 1;
-                //                    }else{
-                //                        // we should move UP...
-                //                        state = 0;
-                //                    }
-                //                } else if( pos.x <= Xmax/2 && pos.y <= Ymax/2){
-                //                    // -> we are IN Q3
-                //                    if(pos.x > pos.y){
-                //                        // we should move LEFT
-                //                        state = 3;
-                //                    }else{
-                //                        // we should move DOWN...
-                //                        state = 2;
-                //                    }
-                //                } else if(pos.x <= Xmax/2){
-                //                    // we are in Q1
-                //                    state = 1;
-                //                }else{
-                //                    // we are in Q4
-                //                    state = 3;
-                //                }*/
-                //                if(pos.x <= Xmax/2){
-                //                    state = LEFT;
-                //                }else if( pos.y <= Ymax/2){
-                //                    state = DOWN;
-                //                }else if( pos.x > pos.y ) {
-                //                    state = RIGHT;
-                //                }else{
-                //                    state = UP;
-                //                }
-                //
-                //                //state = stateToRestore;
-                //
-                //            } else if(health < 50){
-                //                P closestFood = null;
-                //                int minDist = Integer.MAX_VALUE;
-                //                for(P f: foodPlaces){
-                //                    int dist = Math.abs( f.x - pos.x) + Math.abs( f.y - pos.y);
-                //                    minDist = Math.min(minDist, dist);
-                //                    if(minDist == dist){
-                //                        closestFood = f;
-                //                    }
-                //                }
-                //
-                //                if(closestFood != null){
-                //                    Ymin = closestFood.y;
-                //                    Xmin = closestFood.x;
-                //                    Ymax = closestFood.y;
-                //                    Xmax = closestFood.x;
-                //                    stateToRestore = state;
-                //                    huntForFood = true;
-                //                    LOG.info("GOTO: -> "+closestFood);
-                //                }
-                //            }
-
 
                 String move = s.checkSpecialMoves();
                 if (move == null) {
@@ -366,41 +270,38 @@ public class Snake {
                     }
                 }
 
-                /*int rand = (int) (Math.random() * 20);
-                if(rand > 18){
-                    if(move.equals(U) && pos[0] > 2 && pos[0] < Y-3 ){
-                        move = R;
-                    } else if(move.equals(L) && pos[1] > 2 && pos[1] < X-3 ){
-                        move = U;
-                    } else if(move.equals(D) && pos[0] > 2 && pos[0] < Y-3 ){
-                        move = L;
-                    } else if(move.equals(R) && pos[1] > 2 && pos[1] < X-3 ){
-                        move = D;
+                // after we have calculated our next move, we might want to check, IF we can make an additional
+                // move after this one...
+                /*if(!s.doomed){
+                    // we have to mark our current position now as part of our
+                    // body...
+                    try{
+                        s.myBody[s.pos.y][s.pos.x] = 1;
+                    }catch(IndexOutOfBoundsException e){
+                        LOG.info("", e);
                     }
+
+                    // calculating our new position... [this is the HEAD]
+                    switch (move){
+                        case U:
+                            s.pos.y++;
+                            break;
+                        case R:
+                            s.pos.x++;
+                            break;
+                        case D:
+                            s.pos.y--;
+                            break;
+                        case L:
+                            s.pos.x--;
+                            break;
+                    }
+
+                    // we have to mark all the possible enemy locations as "taken" and calculate new possible
+                    // next steps locations...
+                    // I NEED TO SLEEP NOW
                 }*/
 
-                // Don't allow your Battlesnake to move back in on it's own neck
-                //avoidMyNeck(head, body, possibleMoves);
-
-                // TODO: Using information from 'moveRequest', find the edges of the board and
-                // don't
-                // let your Battlesnake move beyond them board_height = ? board_width = ?
-
-                // TODO Using information from 'moveRequest', don't let your Battlesnake pick a
-                // move
-                // that would hit its own body
-
-                // TODO: Using information from 'moveRequest', don't let your Battlesnake pick a
-                // move
-                // that would collide with another Battlesnake
-
-                // TODO: Using information from 'moveRequest', make your Battlesnake move
-                // towards a
-                // piece of food on the board
-
-                // Choose a random direction to move in
-                //final int choice = new Random().nextInt(possibleMoves.size());
-                //final String move = possibleMoves.get(choice);
                 Map<String, String> response = new HashMap<>();
                 response.put("move", move);
                 return response;
@@ -412,35 +313,6 @@ public class Snake {
                 return response;
             }
         }
-
-        /*private String moveUpOrRight(P pos) {
-            if (pos.y < Ymax && usedPlaces[pos.y + 1][pos.x] == 0) {
-                return U;
-            } else if (pos.x < Xmax && usedPlaces[pos.y][pos.x + 1] == 0) {
-                return R;
-            } else {
-                state = DOWN;
-                patched = false;
-                Ymax = Y - 1;
-                Xmax = X - 1;
-                return moveDownOrLeft(pos);
-            }
-        }
-
-        private String moveDownOrLeft(P pos) {
-            if (pos.y > Ymin && usedPlaces[pos.y - 1][pos.x] == 0) {
-                return D;
-            } else if (pos.x > Xmin && usedPlaces[pos.y][pos.x - 1] == 0) {
-                return L;
-            } else {
-                state = UP;
-                patched = false;
-                Ymin = 0;
-                Xmin = 0;
-                return moveUpOrRight(pos);
-            }
-        }*/
-
 
         /**
          * This method is called when a game your Battlesnake was in ends.
@@ -477,4 +349,142 @@ public class Snake {
             return EMPTY;
         }
     }
+
+    private void ranomizer(){
+        /*if(!patched) {
+            if(Math.random() * 20 > 17) {
+                patched = true;
+                int addon1 = (int) (Math.random() * 3);
+                int addon2 = (int) (Math.random() * 3);
+                Ymin = addon1;
+                Xmin = addon2;
+                Ymax = Y - (1+addon1);
+                Xmax = X - (1+addon2);
+            }
+        }*/
+
+        /*int rand = (int) (Math.random() * 20);
+        if(rand > 18){
+            if(move.equals(U) && pos[0] > 2 && pos[0] < Y-3 ){
+                move = R;
+            } else if(move.equals(L) && pos[1] > 2 && pos[1] < X-3 ){
+                move = U;
+            } else if(move.equals(D) && pos[0] > 2 && pos[0] < Y-3 ){
+                move = L;
+            } else if(move.equals(R) && pos[1] > 2 && pos[1] < X-3 ){
+                move = D;
+            }
+        }*/
+    }
+
+    private void oldFoodHuntCode(JsonNode board, Session s){
+        JsonNode food = board.get("food");
+        if (food != null) {
+            int flen = food.size();
+            for (int i = 0; i < flen; i++) {
+                s.foodPlaces.add(new Point(food.get(i)));
+            }
+        }
+
+
+
+        //            boolean huntForFood = false;
+        //            if(health == 100){
+        //                // ok back on previous track!
+        //                Ymin = 0;
+        //                Xmin = 0;
+        //                Ymax = Y-1;
+        //                Xmax = X-1;
+        //
+        //                // after we got our food we need to find the closest wall (again?)
+        //                // 1 | 2
+        //                // -----
+        //                // 3 | 4
+        //                /*if( pos.x > Xmax/2 && pos.y > Ymax/2){
+        //                    // -> we are IN Q2
+        //                    if(pos.x > pos.y){
+        //                        // we should move RIGHT
+        //                        state = 1;
+        //                    }else{
+        //                        // we should move UP...
+        //                        state = 0;
+        //                    }
+        //                } else if( pos.x <= Xmax/2 && pos.y <= Ymax/2){
+        //                    // -> we are IN Q3
+        //                    if(pos.x > pos.y){
+        //                        // we should move LEFT
+        //                        state = 3;
+        //                    }else{
+        //                        // we should move DOWN...
+        //                        state = 2;
+        //                    }
+        //                } else if(pos.x <= Xmax/2){
+        //                    // we are in Q1
+        //                    state = 1;
+        //                }else{
+        //                    // we are in Q4
+        //                    state = 3;
+        //                }*/
+        //                if(pos.x <= Xmax/2){
+        //                    state = LEFT;
+        //                }else if( pos.y <= Ymax/2){
+        //                    state = DOWN;
+        //                }else if( pos.x > pos.y ) {
+        //                    state = RIGHT;
+        //                }else{
+        //                    state = UP;
+        //                }
+        //
+        //                //state = stateToRestore;
+        //
+        //            } else if(health < 50){
+        //                P closestFood = null;
+        //                int minDist = Integer.MAX_VALUE;
+        //                for(P f: foodPlaces){
+        //                    int dist = Math.abs( f.x - pos.x) + Math.abs( f.y - pos.y);
+        //                    minDist = Math.min(minDist, dist);
+        //                    if(minDist == dist){
+        //                        closestFood = f;
+        //                    }
+        //                }
+        //
+        //                if(closestFood != null){
+        //                    Ymin = closestFood.y;
+        //                    Xmin = closestFood.x;
+        //                    Ymax = closestFood.y;
+        //                    Xmax = closestFood.x;
+        //                    stateToRestore = state;
+        //                    huntForFood = true;
+        //                    LOG.info("GOTO: -> "+closestFood);
+        //                }
+        //            }
+    }
+
+    /*private String moveUpOrRight(P pos) {
+        if (pos.y < Ymax && usedPlaces[pos.y + 1][pos.x] == 0) {
+            return U;
+        } else if (pos.x < Xmax && usedPlaces[pos.y][pos.x + 1] == 0) {
+            return R;
+        } else {
+            state = DOWN;
+            patched = false;
+            Ymax = Y - 1;
+            Xmax = X - 1;
+            return moveDownOrLeft(pos);
+        }
+    }
+
+    private String moveDownOrLeft(P pos) {
+        if (pos.y > Ymin && usedPlaces[pos.y - 1][pos.x] == 0) {
+            return D;
+        } else if (pos.x > Xmin && usedPlaces[pos.y][pos.x - 1] == 0) {
+            return L;
+        } else {
+            state = UP;
+            patched = false;
+            Ymin = 0;
+            Xmin = 0;
+            return moveUpOrRight(pos);
+        }
+    }*/
 }

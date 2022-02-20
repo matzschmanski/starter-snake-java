@@ -16,6 +16,7 @@ public class Session {
     int tPhase = 0;
     ArrayList<Integer> cmdChain = null;
     boolean enterDangerZone = false;
+    boolean doomed = false;
     int X = -1;
     int Y = -1;
     int[][] enemyBodies = null;
@@ -35,6 +36,7 @@ public class Session {
                 cmdChain = new ArrayList<>();
                 cmdChain.add(lastCmdToKeep);
             }else {
+                doomed = true;
                 LOG.error("DOOMED!");
                 ret = true;
             }
