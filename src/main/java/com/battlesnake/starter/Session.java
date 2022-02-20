@@ -57,7 +57,7 @@ public class Session {
     }
 
     public String moveUp(boolean reset) {
-        if(cmdChain.contains(Snake.UP)){
+        if(cmdChain.size() < 4 && cmdChain.contains(Snake.UP)){
             return moveRight(reset);
         } else {
             cmdChain.add(Snake.UP);
@@ -96,7 +96,7 @@ public class Session {
     }
 
     public String moveRight(boolean reset) {
-        if(cmdChain.contains(Snake.RIGHT)){
+        if(cmdChain.size() < 4 && cmdChain.contains(Snake.RIGHT)){
             return moveDown(reset);
         }else {
             cmdChain.add(Snake.RIGHT);
@@ -148,7 +148,7 @@ public class Session {
     }
 
     public String moveDown(boolean reset) {
-        if(cmdChain.contains(Snake.DOWN)){
+        if(cmdChain.size() < 4 && cmdChain.contains(Snake.DOWN)){
             return moveLeft(reset);
         }
         cmdChain.add(Snake.DOWN);
@@ -203,7 +203,7 @@ public class Session {
     }
 
     public String moveLeft(boolean reset) {
-        if(cmdChain.contains(Snake.LEFT)){
+        if(cmdChain.size() < 4 && cmdChain.contains(Snake.LEFT)){
             return moveUp(reset);
         }else {
             cmdChain.add(Snake.LEFT);
