@@ -213,20 +213,15 @@ public class Session {
             logState("LEFT");
 
             boolean canMoveLeft = pos.x > xMin;
-            boolean isSpace = false;
-            try {
-                if(pos.x > 0) {
-                    isSpace = myBody[pos.y][pos.x - 1] == 0
-                            && enemyBodies[pos.y][pos.x - 1] == 0
-                            && (enterDangerZone || enemyNextMovePossibleLocations[pos.y][pos.x - 1] < len)
-                    //&& (pos.x < 2 || enemyHeads[pos.y][pos.x - 2] < len)
-                    ;
-                }
-            }catch (IndexOutOfBoundsException e){
-                LOG.info("IndexOutOfBoundsException:");
+            boolean isSpaceToLeft = false;
+            if(pos.x > 0) {
+                isSpaceToLeft = myBody[pos.y][pos.x - 1] == 0
+                                && enemyBodies[pos.y][pos.x - 1] == 0
+                                && (enterDangerZone || enemyNextMovePossibleLocations[pos.y][pos.x - 1] < len)
+                //&& (pos.x < 2 || enemyHeads[pos.y][pos.x - 2] < len)
+                ;
             }
-
-            if (canMoveLeft && (isSpace || tPhase > 0)) {
+            if (canMoveLeft && (isSpaceToLeft || tPhase > 0)) {
                 if (pos.x == 1) {
                     if (pos.y == yMax) {
                         if (tPhase != 2) {
@@ -244,7 +239,7 @@ public class Session {
                         return moveUp(reset);// U;
                     }
                 } else {
-                    if (isSpace) {
+                    if (isSpaceToLeft) {
                         if (tPhase > 0 && (yMax - pos.y) % 2 == 1) {
                             tPhase = 2;
                             return moveUp(reset);
