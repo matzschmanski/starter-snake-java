@@ -170,7 +170,7 @@ public class Snake {
 
             // clearing the used fields...
             s.enterDangerZone = false;
-            s.moveCalcCount = 0;
+            s.cmdChain = new ArrayList<>();
             s.enemyBodies = new int[s.Y][s.X];
             s.enemyNextMovePossibleLocations = new int[s.Y][s.X];
             s.myBody = new int[s.Y][s.X];

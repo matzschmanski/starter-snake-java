@@ -14,7 +14,7 @@ public class Session {
     int health;
     int state = 0;
     int tPhase = 0;
-    int moveCalcCount = 0;
+    ArrayList<Integer> cmdChain = null;
     boolean enterDangerZone = false;
     int X = -1;
     int Y = -1;
@@ -28,11 +28,10 @@ public class Session {
 
     private boolean checkDoomed() {
         boolean ret = false;
-        moveCalcCount++;
-        if(moveCalcCount > 4){
+        if(cmdChain.size() > 4){
             if(!enterDangerZone){
                 enterDangerZone = true;
-                moveCalcCount = 0;
+                cmdChain = new ArrayList<>();
             }else {
                 LOG.error("DOOMED!");
                 ret = true;
@@ -41,7 +40,21 @@ public class Session {
         return ret;
     }
 
+    private boolean checkCmdChain(int type, int pos){
+        int len = cmdChain.size();
+        if(len > pos - 1){
+            int cmdTwoPosBefore = cmdChain.get(len - pos);
+            LOG.info("Compare Type: "+cmdChain+" search: "+type+" found: "+cmdTwoPosBefore);
+            if(cmdTwoPosBefore == type){
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     public String moveUp(boolean reset) {
+        cmdChain.add(Snake.UP);
         if(checkDoomed()){
             return Snake.D;
         }
@@ -65,6 +78,7 @@ public class Session {
     }
 
     public String moveRight(boolean reset) {
+        cmdChain.add(Snake.RIGHT);
         if(checkDoomed()){
             return Snake.L;
         }
@@ -94,6 +108,7 @@ public class Session {
     }
 
     public String moveDown(boolean reset) {
+        cmdChain.add(Snake.DOWN);
         if(checkDoomed()){
             return Snake.U;
         }
@@ -113,7 +128,8 @@ public class Session {
                 return Snake.D;
             }
         } else {
-            if (tPhase > 0) {
+            boolean wasRightBefore = checkCmdChain(Snake.RIGHT, 2);
+            if (tPhase > 0 && !wasRightBefore) {
                 state = Snake.RIGHT;
                 if (reset) {
                     patched = false;
@@ -122,6 +138,9 @@ public class Session {
                 }
                 return moveRight(reset);
             } else {
+                if(wasRightBefore){
+                    tPhase = 0;
+                }
                 state = Snake.LEFT;
                 if (reset) {
                     patched = false;
@@ -134,6 +153,7 @@ public class Session {
     }
 
     public String moveLeft(boolean reset) {
+        cmdChain.add(Snake.LEFT);
         if(checkDoomed()){
             return Snake.R;
         }
@@ -188,7 +208,7 @@ public class Session {
 
     private void logState(final String method) {
         //new Thread(() -> {
-            LOG.info(method + " " + tPhase + " "+ enterDangerZone +" [" + moveCalcCount + "]");
+            LOG.info(method + " " + tPhase + " "+ enterDangerZone +" {" + cmdChain.toString() + "}");
             LOG.info("____________________");
             for (int y = Ymax; y >= 0; y--) {
                 StringBuffer b = new StringBuffer();
