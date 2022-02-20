@@ -89,7 +89,7 @@ public class Snake {
                 } else if (uri.equals("/move")) {
                     snakeResponse = move(parsedRequest);
                 } else if (uri.equals("/end")) {
-                    LOG.info("{} called with: {}", uri, req.body());
+                    //LOG.info("{} called with: {}", uri, req.body());
                     snakeResponse = end(parsedRequest);
                 } else {
                     throw new IllegalAccessError("Strange call made to the snake: " + uri);
@@ -445,7 +445,26 @@ public class Snake {
          */
         public Map<String, String> end(JsonNode endRequest) {
             LOG.info("END");
-            sessions.remove(endRequest.get("game").get("id").asText());
+            Session s = sessions.remove(endRequest.get("game").get("id").asText());
+
+            // get OWN ID
+            JsonNode you = endRequest.get("you");
+            String myId = you.get("id").asText();
+
+            JsonNode board = endRequest.get("board");
+            // get the locations of all snakes...
+            JsonNode snakes = board.get("snakes");
+            int slen = snakes.size();
+            for (int i = 0; i < slen; i++) {
+                JsonNode aSnake = snakes.get(i);
+                if(aSnake.get("id").asText().equals(myId)) {
+                    LOG.info("****************");
+                    LOG.info("WE ARE ALIVE!!!!");
+                    LOG.info("****************");
+                }else {
+                    LOG.info("that's not us... "+aSnake);
+                }
+            }
             return EMPTY;
         }
     }
