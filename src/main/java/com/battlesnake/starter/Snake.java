@@ -245,7 +245,6 @@ public class Snake {
                 }
             }
 
-            String move = D;
             s.health = you.get("health").asInt();
             s.len = you.get("length").asInt();
             JsonNode body = you.get("body");
@@ -341,20 +340,25 @@ public class Snake {
 //            }
 
 
-            boolean huntForFood = false;
-            switch (s.state){
-                case UP:
-                    move = s.moveUp(!huntForFood);
-                    break;
-                case RIGHT:
-                    move = s.moveRight(!huntForFood);
-                    break;
-                case DOWN:
-                    move = s.moveDown(!huntForFood);
-                    break;
-                case LEFT:
-                    move = s.moveLeft(!huntForFood);
-                    break;
+            String move = s.checkSpecialMoves();
+            if(move == null) {
+                boolean huntForFood = false;
+                switch (s.state) {
+                    case UP:
+                        move = s.moveUp(!huntForFood);
+                        break;
+                    case RIGHT:
+                        move = s.moveRight(!huntForFood);
+                        break;
+                    case DOWN:
+                        move = s.moveDown(!huntForFood);
+                        break;
+                    case LEFT:
+                        move = s.moveLeft(!huntForFood);
+                        break;
+                    default:
+                        move = Snake.D;
+                }
             }
 
             /*int rand = (int) (Math.random() * 20);
@@ -369,10 +373,6 @@ public class Snake {
                     move = D;
                 }
             }*/
-
-            //JsonNode head = moveRequest.get("you").get("head");
-            //JsonNode body = moveRequest.get("you").get("body");
-
 
             // Don't allow your Battlesnake to move back in on it's own neck
             //avoidMyNeck(head, body, possibleMoves);
@@ -396,8 +396,6 @@ public class Snake {
             // Choose a random direction to move in
             //final int choice = new Random().nextInt(possibleMoves.size());
             //final String move = possibleMoves.get(choice);
-
-            //LOG.info("MOVE {}", move);
 
             Map<String, String> response = new HashMap<>();
             response.put("move", move);

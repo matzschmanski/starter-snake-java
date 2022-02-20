@@ -54,6 +54,19 @@ public class Session {
         return false;
     }
 
+    public String checkSpecialMoves(){
+        // if we are in the UPPERROW and the x=0 is free, let's move to the LEFT!
+        if(tPhase > 0 && pos.y == Ymax && pos.x < Xmax/3){
+            if(pos.x > 0) {
+                LOG.info("SPECIAL MOVE -> RIGHT CALLED");
+                return moveRight(false);
+            }else{
+                LOG.info("SPECIAL MOVE -> DOWN CALLED");
+                return moveDown(false);
+            }
+        }
+        return null;
+    }
 
     public String moveUp(boolean reset) {
         cmdChain.add(Snake.UP);
@@ -69,6 +82,8 @@ public class Session {
         ) {
             return Snake.U;
         } else {
+            // here we can add some special handling if we are in the UPPER ROW, then we might want to move to
+            // the LEFT (instead of the right)
             state = Snake.RIGHT;
             if (reset) {
                 patched = false;
@@ -94,9 +109,18 @@ public class Session {
             return Snake.R;
         } else {
             if (pos.x == Xmax && tPhase > 0) {
-                state = Snake.LEFT;
-                // check if we can MOVE UP?!
-                return moveUp(reset);//U;
+                if(pos.y == Ymax){
+                    // we should NEVER BE HERE!!
+                    // we are in the UPPER/RIGHT Corner while in TraverseMode! (something failed before)
+                    LOG.info("WE SHOULD NEVER BE HERE in T-PHASE >0");
+                    tPhase = 0;
+                    state = Snake.DOWN;
+                    return moveDown(reset);
+                }else {
+                    state = Snake.LEFT;
+                    // check if we can MOVE UP?!
+                    return moveUp(reset);//U;
+                }
             } else {
                 state = Snake.DOWN;
                 if (reset) {
@@ -187,7 +211,7 @@ public class Session {
                 }
             } else {
                 if (isSpace) {
-                    if (tPhase == 1 && (Ymax - pos.y) % 2 == 1) {
+                    if (tPhase > 0 && (Ymax - pos.y) % 2 == 1) {
                         tPhase = 2;
                         return moveUp(reset);
                     } else {
