@@ -58,7 +58,7 @@ public class Session {
 
     public String moveUp(boolean reset) {
         if(cmdChain.contains(Snake.UP)){
-            if(pos.x < xMax/2 && !cmdChain.contains(Snake.RIGHT)) {
+            if(pos.x < xMax/2 || cmdChain.contains(Snake.LEFT)) {
                 return moveRight(reset);
             }else{
                 return moveLeft(reset);
@@ -78,7 +78,7 @@ public class Session {
                 return Snake.U;
             } else {
                 // can't move...
-                if(pos.x < xMax/2 && !cmdChain.contains(Snake.RIGHT)) {
+                if(pos.x < xMax/2 || cmdChain.contains(Snake.LEFT)) {
                     state = Snake.RIGHT;
                     if (reset) {
                         patched = false;
@@ -101,7 +101,7 @@ public class Session {
 
     public String moveRight(boolean reset) {
         if(cmdChain.contains(Snake.RIGHT)){
-            if(pos.y < yMax/2 && !cmdChain.contains(Snake.UP)) {
+            if(pos.y < yMax/2 || cmdChain.contains(Snake.DOWN)) {
                 return moveUp(reset);
             }else{
                 return moveDown(reset);
@@ -133,7 +133,7 @@ public class Session {
                         return moveUp(reset);//U;
                     }
                 } else {
-                    if(pos.y < yMax/2 && !cmdChain.contains(Snake.UP)) {
+                    if(pos.y < yMax/2 || cmdChain.contains(Snake.DOWN)) {
                         state = Snake.UP;
                         if (reset) {
                             patched = false;
@@ -157,7 +157,7 @@ public class Session {
 
     public String moveDown(boolean reset) {
         if(cmdChain.contains(Snake.DOWN)){
-            if(pos.x < xMax/2 && !cmdChain.contains(Snake.RIGHT)) {
+            if(pos.x < xMax/2 || cmdChain.contains(Snake.LEFT)) {
                 return moveRight(reset);
             }else{
                 return moveLeft(reset);
@@ -193,7 +193,7 @@ public class Session {
                 }
                 return moveRight(reset);
             } else {
-                if(pos.x < xMax/2 && !cmdChain.contains(Snake.RIGHT)) {
+                if(pos.x < xMax/2 || cmdChain.contains(Snake.LEFT)) {
                     state = Snake.RIGHT;
                     if (reset) {
                         patched = false;
@@ -216,9 +216,9 @@ public class Session {
 
     public String moveLeft(boolean reset) {
         if(cmdChain.contains(Snake.LEFT)){
-            if(pos.y < yMax/2 && !cmdChain.contains(Snake.UP)) {
+            if(pos.y < yMax/2 || cmdChain.contains(Snake.DOWN)) {
                 return moveUp(reset);
-            }else{
+            } else {
                 return moveDown(reset);
             }
         }else {
@@ -266,7 +266,7 @@ public class Session {
                 }
             } else {
                 // can't move...
-                if(pos.y < yMax/2 && !cmdChain.contains(Snake.UP)) {
+                if(pos.y < yMax/2 || cmdChain.contains(Snake.DOWN)) {
                     state = Snake.UP;
                     if (reset) {
                         patched = false;
