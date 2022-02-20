@@ -31,7 +31,9 @@ public class Session {
         if(cmdChain.size() > 4){
             if(!enterDangerZone){
                 enterDangerZone = true;
+                int lastCmdToKeep = cmdChain.get(cmdChain.size()-1);
                 cmdChain = new ArrayList<>();
+                cmdChain.add(lastCmdToKeep);
             }else {
                 LOG.error("DOOMED!");
                 ret = true;
@@ -40,12 +42,12 @@ public class Session {
         return ret;
     }
 
-    private boolean checkCmdChain(int type, int pos){
+    private boolean checkCmdChain(int cmdToSearch, int pos){
         int len = cmdChain.size();
         if(len > pos - 1){
-            int cmdTwoPosBefore = cmdChain.get(len - pos);
-            LOG.info("Compare Type: "+cmdChain+" search: "+type+" found: "+cmdTwoPosBefore);
-            if(cmdTwoPosBefore == type){
+            int cmdAtPos = cmdChain.get(len - pos);
+            LOG.info("Compare Type: "+cmdChain+" search: "+cmdToSearch+" found: "+cmdAtPos);
+            if(cmdAtPos == cmdToSearch){
                 return true;
             }
         }
