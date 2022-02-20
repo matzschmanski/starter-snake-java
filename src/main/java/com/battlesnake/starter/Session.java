@@ -82,15 +82,23 @@ public class Session {
         ) {
             return Snake.U;
         } else {
-            // here we can add some special handling if we are in the UPPER ROW, then we might want to move to
-            // the LEFT (instead of the right)
-            state = Snake.RIGHT;
-            if (reset) {
-                patched = false;
-                yMax = Y - 1;
-                xMax = X - 1;
+            if(pos.x < xMax/2) {
+                state = Snake.RIGHT;
+                if (reset) {
+                    patched = false;
+                    yMax = Y - 1;
+                    xMax = X - 1;
+                }
+                return moveRight(reset);
+            } else {
+                state = Snake.LEFT;
+                if (reset) {
+                    patched = false;
+                    yMax = Y - 1;
+                    xMax = X - 1;
+                }
+                return moveLeft(reset);
             }
-            return moveRight(reset);
         }
     }
 
@@ -122,13 +130,25 @@ public class Session {
                     return moveUp(reset);//U;
                 }
             } else {
-                state = Snake.DOWN;
-                if (reset) {
-                    patched = false;
-                    yMax = Y - 1;
-                    xMax = X - 1;
+                // ok we can't move right since "something" is blocking us... the question is,
+                // if just moving down is smart here?!
+                if(pos.y < yMax/2) {
+                    state = Snake.UP;
+                    if (reset) {
+                        patched = false;
+                        yMax = Y - 1;
+                        xMax = X - 1;
+                    }
+                    return moveUp(reset);
+                } else {
+                    state = Snake.DOWN;
+                    if (reset) {
+                        patched = false;
+                        yMax = Y - 1;
+                        xMax = X - 1;
+                    }
+                    return moveDown(reset);
                 }
-                return moveDown(reset);
             }
         }
     }
@@ -222,13 +242,23 @@ public class Session {
                 }
             }
         } else {
-            state = Snake.UP;
-            if (reset) {
-                patched = false;
-                yMin = 0;
-                xMin = 0;
+            if(pos.y < yMax/2) {
+                state = Snake.UP;
+                if (reset) {
+                    patched = false;
+                    yMax = Y - 1;
+                    xMax = X - 1;
+                }
+                return moveUp(reset);
+            } else {
+                state = Snake.DOWN;
+                if (reset) {
+                    patched = false;
+                    yMax = Y - 1;
+                    xMax = X - 1;
+                }
+                return moveDown(reset);
             }
-            return moveUp(reset);
         }
     }
 
