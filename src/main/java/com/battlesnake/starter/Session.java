@@ -332,7 +332,7 @@ public class Session {
 
     private void logState(final String method) {
         //new Thread(() -> {
-            LOG.info(method + " " + tPhase + " avoidEgdes? "+avoidEdges+" goDangerZone? "+ enterDangerZone +" {" + cmdChain.toString() + "}");
+            LOG.info(method + " " + tPhase + " avoidEdges? "+avoidEdges+" goDangerZone? "+ enterDangerZone +" {" + cmdChain.toString() + "}");
             LOG.info("____________________");
             for (int y = yMax; y >= 0; y--) {
                 StringBuffer b = new StringBuffer();
