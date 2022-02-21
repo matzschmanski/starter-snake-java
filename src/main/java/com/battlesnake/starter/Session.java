@@ -26,7 +26,7 @@ public class Session {
     boolean patched = false;
     int stateToRestore = -1;
     private boolean enterDangerZone = false;
-    private boolean avoidEdges = true;
+    private boolean avoidBorder = true;
     private int xMin, yMin, xMax, yMax;
 
     public void initSaveBoardBounds(){
@@ -35,7 +35,7 @@ public class Session {
         yMax = Y - 2;
         xMax = X - 2;
         enterDangerZone = false;
-        avoidEdges = true;
+        avoidBorder = true;
     }
 
     private void setFullBoardBounds(){
@@ -46,28 +46,25 @@ public class Session {
     }
 
     private boolean checkDoomed() {
-        boolean ret = false;
         if(cmdChain.size() > 4){
-            if(avoidEdges){
-                avoidEdges = false;
+            if(avoidBorder){
+                avoidBorder = false;
                 setFullBoardBounds();
                 int lastCmdToKeep = cmdChain.get(cmdChain.size() - 1);
                 cmdChain = new ArrayList<>();
                 cmdChain.add(lastCmdToKeep);
-            }else {
-                if (!enterDangerZone) {
-                    enterDangerZone = true;
-                    int lastCmdToKeep = cmdChain.get(cmdChain.size() - 1);
-                    cmdChain = new ArrayList<>();
-                    cmdChain.add(lastCmdToKeep);
-                } else {
-                    doomed = true;
-                    LOG.error("DOOMED!");
-                    ret = true;
-                }
+            } else if (!enterDangerZone) {
+                enterDangerZone = true;
+                int lastCmdToKeep = cmdChain.get(cmdChain.size() - 1);
+                cmdChain = new ArrayList<>();
+                cmdChain.add(lastCmdToKeep);
+            } else {
+                doomed = true;
+                LOG.error("DOOMED! "+tPhase + " avoidBorder? "+ avoidBorder +" goDangerZone? "+ enterDangerZone +" {" + cmdChain.toString() + "}");
+                return true;
             }
         }
-        return ret;
+        return false;
     }
 
     public String checkSpecialMoves(){
@@ -98,6 +95,7 @@ public class Session {
 
     public String moveUp() {
         if(cmdChain.size() < 4 && cmdChain.contains(Snake.UP)){
+            // here we can generate randomness!
             return moveRight();
         } else {
             cmdChain.add(Snake.UP);
@@ -287,7 +285,7 @@ public class Session {
 
     private void logState(final String method) {
         //new Thread(() -> {
-            LOG.info(method + " " + tPhase + " avoidEdges? "+avoidEdges+" goDangerZone? "+ enterDangerZone +" {" + cmdChain.toString() + "}");
+            LOG.info(method + " " + tPhase + " avoidBorder? "+ avoidBorder +" goDangerZone? "+ enterDangerZone +" {" + cmdChain.toString() + "}");
             LOG.info("____________________");
             for (int y = Y-1; y >= 0; y--) {
                 StringBuffer b = new StringBuffer();
