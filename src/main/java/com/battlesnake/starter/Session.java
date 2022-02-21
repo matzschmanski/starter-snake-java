@@ -75,10 +75,10 @@ public class Session {
         if(tPhase > 0 && pos.y == yMax && pos.x < xMax /3){
             if(pos.x > 0) {
                 LOG.info("SPECIAL MOVE -> LEFT CALLED");
-                return moveLeft(false);
+                return moveLeft();
             }else{
                 LOG.info("SPECIAL MOVE -> DOWN CALLED");
-                return moveDown(false);
+                return moveDown();
             }
         }
         return null;
@@ -96,9 +96,9 @@ public class Session {
         }
     }
 
-    public String moveUp(boolean reset) {
+    public String moveUp() {
         if(cmdChain.size() < 4 && cmdChain.contains(Snake.UP)){
-            return moveRight(reset);
+            return moveRight();
         } else {
             cmdChain.add(Snake.UP);
             if (checkDoomed()) {
@@ -111,20 +111,10 @@ public class Session {
                 // can't move...
                 if(pos.x < xMax/2 || cmdChain.contains(Snake.LEFT)) {
                     state = Snake.RIGHT;
-                    if (reset) {
-                        patched = false;
-                        yMax = Y - 1;
-                        xMax = X - 1;
-                    }
-                    return moveRight(reset);
+                    return moveRight();
                 } else {
                     state = Snake.LEFT;
-                    if (reset) {
-                        patched = false;
-                        yMax = Y - 1;
-                        xMax = X - 1;
-                    }
-                    return moveLeft(reset);
+                    return moveLeft();
                 }
             }
         }
@@ -143,9 +133,9 @@ public class Session {
         }
     }
 
-    public String moveRight(boolean reset) {
+    public String moveRight() {
         if(cmdChain.size() < 4 && cmdChain.contains(Snake.RIGHT)){
-            return moveDown(reset);
+            return moveDown();
         }else {
             cmdChain.add(Snake.RIGHT);
             if (checkDoomed()) {
@@ -162,28 +152,18 @@ public class Session {
                         LOG.info("WE SHOULD NEVER BE HERE in T-PHASE >0");
                         tPhase = 0;
                         state = Snake.DOWN;
-                        return moveDown(reset);
+                        return moveDown();
                     } else {
                         state = Snake.LEFT;
-                        return moveUp(reset);//U;
+                        return moveUp();//U;
                     }
                 } else {
                     if(pos.y < yMax/2 || cmdChain.contains(Snake.DOWN)) {
                         state = Snake.UP;
-                        if (reset) {
-                            patched = false;
-                            yMax = Y - 1;
-                            xMax = X - 1;
-                        }
-                        return moveUp(reset);
+                        return moveUp();
                     } else {
                         state = Snake.DOWN;
-                        if (reset) {
-                            patched = false;
-                            yMax = Y - 1;
-                            xMax = X - 1;
-                        }
-                        return moveDown(reset);
+                        return moveDown();
                     }
                 }
             }
@@ -203,9 +183,9 @@ public class Session {
         }
     }
 
-    public String moveDown(boolean reset) {
+    public String moveDown() {
         if(cmdChain.size() < 4 && cmdChain.contains(Snake.DOWN)){
-            return moveLeft(reset);
+            return moveLeft();
         }
         cmdChain.add(Snake.DOWN);
         if(checkDoomed()){
@@ -217,7 +197,7 @@ public class Session {
             if (tPhase == 2 && pos.y == yMin + 1) {
                 tPhase = 1;
                 state = Snake.RIGHT;
-                return moveRight(reset);
+                return moveRight();
             } else {
                 return Snake.D;
             }
@@ -225,37 +205,22 @@ public class Session {
             // can't move...
             if (tPhase > 0) {
                 state = Snake.RIGHT;
-                if (reset) {
-                    patched = false;
-                    yMin = 0;
-                    xMin = 0;
-                }
-                return moveRight(reset);
+                return moveRight();
             } else {
                 if(pos.x < xMax/2 || cmdChain.contains(Snake.LEFT)) {
                     state = Snake.RIGHT;
-                    if (reset) {
-                        patched = false;
-                        yMax = Y - 1;
-                        xMax = X - 1;
-                    }
-                    return moveRight(reset);
+                    return moveRight();
                 } else {
                     state = Snake.LEFT;
-                    if (reset) {
-                        patched = false;
-                        yMax = Y - 1;
-                        xMax = X - 1;
-                    }
-                    return moveLeft(reset);
+                    return moveLeft();
                 }
             }
         }
     }
 
-    public String moveLeft(boolean reset) {
+    public String moveLeft() {
         if(cmdChain.size() < 4 && cmdChain.contains(Snake.LEFT)){
-            return moveUp(reset);
+            return moveUp();
         }else {
             cmdChain.add(Snake.LEFT);
             if (checkDoomed()) {
@@ -287,7 +252,7 @@ public class Session {
                         }
                         state = Snake.RIGHT;
                         // check if we can MOVE UP
-                        return moveUp(reset);// U;
+                        return moveUp();// U;
                     }
                 } else {
                     if (isSpaceToLeft) {
@@ -296,7 +261,7 @@ public class Session {
                             // we simply really move to the LEFT (since we can!))
                             if(canMoveUp()) {
                                 tPhase = 2;
-                                return moveUp(reset);
+                                return moveUp();
                             }else{
                                 return Snake.L;
                             }
@@ -304,27 +269,17 @@ public class Session {
                             return Snake.L;
                         }
                     } else {
-                        return moveUp(reset);
+                        return moveUp();
                     }
                 }
             } else {
                 // can't move...
                 if(pos.y < yMax/2 || cmdChain.contains(Snake.DOWN)) {
                     state = Snake.UP;
-                    if (reset) {
-                        patched = false;
-                        yMax = Y - 1;
-                        xMax = X - 1;
-                    }
-                    return moveUp(reset);
+                    return moveUp();
                 } else {
                     state = Snake.DOWN;
-                    if (reset) {
-                        patched = false;
-                        yMax = Y - 1;
-                        xMax = X - 1;
-                    }
-                    return moveDown(reset);
+                    return moveDown();
                 }
             }
         }
@@ -334,7 +289,7 @@ public class Session {
         //new Thread(() -> {
             LOG.info(method + " " + tPhase + " avoidEdges? "+avoidEdges+" goDangerZone? "+ enterDangerZone +" {" + cmdChain.toString() + "}");
             LOG.info("____________________");
-            for (int y = yMax; y >= 0; y--) {
+            for (int y = Y-1; y >= 0; y--) {
                 StringBuffer b = new StringBuffer();
                 b.append('|');
                 for (int x = 0; x < X; x++) {

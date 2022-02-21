@@ -250,16 +250,16 @@ public class Snake {
                     boolean huntForFood = false;
                     switch (s.state) {
                         case UP:
-                            move = s.moveUp(!huntForFood);
+                            move = s.moveUp();
                             break;
                         case RIGHT:
-                            move = s.moveRight(!huntForFood);
+                            move = s.moveRight();
                             break;
                         case DOWN:
-                            move = s.moveDown(!huntForFood);
+                            move = s.moveDown();
                             break;
                         case LEFT:
-                            move = s.moveLeft(!huntForFood);
+                            move = s.moveLeft();
                             break;
                         default:
                             move = Snake.D;
