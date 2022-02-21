@@ -26,6 +26,7 @@ public class Session {
     boolean patched = false;
     int stateToRestore = -1;
     int xMin, yMin, xMax, yMax;
+    private boolean avoidEdges = true;
 
     private boolean checkDoomed() {
         boolean ret = false;
@@ -60,7 +61,7 @@ public class Session {
 
     private boolean canMoveUp(){
         try {
-            return pos.y < yMax
+            return  pos.y < yMax
                     && myBody[pos.y + 1][pos.x] == 0
                     && enemyBodies[pos.y + 1][pos.x] == 0
                     && (enterDangerZone || enemyNextMovePossibleLocations[pos.y + 1][pos.x] < len);
@@ -106,7 +107,7 @@ public class Session {
 
     private boolean canMoveRight(){
         try {
-            return pos.x < xMax
+            return  pos.x < xMax
                     && myBody[pos.y][pos.x + 1] == 0
                     && enemyBodies[pos.y][pos.x + 1] == 0
                     && (enterDangerZone || enemyNextMovePossibleLocations[pos.y][pos.x + 1] < len);
@@ -166,8 +167,8 @@ public class Session {
 
     private boolean canMoveDown(){
         try {
-            return pos.y > yMin &&
-                    myBody[pos.y - 1][pos.x] == 0
+            return  pos.y > yMin
+                    && myBody[pos.y - 1][pos.x] == 0
                     && enemyBodies[pos.y - 1][pos.x] == 0
                     && (enterDangerZone || enemyNextMovePossibleLocations[pos.y - 1][pos.x] < len);
             //&& (pos.y < 2 || enemyHeads[pos.y - 2][pos.x] < len)
@@ -188,7 +189,7 @@ public class Session {
         logState("DOWN");
 
         if (canMoveDown()) {
-            if (tPhase == 2 && pos.y == 1) {
+            if (tPhase == 2 && pos.y == yMin + 1) {
                 tPhase = 1;
                 state = Snake.RIGHT;
                 return moveRight(reset);
@@ -247,7 +248,7 @@ public class Session {
                 ;
             }
             if (canMoveLeft && (isSpaceToLeft || tPhase > 0)) {
-                if (pos.x == 1) {
+                if (pos.x == xMin + 1) {
                     if (pos.y == yMax) {
                         if (tPhase != 2) {
                             tPhase = 1;
