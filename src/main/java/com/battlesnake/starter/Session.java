@@ -15,7 +15,7 @@ public class Session {
     int state = 0;
     int tPhase = 0;
     ArrayList<Integer> cmdChain = null;
-    boolean enterDangerZone = false;
+
     boolean doomed = false;
     int X = -1;
     int Y = -1;
@@ -25,21 +25,46 @@ public class Session {
     ArrayList<Point> foodPlaces = null;
     boolean patched = false;
     int stateToRestore = -1;
-    int xMin, yMin, xMax, yMax;
+    private boolean enterDangerZone = false;
     private boolean avoidEdges = true;
+    private int xMin, yMin, xMax, yMax;
+
+    public void initSaveBoardBounds(){
+        yMin = 1;
+        xMin = 1;
+        yMax = Y - 2;
+        xMax = X - 2;
+        enterDangerZone = false;
+        avoidEdges = true;
+    }
+
+    private void setFullBoardBounds(){
+        yMin = 0;
+        xMin = 0;
+        yMax = Y - 1;
+        xMax = X - 1;
+    }
 
     private boolean checkDoomed() {
         boolean ret = false;
         if(cmdChain.size() > 4){
-            if(!enterDangerZone){
-                enterDangerZone = true;
-                int lastCmdToKeep = cmdChain.get(cmdChain.size()-1);
+            if(avoidEdges){
+                avoidEdges = false;
+                setFullBoardBounds();
+                int lastCmdToKeep = cmdChain.get(cmdChain.size() - 1);
                 cmdChain = new ArrayList<>();
                 cmdChain.add(lastCmdToKeep);
             }else {
-                doomed = true;
-                LOG.error("DOOMED!");
-                ret = true;
+                if (!enterDangerZone) {
+                    enterDangerZone = true;
+                    int lastCmdToKeep = cmdChain.get(cmdChain.size() - 1);
+                    cmdChain = new ArrayList<>();
+                    cmdChain.add(lastCmdToKeep);
+                } else {
+                    doomed = true;
+                    LOG.error("DOOMED!");
+                    ret = true;
+                }
             }
         }
         return ret;
@@ -307,7 +332,7 @@ public class Session {
 
     private void logState(final String method) {
         //new Thread(() -> {
-            LOG.info(method + " " + tPhase + " "+ enterDangerZone +" {" + cmdChain.toString() + "}");
+            LOG.info(method + " " + tPhase + " avoidEgdes? "+avoidEdges+" goDangerZone? "+ enterDangerZone +" {" + cmdChain.toString() + "}");
             LOG.info("____________________");
             for (int y = yMax; y >= 0; y--) {
                 StringBuffer b = new StringBuffer();

@@ -163,14 +163,10 @@ public class Snake {
                 if (s.X == -1) {
                     s.Y = board.get("height").asInt();
                     s.X = board.get("width").asInt();
-                    s.yMin = 0;
-                    s.xMin = 0;
-                    s.yMax = s.Y - 1;
-                    s.xMax = s.X - 1;
                 }
 
                 // clearing the used session fields...
-                s.enterDangerZone = false;
+                s.initSaveBoardBounds();
                 s.cmdChain = new ArrayList<>();
                 s.enemyBodies = new int[s.Y][s.X];
                 s.enemyNextMovePossibleLocations = new int[s.Y][s.X];
