@@ -45,19 +45,20 @@ public class Session {
         xMax = X - 1;
     }
 
-    private boolean checkDoomed() {
+    private boolean checkDoomed(int cmdToAdd) {
+        cmdChain.add(cmdToAdd);
         if(cmdChain.size() > 4){
             if(avoidBorder){
+                LOG.info("activate now GO-TO-BORDERS");
                 avoidBorder = false;
                 setFullBoardBounds();
-                int lastCmdToKeep = cmdChain.get(cmdChain.size() - 1);
                 cmdChain = new ArrayList<>();
-                cmdChain.add(lastCmdToKeep);
+                cmdChain.add(cmdToAdd);
             } else if (!enterDangerZone) {
+                LOG.info("activate now GO-TO-DANGER-ZONE");
                 enterDangerZone = true;
-                int lastCmdToKeep = cmdChain.get(cmdChain.size() - 1);
                 cmdChain = new ArrayList<>();
-                cmdChain.add(lastCmdToKeep);
+                cmdChain.add(cmdToAdd);
             } else {
                 doomed = true;
                 LOG.error("DOOMED! "+tPhase + " avoidBorder? "+ avoidBorder +" goDangerZone? "+ enterDangerZone +" {" + cmdChain.toString() + "}");
@@ -98,8 +99,7 @@ public class Session {
             // here we can generate randomness!
             return moveRight();
         } else {
-            cmdChain.add(Snake.UP);
-            if (checkDoomed()) {
+            if (checkDoomed(Snake.UP)) {
                 return Snake.D;
             }
             logState("UP");
@@ -135,8 +135,7 @@ public class Session {
         if(cmdChain.size() < 4 && cmdChain.contains(Snake.RIGHT)){
             return moveDown();
         }else {
-            cmdChain.add(Snake.RIGHT);
-            if (checkDoomed()) {
+            if (checkDoomed(Snake.RIGHT)) {
                 return Snake.L;
             }
             logState("RIGHT");
@@ -185,8 +184,7 @@ public class Session {
         if(cmdChain.size() < 4 && cmdChain.contains(Snake.DOWN)){
             return moveLeft();
         }
-        cmdChain.add(Snake.DOWN);
-        if(checkDoomed()){
+        if(checkDoomed(Snake.DOWN)){
             return Snake.U;
         }
         logState("DOWN");
@@ -220,8 +218,7 @@ public class Session {
         if(cmdChain.size() < 4 && cmdChain.contains(Snake.LEFT)){
             return moveUp();
         }else {
-            cmdChain.add(Snake.LEFT);
-            if (checkDoomed()) {
+            if (checkDoomed(Snake.LEFT)) {
                 return Snake.R;
             }
             logState("LEFT");
