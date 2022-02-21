@@ -58,6 +58,18 @@ public class Session {
         return null;
     }
 
+    private boolean canMoveUp(){
+        try {
+            return pos.y < yMax
+                    && myBody[pos.y + 1][pos.x] == 0
+                    && enemyBodies[pos.y + 1][pos.x] == 0
+                    && (enterDangerZone || enemyNextMovePossibleLocations[pos.y + 1][pos.x] < len);
+        }catch(IndexOutOfBoundsException e){
+            LOG.info("IoB @ canMoveUp check...", e);
+            return false;
+        }
+    }
+
     public String moveUp(boolean reset) {
         if(cmdChain.size() < 4 && cmdChain.contains(Snake.UP)){
             return moveRight(reset);
@@ -67,12 +79,7 @@ public class Session {
                 return Snake.D;
             }
             logState("UP");
-            if (pos.y < yMax &&
-                    myBody[pos.y + 1][pos.x] == 0
-                    && enemyBodies[pos.y + 1][pos.x] == 0
-                    && (enterDangerZone || enemyNextMovePossibleLocations[pos.y + 1][pos.x] < len)
-                //&& (enemyHeads.length < pos.y + 3 || enemyHeads[pos.y + 2][pos.x] < len)
-            ) {
+            if (canMoveUp()) {
                 return Snake.U;
             } else {
                 // can't move...
@@ -97,6 +104,19 @@ public class Session {
         }
     }
 
+    private boolean canMoveRight(){
+        try {
+            return pos.x < xMax
+                    && myBody[pos.y][pos.x + 1] == 0
+                    && enemyBodies[pos.y][pos.x + 1] == 0
+                    && (enterDangerZone || enemyNextMovePossibleLocations[pos.y][pos.x + 1] < len);
+                    //&& (enemyHeads[pos.y].length < pos.x + 3 || enemyHeads[pos.y][pos.x + 2] < len)
+        }catch(IndexOutOfBoundsException e){
+            LOG.info("IoB @ canMoveRight check...", e);
+            return false;
+        }
+    }
+
     public String moveRight(boolean reset) {
         if(cmdChain.size() < 4 && cmdChain.contains(Snake.RIGHT)){
             return moveDown(reset);
@@ -106,12 +126,7 @@ public class Session {
                 return Snake.L;
             }
             logState("RIGHT");
-            if (pos.x < xMax &&
-                    myBody[pos.y][pos.x + 1] == 0
-                    && enemyBodies[pos.y][pos.x + 1] == 0
-                    && (enterDangerZone || enemyNextMovePossibleLocations[pos.y][pos.x + 1] < len)
-                //&& (enemyHeads[pos.y].length < pos.x + 3 || enemyHeads[pos.y][pos.x + 2] < len)
-            ) {
+            if (canMoveRight()) {
                 return Snake.R;
             } else {
                 if (pos.x == xMax && tPhase > 0) {
@@ -149,6 +164,19 @@ public class Session {
         }
     }
 
+    private boolean canMoveDown(){
+        try {
+            return pos.y > yMin &&
+                    myBody[pos.y - 1][pos.x] == 0
+                    && enemyBodies[pos.y - 1][pos.x] == 0
+                    && (enterDangerZone || enemyNextMovePossibleLocations[pos.y - 1][pos.x] < len);
+            //&& (pos.y < 2 || enemyHeads[pos.y - 2][pos.x] < len)
+        }catch(IndexOutOfBoundsException e){
+            LOG.info("IoB @ canMoveDown check...", e);
+            return false;
+        }
+    }
+
     public String moveDown(boolean reset) {
         if(cmdChain.size() < 4 && cmdChain.contains(Snake.DOWN)){
             return moveLeft(reset);
@@ -159,12 +187,7 @@ public class Session {
         }
         logState("DOWN");
 
-        if (pos.y > yMin &&
-                myBody[pos.y - 1][pos.x] == 0
-                && enemyBodies[pos.y - 1][pos.x] == 0
-                && (enterDangerZone || enemyNextMovePossibleLocations[pos.y - 1][pos.x] < len)
-            //&& (pos.y < 2 || enemyHeads[pos.y - 2][pos.x] < len)
-        ) {
+        if (canMoveDown()) {
             if (tPhase == 2 && pos.y == 1) {
                 tPhase = 1;
                 state = Snake.RIGHT;
@@ -242,9 +265,15 @@ public class Session {
                     }
                 } else {
                     if (isSpaceToLeft) {
-                        if (tPhase > 0 && (yMax - pos.y) % 2 == 1) {
-                            tPhase = 2;
-                            return moveUp(reset);
+                        if ( tPhase > 0 && (yMax - pos.y) % 2 == 1 ) {
+                            // before we instantly decide to go up - we need to check, IF we can GO UP (and if not,
+                            // we simply really move to the LEFT (since we can!))
+                            if(canMoveUp()) {
+                                tPhase = 2;
+                                return moveUp(reset);
+                            }else{
+                                return Snake.L;
+                            }
                         } else {
                             return Snake.L;
                         }
