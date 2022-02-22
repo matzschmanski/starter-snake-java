@@ -1,13 +1,90 @@
 package com.battlesnake.starter;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.*;
 import java.util.ArrayList;
 
 public class Session {
 
-    private static final Logger LOG = LoggerFactory.getLogger(Session.class);
+    //private static final Logger LOG = LoggerFactory.getLogger(Session.class);
+    private static final SLogger LOG = new SLogger();
+
+    private static class SLogger extends ArrayList<String> {
+
+        private ArrayList<JsonNode> req = new ArrayList<>(5000);
+
+        private static final Logger iLOG = LoggerFactory.getLogger(Session.class);
+
+        public void info(String s) {
+            add(s);
+            iLOG.info(s);
+        }
+
+        public void info(String s, Throwable t) {
+            add(s);
+            iLOG.info(s, t);
+        }
+
+        public void error(String s) {
+            add(s);
+            iLOG.error(s);
+        }
+
+        public void write() {
+            Long ts = System.currentTimeMillis();
+            writeLOG(ts);
+            writeREQ(ts);
+        }
+
+        public void writeLOG(long ts) {
+            FileOutputStream fos = null;
+            try {
+                fos = new FileOutputStream(new File("log_"+ts+".txt"));
+                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+                for (String line : this) {
+                    bw.write(line);
+                    bw.newLine();
+                }
+                bw.close();
+            } catch (IOException e) {
+                iLOG.error("", e);
+            } finally {
+                if(fos != null){
+                    try {
+                        fos.close();
+                    }catch(Exception e){}
+                }
+            }
+        }
+
+        public void writeREQ(long ts) {
+            FileOutputStream fos = null;
+            try {
+                fos = new FileOutputStream(new File("req_"+ts+".txt"));
+                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+                for (JsonNode json : req) {
+                    bw.write(json.toString());
+                    bw.newLine();
+                }
+                bw.close();
+            } catch (IOException e) {
+                iLOG.error("", e);
+            } finally {
+                if(fos != null){
+                    try {
+                        fos.close();
+                    }catch(Exception e){}
+                }
+            }
+        }
+
+        public void logReq(JsonNode json) {
+            req.add(json);
+        }
+    }
 
     Point pos;
     int len;
@@ -28,6 +105,13 @@ public class Session {
     private boolean enterDangerZone = false;
     private boolean avoidBorder = true;
     private int xMin, yMin, xMax, yMax;
+
+    public void saveLog(){
+        LOG.write();
+    }
+    public void logReq(JsonNode json) {
+        LOG.logReq(json);
+    }
 
     public void initSaveBoardBounds(){
         yMin = 1;

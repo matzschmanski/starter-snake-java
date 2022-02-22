@@ -133,7 +133,9 @@ public class Snake {
          */
         public Map<String, String> start(JsonNode startRequest) {
             LOG.info("START");
-            sessions.put(startRequest.get("game").get("id").asText(), new Session());
+            Session s = new Session();
+            s.logReq(startRequest);
+            sessions.put(startRequest.get("game").get("id").asText(), s);
             return EMPTY;
         }
 
@@ -159,6 +161,7 @@ public class Snake {
             String sessId = moveRequest.get("game").get("id").asText();
             Session s = sessions.get(sessId);
             if(s != null) {
+                s.logReq(moveRequest);
                 JsonNode board = moveRequest.get("board");
                 if (s.X == -1) {
                     s.Y = board.get("height").asInt();
@@ -323,6 +326,9 @@ public class Snake {
         public Map<String, String> end(JsonNode endRequest) {
             LOG.info("END");
             Session s = sessions.remove(endRequest.get("game").get("id").asText());
+            if(s != null) {
+                s.logReq(endRequest);
+            }
 
             // get OWN ID
             JsonNode you = endRequest.get("you");
@@ -340,6 +346,10 @@ public class Snake {
                     LOG.info("****************");
                 }else {
                     LOG.info("that's not us... "+aSnake);
+                    if(s != null) {
+                        // KEEP GAME FOR LATER!
+                        s.saveLog();
+                    }
                 }
             }
             return EMPTY;
