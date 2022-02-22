@@ -38,7 +38,7 @@ public class Snake {
     static final String L = "left";
     static final String R = "right";
 
-
+    static boolean loggingFailed = false;
     /**
      * Main entry point.
      *
@@ -49,6 +49,7 @@ public class Snake {
         if (port == null) {
             LOG.info("Using default port: {}", port);
             port = "9191";
+            loggingFailed = true;
         } else {
             LOG.info("Found system provided port: {}", port);
         }
@@ -134,7 +135,9 @@ public class Snake {
         public Map<String, String> start(JsonNode startRequest) {
             LOG.info("START");
             Session s = new Session();
-            s.logReq(startRequest);
+            if(loggingFailed) {
+                s.logReq(startRequest);
+            }
             sessions.put(startRequest.get("game").get("id").asText(), s);
             return EMPTY;
         }
@@ -161,7 +164,9 @@ public class Snake {
             String sessId = moveRequest.get("game").get("id").asText();
             Session s = sessions.get(sessId);
             if(s != null) {
-                s.logReq(moveRequest);
+                if(loggingFailed) {
+                    s.logReq(moveRequest);
+                }
                 JsonNode board = moveRequest.get("board");
                 if (s.X == -1) {
                     s.Y = board.get("height").asInt();
@@ -303,6 +308,9 @@ public class Snake {
 
                 Map<String, String> response = new HashMap<>();
                 response.put("move", move);
+                if(loggingFailed) {
+                    s.logMove(move);
+                }
                 return response;
             }else{
                 // session is null ?!
@@ -326,7 +334,7 @@ public class Snake {
         public Map<String, String> end(JsonNode endRequest) {
             LOG.info("END");
             Session s = sessions.remove(endRequest.get("game").get("id").asText());
-            if(s != null) {
+            if(s != null && loggingFailed) {
                 s.logReq(endRequest);
             }
 
@@ -337,19 +345,27 @@ public class Snake {
             JsonNode board = endRequest.get("board");
             // get the locations of all snakes...
             JsonNode snakes = board.get("snakes");
-            int slen = snakes.size();
-            for (int i = 0; i < slen; i++) {
-                JsonNode aSnake = snakes.get(i);
-                if(aSnake.get("id").asText().equals(myId)) {
-                    LOG.info("****************");
-                    LOG.info("WE ARE ALIVE!!!!");
-                    LOG.info("****************");
-                }else {
-                    LOG.info("that's not us... "+aSnake);
-                    if(s != null) {
-                        // KEEP GAME FOR LATER!
-                        s.saveLog();
+            int sLen = snakes.size();
+            if(sLen > 0) {
+                for (int i = 0; i < sLen; i++) {
+                    JsonNode aSnake = snakes.get(i);
+                    if (aSnake.get("id").asText().equals(myId)) {
+                        LOG.info("****************");
+                        LOG.info("WE ARE ALIVE!!!!");
+                        LOG.info("****************");
+                    } else {
+                        LOG.info("that's not us... " + aSnake);
+                        if (s != null && loggingFailed) {
+                            // KEEP GAME FOR LATER!
+                            s.writeLogDataToFS();
+                        }
                     }
+                }
+            } else {
+                LOG.info("that's not us... ");
+                if (s != null && loggingFailed) {
+                    // KEEP GAME FOR LATER!
+                    s.writeLogDataToFS();
                 }
             }
             return EMPTY;

@@ -18,28 +18,43 @@ public class Session {
 
         private static final Logger iLOG = LoggerFactory.getLogger(Session.class);
 
+        public void debug(String s) {
+            if(Snake.loggingFailed) {
+                add(s);
+            }
+            iLOG.debug(s);
+        }
+
         public void info(String s) {
-            add(s);
+            if(Snake.loggingFailed) {
+                add(s);
+            }
             iLOG.info(s);
         }
 
         public void info(String s, Throwable t) {
-            add(s);
+            if(Snake.loggingFailed) {
+                add(s);
+            }
             iLOG.info(s, t);
         }
 
         public void error(String s) {
-            add(s);
+            if(Snake.loggingFailed) {
+                add(s);
+            }
             iLOG.error(s);
         }
 
-        public void write() {
-            Long ts = System.currentTimeMillis();
-            writeLOG(ts);
-            writeREQ(ts);
+        private void write() {
+            if(Snake.loggingFailed) {
+                Long ts = System.currentTimeMillis();
+                writeLOG(ts);
+                writeREQ(ts);
+            }
         }
 
-        public void writeLOG(long ts) {
+        private void writeLOG(long ts) {
             FileOutputStream fos = null;
             try {
                 fos = new FileOutputStream(new File("log_"+ts+".txt"));
@@ -60,7 +75,7 @@ public class Session {
             }
         }
 
-        public void writeREQ(long ts) {
+        private void writeREQ(long ts) {
             FileOutputStream fos = null;
             try {
                 fos = new FileOutputStream(new File("req_"+ts+".txt"));
@@ -81,7 +96,7 @@ public class Session {
             }
         }
 
-        public void logReq(JsonNode json) {
+        private void logReq(JsonNode json) {
             req.add(json);
         }
     }
@@ -106,11 +121,16 @@ public class Session {
     private boolean avoidBorder = true;
     private int xMin, yMin, xMax, yMax;
 
-    public void saveLog(){
+    public void writeLogDataToFS(){
         LOG.write();
     }
+
     public void logReq(JsonNode json) {
         LOG.logReq(json);
+    }
+
+    public void logMove(String move) {
+        LOG.add("=> RESULTING MOVE: "+move);
     }
 
     public void initSaveBoardBounds(){
@@ -184,18 +204,23 @@ public class Session {
             return moveRight();
         } else {
             if (checkDoomed(Snake.UP)) {
+LOG.debug("UP: DOOMED -> "+Snake.D);
                 return Snake.D;
             }
             logState("UP");
             if (canMoveUp()) {
+LOG.debug("UP: YES -> "+Snake.U);
                 return Snake.U;
             } else {
+LOG.debug("UP: NO");
                 // can't move...
                 if(pos.x < xMax/2 || cmdChain.contains(Snake.LEFT)) {
                     state = Snake.RIGHT;
+LOG.debug("UP: NO - check RIGHT x:" + pos.x + " < Xmax/2:"+ xMax/2);
                     return moveRight();
                 } else {
                     state = Snake.LEFT;
+LOG.debug("UP: NO - check LEFT");
                     return moveLeft();
                 }
             }
@@ -220,12 +245,15 @@ public class Session {
             return moveDown();
         }else {
             if (checkDoomed(Snake.RIGHT)) {
+LOG.debug("RIGHT: DOOMED -> "+Snake.L);
                 return Snake.L;
             }
             logState("RIGHT");
             if (canMoveRight()) {
                 return Snake.R;
             } else {
+LOG.debug("RIGHT: NO");
+                // can't move...
                 if (pos.x == xMax && tPhase > 0) {
                     if (pos.y == yMax) {
                         // we should NEVER BE HERE!!
@@ -239,12 +267,18 @@ public class Session {
                         return moveUp();//U;
                     }
                 } else {
-                    if(pos.y < yMax/2 || cmdChain.contains(Snake.DOWN)) {
+                    // if we are in the pending mode, we prefer to go up ALWAYS
+                    if (tPhase > 0 && !cmdChain.contains(Snake.UP)) {
                         state = Snake.UP;
                         return moveUp();
-                    } else {
-                        state = Snake.DOWN;
-                        return moveDown();
+                    }else {
+                        if (pos.y < yMax / 2 || cmdChain.contains(Snake.DOWN)) {
+                            state = Snake.UP;
+                            return moveUp();
+                        } else {
+                            state = Snake.DOWN;
+                            return moveDown();
+                        }
                     }
                 }
             }
@@ -269,6 +303,7 @@ public class Session {
             return moveLeft();
         }
         if(checkDoomed(Snake.DOWN)){
+LOG.debug("DOWN: DOOMED -> "+Snake.U);
             return Snake.U;
         }
         logState("DOWN");
@@ -298,16 +333,81 @@ public class Session {
         }
     }
 
+    private boolean canMoveLeft(){
+        try {
+            return  pos.x > xMin
+                    && myBody[pos.y][pos.x - 1] == 0
+                    && enemyBodies[pos.y][pos.x - 1] == 0
+                    && (enterDangerZone || enemyNextMovePossibleLocations[pos.y][pos.x - 1] < len);
+            //&& (pos.y < 2 || enemyHeads[pos.y - 2][pos.x] < len)
+        }catch(IndexOutOfBoundsException e){
+            LOG.info("IoB @ canMoveLeft check...", e);
+            return false;
+        }
+    }
+
     public String moveLeft() {
         if(cmdChain.size() < 4 && cmdChain.contains(Snake.LEFT)){
             return moveUp();
         }else {
             if (checkDoomed(Snake.LEFT)) {
+LOG.debug("LEFT: DOOMED -> "+Snake.R);
                 return Snake.R;
             }
             logState("LEFT");
+            if (canMoveLeft()) {
+LOG.debug("LEFT: YES");
+                // even if we "could" move to left - let's check, if we should/will follow our program...
+                if (pos.x == xMin + 1) {
+                    // We are at the left-hand "border" side of the board
+                    if (tPhase != 2) {
+                        tPhase = 1;
+                    }
+                    if (pos.y == yMax) {
+                        state = Snake.DOWN;
+                        return Snake.L;
+                    } else {
+                        if(canMoveUp()) {
+                            state = Snake.RIGHT;
+                            return moveUp();// U;
+                        } else {
+                            return Snake.L;
+                        }
+                    }
+                } else {
+                    if ((yMax - pos.y) % 2 == 1) {
+                        // before we instantly decide to go up - we need to check, IF we can GO UP (and if not,
+                        // we simply really move to the LEFT (since we can!))
+                        if (canMoveUp()) {
+                            tPhase = 2;
+                            return moveUp();
+                        } else {
+                            return Snake.L;
+                        }
+                    } else {
+                        return Snake.L;
+                    }
+                }
+            } else {
+                // can't move...
+LOG.debug("LEFT: NO");
+                // if we are in the pending mode, we prefer to go ALWAYS UP
+                if (tPhase > 0 && !cmdChain.contains(Snake.UP)) {
+                    state = Snake.UP;
+                    return moveUp();
+                }else {
+                    if (pos.y < yMax / 2 || cmdChain.contains(Snake.DOWN)) {
+                        state = Snake.UP;
+                        return moveUp();
+                    } else {
+                        state = Snake.DOWN;
+                        return moveDown();
+                    }
+                }
+            }
 
-            boolean canMoveLeft = pos.x > xMin;
+
+            /*boolean canMoveLeft = pos.x > xMin;
             boolean isSpaceToLeft = false;
             if(pos.x > 0) {
                 isSpaceToLeft = myBody[pos.y][pos.x - 1] == 0
@@ -360,7 +460,7 @@ public class Session {
                     state = Snake.DOWN;
                     return moveDown();
                 }
-            }
+            }*/
         }
     }
 
