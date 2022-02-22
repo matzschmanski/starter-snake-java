@@ -172,7 +172,7 @@ public class Snake {
 
                 String move = calculateNextMove(s);
 
-                LOG.info("next move: -> "+move);
+                LOG.info("next move: -> "+move+" ["+s.state+"]");
 
                 // after we have calculated our next move, we might want to check, IF we can make an additional
                 // move after this one...

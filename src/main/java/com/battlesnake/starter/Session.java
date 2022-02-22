@@ -571,6 +571,22 @@ LOG.debug("LEFT: NO");
             }
             LOG.info("--------------------");
         }
-        LOG.info(method + " " + tPhase + " avoidBorder? " + avoidBorder + " goDangerZone? " + enterDangerZone + " {" + cmdChain.toString() + "}");
+
+        String stateAsString = null;
+        switch (state) {
+            case Snake.UP:
+                stateAsString = Snake.U;
+                break;
+            case Snake.RIGHT:
+                stateAsString = Snake.R;
+                break;
+            case Snake.DOWN:
+                stateAsString = Snake.D;
+                break;
+            case Snake.LEFT:
+                stateAsString = Snake.L;
+                break;
+        }
+        LOG.info(method + " moveState:" +stateAsString.substring(0,2).toUpperCase()+"["+state+"] phase:"+ tPhase + " avoidBorder? " + avoidBorder + " goDangerZone? " + enterDangerZone + " {" + cmdChain.toString() + "}");
     }
 }
