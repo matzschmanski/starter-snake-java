@@ -256,6 +256,15 @@ public class Snake {
             JsonNode you = moveRequest.get("you");
             String myId = you.get("id").asText();
 
+            // reading about available food...
+            JsonNode food = board.get("food");
+            if (food != null) {
+                int fLen = food.size();
+                for (int i = 0; i < fLen; i++) {
+                    s.foodPlaces.add(new Point(food.get(i)));
+                }
+            }
+
             // get the locations of all snakes...
             JsonNode snakes = board.get("snakes");
             int sLen = snakes.size();
@@ -267,39 +276,57 @@ public class Snake {
                     JsonNode body = aSnake.get("body");
                     int bLen = body.size();
 
-                    // we start from j=1 here - since we handle the other SneakHEAD's
-                    // later!!
-                    for (int j = 1; j < bLen; j++) {
-                        Point p = new Point(body.get(j));
-                        s.enemyBodies[p.y][p.x] = 1;
-                    }
-
-                    JsonNode head = aSnake.get("head");
-                    Point h = new Point(head);
+                    Point h = new Point(aSnake.get("head"));
                     s.enemyBodies[h.y][h.x] = len;
+
+                    boolean isFoodReachable = false;
                     try {
                         if (s.enemyBodies[h.y - 1][h.x] == 0) {
                             s.enemyNextMovePossibleLocations[h.y - 1][h.x] = len;
+                            if(s.foodPlaces.contains(new Point(h.y - 1, h.x))){
+                                isFoodReachable = true;
+                            }
                         }
                     } catch (IndexOutOfBoundsException e) {
                     }
                     try {
                         if (s.enemyBodies[h.y + 1][h.x] == 0) {
                             s.enemyNextMovePossibleLocations[h.y + 1][h.x] = len;
+                            if(!isFoodReachable && s.foodPlaces.contains(new Point(h.y + 1, h.x))){
+                                isFoodReachable = true;
+                            }
                         }
                     } catch (IndexOutOfBoundsException e) {
                     }
                     try {
                         if (s.enemyBodies[h.y][h.x - 1] == 0) {
                             s.enemyNextMovePossibleLocations[h.y][h.x - 1] = len;
+                            if(!isFoodReachable && s.foodPlaces.contains(new Point(h.y, h.x - 1))){
+                                isFoodReachable = true;
+                            }
                         }
                     } catch (IndexOutOfBoundsException e) {
                     }
                     try {
                         if (s.enemyBodies[h.y][h.x + 1] == 0) {
                             s.enemyNextMovePossibleLocations[h.y][h.x + 1] = len;
+                            if(!isFoodReachable && s.foodPlaces.contains(new Point(h.y, h.x + 1))){
+                                isFoodReachable = true;
+                            }
                         }
                     } catch (IndexOutOfBoundsException e) {
+                    }
+
+                    // IF THERE is NO FOOD directly ahead of the enemySnake, we can ignore the last
+                    // PART of the snake as well!!
+                    if(!isFoodReachable) {
+                        bLen--;
+                    }
+
+                    // we start from j=1 here - since we have handled the SneakHEAD's already
+                    for (int j = 1; j < bLen; j++) {
+                        Point p = new Point(body.get(j));
+                        s.enemyBodies[p.y][p.x] = 1;
                     }
                 }
             }
@@ -448,15 +475,6 @@ public class Snake {
     }
 
     private void oldFoodHuntCode(JsonNode board, Session s){
-        JsonNode food = board.get("food");
-        if (food != null) {
-            int flen = food.size();
-            for (int i = 0; i < flen; i++) {
-                s.foodPlaces.add(new Point(food.get(i)));
-            }
-        }
-
-
 
         //            boolean huntForFood = false;
         //            if(health == 100){

@@ -10,7 +10,20 @@ public class Point {
         x = p.get("x").asInt();
     }
 
+    public Point(int y, int x) {
+        this.y = y;
+        this.x = x;
+    }
+
     public String toString(){
         return x+"|"+y;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof Point){
+            return y == ((Point) obj).y && x == ((Point) obj).x;
+        }
+        return super.equals(obj);
     }
 }
