@@ -1,127 +1,25 @@
 package com.battlesnake.starter;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.*;
 import java.util.ArrayList;
 import java.util.HashSet;
 
 public class Session {
 
     //private static final Logger LOG = LoggerFactory.getLogger(Session.class);
-    private static final SLogger LOG = new SLogger();
+    private static final SessionLogger LOG = new SessionLogger();
 
-    private static class SLogger extends ArrayList<String> {
-        private boolean doIt = true;
-        private ArrayList<JsonNode> req = new ArrayList<>(5000);
-
-        private static final Logger iLOG = LoggerFactory.getLogger(Session.class);
-
-        public void debug(String s) {
-            if(doIt) {
-                if (Snake.loggingFailed) {
-                    add(s);
-                }
-                iLOG.debug(s);
-            }
-        }
-
-        public void info(String s) {
-            if(doIt) {
-                if (Snake.loggingFailed) {
-                    add(s);
-                }
-                iLOG.info(s);
-            }
-        }
-
-        public void info(String s, Throwable t) {
-            if(doIt) {
-                if (Snake.loggingFailed) {
-                    add(s);
-                }
-                iLOG.info(s, t);
-            }
-        }
-
-        public void error(String s) {
-            if(doIt) {
-                if (Snake.loggingFailed) {
-                    add(s);
-                }
-                iLOG.error(s);
-            }
-        }
-
-        private void write() {
-            if(Snake.loggingFailed) {
-                Long ts = System.currentTimeMillis();
-                writeLOG(ts);
-                writeREQ(ts);
-            }
-        }
-
-        private void writeLOG(long ts) {
-            FileOutputStream fos = null;
-            try {
-                fos = new FileOutputStream(new File("log_"+ts+".txt"));
-                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
-                for (String line : this) {
-                    bw.write(line);
-                    bw.newLine();
-                }
-                bw.close();
-            } catch (IOException e) {
-                iLOG.error("", e);
-            } finally {
-                if(fos != null){
-                    try {
-                        fos.close();
-                    }catch(Exception e){}
-                }
-            }
-        }
-
-        private void writeREQ(long ts) {
-            FileOutputStream fos = null;
-            try {
-                fos = new FileOutputStream(new File("req_"+ts+".txt"));
-                BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
-                for (JsonNode json : req) {
-                    bw.write(json.toString());
-                    bw.newLine();
-                }
-                bw.close();
-            } catch (IOException e) {
-                iLOG.error("", e);
-            } finally {
-                if(fos != null){
-                    try {
-                        fos.close();
-                    }catch(Exception e){}
-                }
-            }
-        }
-
-        private void logReq(JsonNode json) {
-            req.add(json);
-        }
-    }
     public void writeLogDataToFS(){
         LOG.write();
     }
-
     public void logReq(JsonNode json) {
         LOG.logReq(json);
     }
-
     public void logMove(String move) {
-        LOG.add("=> RESULTING MOVE: "+move);
+        LOG.add("=> RESULTING MOVE: "+move+" ["+state+"]");
     }
-
-    public void log(boolean b) {
+    public void doLog(boolean b) {
         LOG.doIt = b;
     }
 
@@ -202,14 +100,50 @@ public class Session {
     }
 
     public String checkSpecialMoves(){
+        if(health < 31){
+            LOG.info("NEED FOOD!");
+            // ok we need to start to fetch FOOD!
+            // we should move into the direction of the next FOOD!
+            String possibleFoodMove = checkFoodMove();
+            if(possibleFoodMove !=null){
+                return possibleFoodMove;
+            }
+        }
+
         // if we are in the UPPERROW and the x=0 is free, let's move to the LEFT!
-        if(tPhase > 0 && pos.y == yMax && pos.x < xMax /3){
-            if(pos.x > 0) {
+        if (tPhase > 0 && pos.y == yMax && pos.x < xMax / 3) {
+            if (pos.x > 0) {
                 LOG.info("SPECIAL MOVE -> LEFT CALLED");
                 return moveLeft();
-            }else{
+            } else {
                 LOG.info("SPECIAL MOVE -> DOWN CALLED");
                 return moveDown();
+            }
+        }
+        return null;
+    }
+
+    private String checkFoodMove() {
+        Point closestFood = null;
+        int minDist = Integer.MAX_VALUE;
+        for(Point f: foodPlaces){
+            int dist = Math.abs( f.x - pos.x) + Math.abs( f.y - pos.y);
+            minDist = Math.min(minDist, dist);
+            if(minDist == dist){
+                closestFood = f;
+            }
+        }
+
+        if(closestFood != null && minDist <= X/3 + Y/3){
+            LOG.info("TRY TO GET FOOD: at: "+closestFood);
+            if(pos.x > closestFood.x){
+                return moveLeft();
+            }else if(pos.x < closestFood.x){
+                return moveRight();
+            }else if(pos.y > closestFood.y){
+                return moveDown();
+            }else{
+                return  moveUp();
             }
         }
         return null;

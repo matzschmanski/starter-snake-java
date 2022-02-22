@@ -209,9 +209,9 @@ public class Snake {
                     // TODO!!! [setting all new ENEMY positions in the Session!]
 
                     // ok when we make our next move are we doomed then?!
-                    s.log(false);
+                    s.doLog(false);
                     calculateNextMove(s);
-                    s.log(true);
+                    s.doLog(true);
 
                     // reinit the original board status...
                     s.state = sessionStateToKeep;
