@@ -34,27 +34,35 @@ public class Session {
     int X = -1;
     int Y = -1;
     boolean doomed = false;
+    ArrayList<Point> enemyHeads = null;
     int[][] enemyBodies = null;
     int[][] enemyNextMovePossibleLocations = null;
+    int maxEnemyLen = 0;
     int[][] myBody = null;
     ArrayList<Point> foodPlaces = null;
-    boolean patched = false;
-    int stateToRestore = -1;
+
     private boolean enterDangerZone = false;
     private boolean avoidBorder = true;
+    private boolean goForFood = false;
     private int xMin, yMin, xMax, yMax;
-    public boolean boardLogged;
+    public boolean boardStatusLogged;
 
     public void initSessionForTurn(int height, int width) {
         Y = height;
         X = width;
         initSaveBoardBounds();
-        boardLogged = false;
+        boardStatusLogged = false;
         doomed = false;
         cmdChain = new ArrayList<>();
+
+        enemyHeads = new ArrayList<>();
         enemyBodies = new int[Y][X];
         enemyNextMovePossibleLocations = new int[Y][X];
+        maxEnemyLen = 0;
+
         myBody = new int[Y][X];
+
+        goForFood = false;
         foodPlaces = new ArrayList<>();
     }
 
@@ -100,17 +108,22 @@ public class Session {
     }
 
     public String checkSpecialMoves(){
-        if(health < 31){
-            LOG.info("NEED FOOD!");
+        if(health < 31 || ( len <= maxEnemyLen) ){
+            LOG.info("Check for FOOD! health:" +health +"/ "+len+"<="+maxEnemyLen);
+
             // ok we need to start to fetch FOOD!
             // we should move into the direction of the next FOOD!
             String possibleFoodMove = checkFoodMove();
-            if(possibleFoodMove !=null){
+            if(possibleFoodMove != null){
                 return possibleFoodMove;
+            }else{
+                // checkFoodMove() might set the MIN/MAX to the total bounds...
+                // this needs to be reset...
+                initSaveBoardBounds();
             }
         }
 
-        // if we are in the UPPERROW and the x=0 is free, let's move to the LEFT!
+        // if we are in the UPPER-ROW and the x=0 is free, let's move to the LEFT!
         if (tPhase > 0 && pos.y == yMax && pos.x < xMax / 3) {
             if (pos.x > 0) {
                 LOG.info("SPECIAL MOVE -> LEFT CALLED");
@@ -126,7 +139,26 @@ public class Session {
     private String checkFoodMove() {
         Point closestFood = null;
         int minDist = Integer.MAX_VALUE;
-        for(Point f: foodPlaces){
+
+        // we remove all food's that are in direct distance of other snakes heads
+        ArrayList<Point> availableFoods = new ArrayList<>(foodPlaces.size());
+        availableFoods.addAll(foodPlaces);
+        for(int i=1; i <= 2; i++){
+            for (Point h: enemyHeads){
+                availableFoods.remove(new Point(h.y - i, h.x - i));
+                availableFoods.remove(new Point(h.y - i, h.x));
+                availableFoods.remove(new Point(h.y - i, h.x + i));
+
+                availableFoods.remove(new Point(h.y + i, h.x - i));
+                availableFoods.remove(new Point(h.y + i, h.x));
+                availableFoods.remove(new Point(h.y + i, h.x + i));
+
+                availableFoods.remove(new Point(h.y, h.x - i));
+                availableFoods.remove(new Point(h.y, h.x + i));
+            }
+        }
+
+        for(Point f: availableFoods) {
             int dist = Math.abs( f.x - pos.x) + Math.abs( f.y - pos.y);
             minDist = Math.min(minDist, dist);
             if(minDist == dist){
@@ -135,6 +167,17 @@ public class Session {
         }
 
         if(closestFood != null && minDist <= X/3 + Y/3){
+            goForFood = true;
+
+            if( closestFood.y == 0 ||
+                closestFood.y == Y-1 ||
+                closestFood.x == 0 ||
+                closestFood.x == X-1
+            ) {
+                avoidBorder = false;
+                setFullBoardBounds();
+            }
+
             LOG.info("TRY TO GET FOOD: at: "+closestFood);
             if(pos.x > closestFood.x){
                 return moveLeft();
@@ -262,12 +305,16 @@ LOG.debug("RIGHT: NO");
 
         if (canMoveDown()) {
 LOG.debug("DOWN: YES");
-            if (tPhase == 2 && pos.y == yMin + 1) {
-                tPhase = 1;
-                state = Snake.RIGHT;
-                return moveRight();
-            } else {
+            if(goForFood) {
                 return Snake.D;
+            } else {
+                if (tPhase == 2 && pos.y == yMin + 1) {
+                    tPhase = 1;
+                    state = Snake.RIGHT;
+                    return moveRight();
+                } else {
+                    return Snake.D;
+                }
             }
         } else {
 LOG.debug("DOWN: NO");
@@ -311,38 +358,42 @@ LOG.debug("DOWN: NO");
             logState("LE");
             if (canMoveLeft()) {
 LOG.debug("LEFT: YES");
-                // even if we "could" move to left - let's check, if we should/will follow our program...
-                if (pos.x == xMin + 1) {
-                    // We are at the left-hand "border" side of the board
-                    if (tPhase != 2) {
-                        tPhase = 1;
-                    }
-                    if (pos.y == yMax) {
-//LOG.debug("LEFT: STATE down -> RETURN: LEFT");
-                        state = Snake.DOWN;
-                        return Snake.L;
-                    } else {
-                        if(canMoveUp()) {
-//LOG.debug("LEFT: STATE right -> RETURN: UP");
-                            state = Snake.RIGHT;
-                            return moveUp();
-                        } else {
-//LOG.debug("LEFT: RETURN: LEFT");
-                            return Snake.L;
+                if(goForFood){
+                    return Snake.L;
+                }else {
+                    // even if we "could" move to left - let's check, if we should/will follow our program...
+                    if (pos.x == xMin + 1) {
+                        // We are at the left-hand "border" side of the board
+                        if (tPhase != 2) {
+                            tPhase = 1;
                         }
-                    }
-                } else {
-                    if ((yMax - pos.y) % 2 == 1) {
-                        // before we instantly decide to go up - we need to check, IF we can GO UP (and if not,
-                        // we simply really move to the LEFT (since we can!))
-                        if (canMoveUp()) {
-                            tPhase = 2;
-                            return moveUp();
-                        } else {
+                        if (pos.y == yMax) {
+                            //LOG.debug("LEFT: STATE down -> RETURN: LEFT");
+                            state = Snake.DOWN;
                             return Snake.L;
+                        } else {
+                            if (canMoveUp()) {
+                                //LOG.debug("LEFT: STATE right -> RETURN: UP");
+                                state = Snake.RIGHT;
+                                return moveUp();
+                            } else {
+                                //LOG.debug("LEFT: RETURN: LEFT");
+                                return Snake.L;
+                            }
                         }
                     } else {
-                        return Snake.L;
+                        if ((yMax - pos.y) % 2 == 1) {
+                            // before we instantly decide to go up - we need to check, IF we can GO UP (and if not,
+                            // we simply really move to the LEFT (since we can!))
+                            if (canMoveUp()) {
+                                tPhase = 2;
+                                return moveUp();
+                            } else {
+                                return Snake.L;
+                            }
+                        } else {
+                            return Snake.L;
+                        }
                     }
                 }
             } else {
@@ -386,7 +437,6 @@ LOG.debug("LEFT: NO");
                         return decideForUpOrDownUsedFromMoveLeftOrRight(Snake.LEFT);
                     }
                 }
-
 
                 // if we are in the pending mode, we prefer to go ALWAYS UP
                 //return decideForUpOrDownUsedFromMoveLeftOrRight(Snake.LEFT);
@@ -467,8 +517,8 @@ LOG.debug("LEFT: NO");
     }
 
     private void logState(final String method) {
-        if(!boardLogged) {
-            boardLogged = true;
+        if(!boardStatusLogged) {
+            boardStatusLogged = true;
             LOG.info("____________________");
             for (int y = Y - 1; y >= 0; y--) {
                 StringBuffer b = new StringBuffer();

@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -278,9 +277,10 @@ public class Snake {
                 JsonNode aSnake = snakes.get(i);
                 if (!aSnake.get("id").asText().equals(myId)) {
                     int len = aSnake.get("length").asInt();
-
+                    s.maxEnemyLen = Math.max(len, s.maxEnemyLen);
                     Point h = new Point(aSnake.get("head"));
                     s.enemyBodies[h.y][h.x] = len;
+                    s.enemyHeads.add(h);
 
                     boolean isFoodReachable = false;
                     try {
