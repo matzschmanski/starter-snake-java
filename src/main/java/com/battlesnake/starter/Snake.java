@@ -172,8 +172,11 @@ public class Snake {
 
                 String move = calculateNextMove(s);
 
+                LOG.info("next move: -> "+move);
+
                 // after we have calculated our next move, we might want to check, IF we can make an additional
                 // move after this one...
+                /*
                 if(!s.doomed){
                     int sessionStateToKeep = s.state;
 
@@ -219,6 +222,7 @@ public class Snake {
                         move = reCalculateNextMove(move, s);
                     }
                 }
+                */
 
                 Map<String, String> response = new HashMap<>();
                 response.put("move", move);
