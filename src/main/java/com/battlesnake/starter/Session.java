@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class Session {
 
@@ -107,6 +108,7 @@ public class Session {
     int state = 0;
     int tPhase = 0;
     ArrayList<Integer> cmdChain = null;
+    HashSet<Integer> movesToIgnore = new HashSet<>();
 
     boolean doomed = false;
     int X = -1;
@@ -157,11 +159,13 @@ public class Session {
                 avoidBorder = false;
                 setFullBoardBounds();
                 cmdChain = new ArrayList<>();
+                cmdChain.addAll(movesToIgnore);
                 cmdChain.add(cmdToAdd);
             } else if (!enterDangerZone) {
                 LOG.info("activate now GO-TO-DANGER-ZONE");
                 enterDangerZone = true;
                 cmdChain = new ArrayList<>();
+                cmdChain.addAll(movesToIgnore);
                 cmdChain.add(cmdToAdd);
             } else {
                 doomed = true;
@@ -204,23 +208,23 @@ public class Session {
             return moveRight();
         } else {
             if (checkDoomed(Snake.UP)) {
-LOG.debug("UP: DOOMED -> "+Snake.D);
+                //LOG.debug("UP: DOOMED -> "+Snake.D);
                 return Snake.D;
             }
             logState("UP");
             if (canMoveUp()) {
-LOG.debug("UP: YES -> "+Snake.U);
+LOG.debug("UP: YES");
                 return Snake.U;
             } else {
 LOG.debug("UP: NO");
                 // can't move...
                 if(pos.x < xMax/2 || cmdChain.contains(Snake.LEFT)) {
                     state = Snake.RIGHT;
-LOG.debug("UP: NO - check RIGHT x:" + pos.x + " < Xmax/2:"+ xMax/2);
+                    //LOG.debug("UP: NO - check RIGHT x:" + pos.x + " < Xmax/2:"+ xMax/2);
                     return moveRight();
                 } else {
                     state = Snake.LEFT;
-LOG.debug("UP: NO - check LEFT");
+                    //LOG.debug("UP: NO - check LEFT");
                     return moveLeft();
                 }
             }
@@ -245,11 +249,12 @@ LOG.debug("UP: NO - check LEFT");
             return moveDown();
         }else {
             if (checkDoomed(Snake.RIGHT)) {
-LOG.debug("RIGHT: DOOMED -> "+Snake.L);
+                //LOG.debug("RIGHT: DOOMED -> "+Snake.L);
                 return Snake.L;
             }
             logState("RIGHT");
             if (canMoveRight()) {
+LOG.debug("RIGHT: YES");
                 return Snake.R;
             } else {
 LOG.debug("RIGHT: NO");
@@ -264,22 +269,10 @@ LOG.debug("RIGHT: NO");
                         return moveDown();
                     } else {
                         state = Snake.LEFT;
-                        return moveUp();//U;
+                        return moveUp();
                     }
                 } else {
-                    // if we are in the pending mode, we prefer to go up ALWAYS
-                    if (tPhase > 0 && !cmdChain.contains(Snake.UP)) {
-                        state = Snake.UP;
-                        return moveUp();
-                    }else {
-                        if (pos.y < yMax / 2 || cmdChain.contains(Snake.DOWN)) {
-                            state = Snake.UP;
-                            return moveUp();
-                        } else {
-                            state = Snake.DOWN;
-                            return moveDown();
-                        }
-                    }
+                    return decideForUpOrDownUsedFromMoveLeftOrRight(Snake.RIGHT);
                 }
             }
         }
@@ -303,12 +296,13 @@ LOG.debug("RIGHT: NO");
             return moveLeft();
         }
         if(checkDoomed(Snake.DOWN)){
-LOG.debug("DOWN: DOOMED -> "+Snake.U);
+            //LOG.debug("DOWN: DOOMED -> "+Snake.U);
             return Snake.U;
         }
         logState("DOWN");
 
         if (canMoveDown()) {
+LOG.debug("DOWN: YES");
             if (tPhase == 2 && pos.y == yMin + 1) {
                 tPhase = 1;
                 state = Snake.RIGHT;
@@ -317,6 +311,7 @@ LOG.debug("DOWN: DOOMED -> "+Snake.U);
                 return Snake.D;
             }
         } else {
+LOG.debug("DOWN: NO");
             // can't move...
             if (tPhase > 0) {
                 state = Snake.RIGHT;
@@ -351,7 +346,7 @@ LOG.debug("DOWN: DOOMED -> "+Snake.U);
             return moveUp();
         }else {
             if (checkDoomed(Snake.LEFT)) {
-LOG.debug("LEFT: DOOMED -> "+Snake.R);
+                //LOG.debug("LEFT: DOOMED -> "+Snake.R);
                 return Snake.R;
             }
             logState("LEFT");
@@ -392,18 +387,7 @@ LOG.debug("LEFT: YES");
                 // can't move...
 LOG.debug("LEFT: NO");
                 // if we are in the pending mode, we prefer to go ALWAYS UP
-                if (tPhase > 0 && !cmdChain.contains(Snake.UP)) {
-                    state = Snake.UP;
-                    return moveUp();
-                }else {
-                    if (pos.y < yMax / 2 || cmdChain.contains(Snake.DOWN)) {
-                        state = Snake.UP;
-                        return moveUp();
-                    } else {
-                        state = Snake.DOWN;
-                        return moveDown();
-                    }
-                }
+                return decideForUpOrDownUsedFromMoveLeftOrRight(Snake.LEFT);
             }
 
 
@@ -461,6 +445,22 @@ LOG.debug("LEFT: NO");
                     return moveDown();
                 }
             }*/
+        }
+    }
+
+    private String decideForUpOrDownUsedFromMoveLeftOrRight(int cmd) {
+        // if we are in the pending mode, we prefer to go ALWAYS-UP
+        if (tPhase > 0 && !cmdChain.contains(Snake.UP)) {
+            state = Snake.UP;
+            return moveUp();
+        }else {
+            if (pos.y < yMax / 2 || cmdChain.contains(Snake.DOWN)) {
+                state = Snake.UP;
+                return moveUp();
+            } else {
+                state = Snake.DOWN;
+                return moveDown();
+            }
         }
     }
 

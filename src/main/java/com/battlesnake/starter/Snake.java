@@ -167,116 +167,16 @@ public class Snake {
                 if(loggingFailed) {
                     s.logReq(moveRequest);
                 }
-                JsonNode board = moveRequest.get("board");
-                if (s.X == -1) {
-                    s.Y = board.get("height").asInt();
-                    s.X = board.get("width").asInt();
-                }
 
-                // clearing the used session fields...
-                s.initSaveBoardBounds();
-                s.cmdChain = new ArrayList<>();
-                s.enemyBodies = new int[s.Y][s.X];
-                s.enemyNextMovePossibleLocations = new int[s.Y][s.X];
-                s.myBody = new int[s.Y][s.X];
-                s.foodPlaces = new ArrayList<>();
+                readCurrentBoardStatusIntoSession(moveRequest, s);
 
-                // get OWN SnakeID
-                JsonNode you = moveRequest.get("you");
-                String myId = you.get("id").asText();
-
-                // get the locations of all snakes...
-                JsonNode snakes = board.get("snakes");
-                int slen = snakes.size();
-                for (int i = 0; i < slen; i++) {
-                    JsonNode aSnake = snakes.get(i);
-                    if (!aSnake.get("id").asText().equals(myId)) {
-                        int len = aSnake.get("length").asInt();
-
-                        JsonNode body = aSnake.get("body");
-                        int bLen = body.size();
-
-                        // we start from j=1 here - since we handle the other SneakHEAD's
-                        // later!!
-                        for (int j = 1; j < bLen; j++) {
-                            Point p = new Point(body.get(j));
-                            s.enemyBodies[p.y][p.x] = 1;
-                        }
-
-                        JsonNode head = aSnake.get("head");
-                        Point h = new Point(head);
-                        s.enemyBodies[h.y][h.x] = len;
-                        try {
-                            if (s.enemyBodies[h.y - 1][h.x] == 0) {
-                                s.enemyNextMovePossibleLocations[h.y - 1][h.x] = len;
-                            }
-                        } catch (IndexOutOfBoundsException e) {
-                        }
-                        try {
-                            if (s.enemyBodies[h.y + 1][h.x] == 0) {
-                                s.enemyNextMovePossibleLocations[h.y + 1][h.x] = len;
-                            }
-                        } catch (IndexOutOfBoundsException e) {
-                        }
-                        try {
-                            if (s.enemyBodies[h.y][h.x - 1] == 0) {
-                                s.enemyNextMovePossibleLocations[h.y][h.x - 1] = len;
-                            }
-                        } catch (IndexOutOfBoundsException e) {
-                        }
-                        try {
-                            if (s.enemyBodies[h.y][h.x + 1] == 0) {
-                                s.enemyNextMovePossibleLocations[h.y][h.x + 1] = len;
-                            }
-                        } catch (IndexOutOfBoundsException e) {
-                        }
-                    }
-                }
-
-                JsonNode haz = board.get("hazards");
-                if (haz != null) {
-                    int hLen = haz.size();
-                    for (int i = 0; i < hLen; i++) {
-                        Point p = new Point(haz.get(i));
-                        s.myBody[p.y][p.x] = 1;
-                    }
-                }
-
-                s.health = you.get("health").asInt();
-                s.len = you.get("length").asInt();
-                JsonNode body = you.get("body");
-                int bLen = body.size();
-                for (int i = 1; i < bLen; i++) {
-                    Point p = new Point(body.get(i));
-                    s.myBody[p.y][p.x] = 1;
-                }
-                JsonNode head = you.get("head");
-                s.pos = new Point(head);
-
-                String move = s.checkSpecialMoves();
-                if (move == null) {
-                    boolean huntForFood = false;
-                    switch (s.state) {
-                        case UP:
-                            move = s.moveUp();
-                            break;
-                        case RIGHT:
-                            move = s.moveRight();
-                            break;
-                        case DOWN:
-                            move = s.moveDown();
-                            break;
-                        case LEFT:
-                            move = s.moveLeft();
-                            break;
-                        default:
-                            move = Snake.D;
-                    }
-                }
+                String move = calculateNextMove(s);
 
                 // after we have calculated our next move, we might want to check, IF we can make an additional
                 // move after this one...
-                /*if(!s.doomed){
+                if(!s.doomed){
+                    int sessionStateToKeep = s.state;
+
                     // we have to mark our current position now as part of our
                     // body...
                     try{
@@ -303,8 +203,22 @@ public class Snake {
 
                     // we have to mark all the possible enemy locations as "taken" and calculate new possible
                     // next steps locations...
-                    // I NEED TO SLEEP NOW
-                }*/
+                    // TODO!!! [setting all new ENEMY positions in the Session!]
+
+                    // ok when we make our next move are we doomed then?!
+                    LOG.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+                    calculateNextMove(s);
+                    LOG.info("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
+
+                    // reinit the original board status...
+                    s.state = sessionStateToKeep;
+
+                    if(s.doomed){
+                        LOG.info("WE WILL KILL OURSELVES in the NEXT TURN -> so select another one!");
+                        readCurrentBoardStatusIntoSession(moveRequest, s);
+                        move = reCalculateNextMove(move, s);
+                    }
+                }
 
                 Map<String, String> response = new HashMap<>();
                 response.put("move", move);
@@ -319,6 +233,136 @@ public class Snake {
                 response.put("move", R);
                 return response;
             }
+        }
+
+        private void readCurrentBoardStatusIntoSession(JsonNode moveRequest, Session s) {
+            JsonNode board = moveRequest.get("board");
+            s.Y = board.get("height").asInt();
+            s.X = board.get("width").asInt();
+
+            // clearing the used session fields...
+            s.initSaveBoardBounds();
+            s.cmdChain = new ArrayList<>();
+            s.enemyBodies = new int[s.Y][s.X];
+            s.enemyNextMovePossibleLocations = new int[s.Y][s.X];
+            s.myBody = new int[s.Y][s.X];
+            s.foodPlaces = new ArrayList<>();
+
+            // get OWN SnakeID
+            JsonNode you = moveRequest.get("you");
+            String myId = you.get("id").asText();
+
+            // get the locations of all snakes...
+            JsonNode snakes = board.get("snakes");
+            int sLen = snakes.size();
+            for (int i = 0; i < sLen; i++) {
+                JsonNode aSnake = snakes.get(i);
+                if (!aSnake.get("id").asText().equals(myId)) {
+                    int len = aSnake.get("length").asInt();
+
+                    JsonNode body = aSnake.get("body");
+                    int bLen = body.size();
+
+                    // we start from j=1 here - since we handle the other SneakHEAD's
+                    // later!!
+                    for (int j = 1; j < bLen; j++) {
+                        Point p = new Point(body.get(j));
+                        s.enemyBodies[p.y][p.x] = 1;
+                    }
+
+                    JsonNode head = aSnake.get("head");
+                    Point h = new Point(head);
+                    s.enemyBodies[h.y][h.x] = len;
+                    try {
+                        if (s.enemyBodies[h.y - 1][h.x] == 0) {
+                            s.enemyNextMovePossibleLocations[h.y - 1][h.x] = len;
+                        }
+                    } catch (IndexOutOfBoundsException e) {
+                    }
+                    try {
+                        if (s.enemyBodies[h.y + 1][h.x] == 0) {
+                            s.enemyNextMovePossibleLocations[h.y + 1][h.x] = len;
+                        }
+                    } catch (IndexOutOfBoundsException e) {
+                    }
+                    try {
+                        if (s.enemyBodies[h.y][h.x - 1] == 0) {
+                            s.enemyNextMovePossibleLocations[h.y][h.x - 1] = len;
+                        }
+                    } catch (IndexOutOfBoundsException e) {
+                    }
+                    try {
+                        if (s.enemyBodies[h.y][h.x + 1] == 0) {
+                            s.enemyNextMovePossibleLocations[h.y][h.x + 1] = len;
+                        }
+                    } catch (IndexOutOfBoundsException e) {
+                    }
+                }
+            }
+
+            JsonNode haz = board.get("hazards");
+            if (haz != null) {
+                int hLen = haz.size();
+                for (int i = 0; i < hLen; i++) {
+                    Point p = new Point(haz.get(i));
+                    s.myBody[p.y][p.x] = 1;
+                }
+            }
+
+            s.health = you.get("health").asInt();
+            s.len = you.get("length").asInt();
+            JsonNode body = you.get("body");
+            int bLen = body.size();
+            for (int i = 1; i < bLen; i++) {
+                Point p = new Point(body.get(i));
+                s.myBody[p.y][p.x] = 1;
+            }
+            JsonNode head = you.get("head");
+            s.pos = new Point(head);
+        }
+
+        private String reCalculateNextMove(String moveToIgnore, Session s) {
+            int moveKeyToIgnore = -1;
+            switch (moveToIgnore){
+                case U:
+                    moveKeyToIgnore = UP;
+                    break;
+                case R:
+                    moveKeyToIgnore = RIGHT;
+                    break;
+                case D:
+                    moveKeyToIgnore = DOWN;
+                    break;
+                case L:
+                    moveKeyToIgnore = LEFT;
+                    break;
+            }
+            s.movesToIgnore.add(moveKeyToIgnore);
+            s.cmdChain.add(moveKeyToIgnore);
+            return calculateNextMove(s);
+        }
+
+        private String calculateNextMove(Session s) {
+            String move = s.checkSpecialMoves();
+            if (move == null) {
+                switch (s.state) {
+                    case UP:
+                        move = s.moveUp();
+                        break;
+                    case RIGHT:
+                        move = s.moveRight();
+                        break;
+                    case DOWN:
+                        move = s.moveDown();
+                        break;
+                    case LEFT:
+                        move = s.moveLeft();
+                        break;
+                    default:
+                        move = Snake.D;
+                }
+            }
+            return move;
         }
 
         /**
