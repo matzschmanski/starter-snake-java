@@ -14,37 +14,45 @@ public class Session {
     private static final SLogger LOG = new SLogger();
 
     private static class SLogger extends ArrayList<String> {
-
+        private boolean doIt = true;
         private ArrayList<JsonNode> req = new ArrayList<>(5000);
 
         private static final Logger iLOG = LoggerFactory.getLogger(Session.class);
 
         public void debug(String s) {
-            if(Snake.loggingFailed) {
-                add(s);
+            if(doIt) {
+                if (Snake.loggingFailed) {
+                    add(s);
+                }
+                iLOG.debug(s);
             }
-            iLOG.debug(s);
         }
 
         public void info(String s) {
-            if(Snake.loggingFailed) {
-                add(s);
+            if(doIt) {
+                if (Snake.loggingFailed) {
+                    add(s);
+                }
+                iLOG.info(s);
             }
-            iLOG.info(s);
         }
 
         public void info(String s, Throwable t) {
-            if(Snake.loggingFailed) {
-                add(s);
+            if(doIt) {
+                if (Snake.loggingFailed) {
+                    add(s);
+                }
+                iLOG.info(s, t);
             }
-            iLOG.info(s, t);
         }
 
         public void error(String s) {
-            if(Snake.loggingFailed) {
-                add(s);
+            if(doIt) {
+                if (Snake.loggingFailed) {
+                    add(s);
+                }
+                iLOG.error(s);
             }
-            iLOG.error(s);
         }
 
         private void write() {
@@ -133,6 +141,10 @@ public class Session {
 
     public void logMove(String move) {
         LOG.add("=> RESULTING MOVE: "+move);
+    }
+
+    public void log(boolean b) {
+        LOG.doIt = b;
     }
 
     public void initSaveBoardBounds(){
