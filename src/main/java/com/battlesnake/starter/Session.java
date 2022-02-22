@@ -384,13 +384,16 @@ LOG.debug("LEFT: YES");
                         tPhase = 1;
                     }
                     if (pos.y == yMax) {
+//LOG.debug("LEFT: STATE down -> RETURN: LEFT");
                         state = Snake.DOWN;
                         return Snake.L;
                     } else {
                         if(canMoveUp()) {
+//LOG.debug("LEFT: STATE right -> RETURN: UP");
                             state = Snake.RIGHT;
-                            return moveUp();// U;
+                            return moveUp();
                         } else {
+//LOG.debug("LEFT: RETURN: LEFT");
                             return Snake.L;
                         }
                     }
@@ -411,8 +414,48 @@ LOG.debug("LEFT: YES");
             } else {
                 // can't move...
 LOG.debug("LEFT: NO");
+                // IF we can't go LEFT, then we should check, if we are at our special position
+                // SEE also 'YES' part (only difference is, that we do not MOVE to LEFT here!)
+                if (pos.x == xMin + 1) {
+                    // We are at the left-hand "border" side of the board
+                    if (tPhase != 2) {
+                        tPhase = 1;
+                    }
+                    if (pos.y == yMax) {
+                        state = Snake.DOWN;
+                        //return Snake.L;
+                        return moveDown();
+
+                    } else {
+                        if(canMoveUp()) {
+                            state = Snake.RIGHT;
+                            return moveUp();
+                        } else {
+                            //return Snake.L;
+                            return moveDown();
+                        }
+                    }
+                } else {
+                    if ((yMax - pos.y) % 2 == 1) {
+                        // before we instantly decide to go up - we need to check, IF we can GO UP (and if not,
+                        // we simply really move to the LEFT (since we can!))
+                        if (canMoveUp()) {
+                            tPhase = 2;
+                            return moveUp();
+                        } else {
+                            //return Snake.L;
+                            return moveDown();
+                        }
+                    } else {
+                        //return Snake.L;
+                        // if we are in the pending mode, we prefer to go ALWAYS UP
+                        return decideForUpOrDownUsedFromMoveLeftOrRight(Snake.LEFT);
+                    }
+                }
+
+
                 // if we are in the pending mode, we prefer to go ALWAYS UP
-                return decideForUpOrDownUsedFromMoveLeftOrRight(Snake.LEFT);
+                //return decideForUpOrDownUsedFromMoveLeftOrRight(Snake.LEFT);
             }
 
 
@@ -514,7 +557,7 @@ LOG.debug("LEFT: NO");
                                     b.append('o');
                                 } else {
                                     if(foodPlaces.contains(new Point(y,x))){
-                                        b.append('°');
+                                        b.append('.');
                                     }else {
                                         b.append(' ');
                                     }
