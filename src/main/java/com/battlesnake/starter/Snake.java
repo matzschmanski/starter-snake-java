@@ -241,16 +241,9 @@ public class Snake {
 
         private void readCurrentBoardStatusIntoSession(JsonNode moveRequest, Session s) {
             JsonNode board = moveRequest.get("board");
-            s.Y = board.get("height").asInt();
-            s.X = board.get("width").asInt();
 
             // clearing the used session fields...
-            s.initSaveBoardBounds();
-            s.cmdChain = new ArrayList<>();
-            s.enemyBodies = new int[s.Y][s.X];
-            s.enemyNextMovePossibleLocations = new int[s.Y][s.X];
-            s.myBody = new int[s.Y][s.X];
-            s.foodPlaces = new ArrayList<>();
+            s.initSessionForTurn(board.get("height").asInt(), board.get("width").asInt());
 
             // get OWN SnakeID
             JsonNode you = moveRequest.get("you");

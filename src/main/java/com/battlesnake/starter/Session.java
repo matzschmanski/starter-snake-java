@@ -109,28 +109,6 @@ public class Session {
             req.add(json);
         }
     }
-
-    Point pos;
-    int len;
-    int health;
-    int state = 0;
-    int tPhase = 0;
-    ArrayList<Integer> cmdChain = null;
-    HashSet<Integer> movesToIgnore = new HashSet<>();
-
-    boolean doomed = false;
-    int X = -1;
-    int Y = -1;
-    int[][] enemyBodies = null;
-    int[][] enemyNextMovePossibleLocations = null;
-    int[][] myBody = null;
-    ArrayList<Point> foodPlaces = null;
-    boolean patched = false;
-    int stateToRestore = -1;
-    private boolean enterDangerZone = false;
-    private boolean avoidBorder = true;
-    private int xMin, yMin, xMax, yMax;
-
     public void writeLogDataToFS(){
         LOG.write();
     }
@@ -147,7 +125,42 @@ public class Session {
         LOG.doIt = b;
     }
 
-    public void initSaveBoardBounds(){
+    int state = 0;
+    int tPhase = 0;
+
+    Point pos;
+    int len;
+    int health;
+    ArrayList<Integer> cmdChain = null;
+    HashSet<Integer> movesToIgnore = new HashSet<>();
+    int X = -1;
+    int Y = -1;
+    boolean doomed = false;
+    int[][] enemyBodies = null;
+    int[][] enemyNextMovePossibleLocations = null;
+    int[][] myBody = null;
+    ArrayList<Point> foodPlaces = null;
+    boolean patched = false;
+    int stateToRestore = -1;
+    private boolean enterDangerZone = false;
+    private boolean avoidBorder = true;
+    private int xMin, yMin, xMax, yMax;
+    public boolean boardLogged;
+
+    public void initSessionForTurn(int height, int width) {
+        Y = height;
+        X = width;
+        initSaveBoardBounds();
+        boardLogged = false;
+        doomed = false;
+        cmdChain = new ArrayList<>();
+        enemyBodies = new int[Y][X];
+        enemyNextMovePossibleLocations = new int[Y][X];
+        myBody = new int[Y][X];
+        foodPlaces = new ArrayList<>();
+    }
+
+    private void initSaveBoardBounds(){
         yMin = 1;
         xMin = 1;
         yMax = Y - 2;
@@ -264,7 +277,7 @@ LOG.debug("UP: NO");
                 //LOG.debug("RIGHT: DOOMED -> "+Snake.L);
                 return Snake.L;
             }
-            logState("RIGHT");
+            logState("RI");
             if (canMoveRight()) {
 LOG.debug("RIGHT: YES");
                 return Snake.R;
@@ -311,7 +324,7 @@ LOG.debug("RIGHT: NO");
             //LOG.debug("DOWN: DOOMED -> "+Snake.U);
             return Snake.U;
         }
-        logState("DOWN");
+        logState("DO");
 
         if (canMoveDown()) {
 LOG.debug("DOWN: YES");
@@ -361,7 +374,7 @@ LOG.debug("DOWN: NO");
                 //LOG.debug("LEFT: DOOMED -> "+Snake.R);
                 return Snake.R;
             }
-            logState("LEFT");
+            logState("LE");
             if (canMoveLeft()) {
 LOG.debug("LEFT: YES");
                 // even if we "could" move to left - let's check, if we should/will follow our program...
@@ -477,10 +490,10 @@ LOG.debug("LEFT: NO");
     }
 
     private void logState(final String method) {
-        //new Thread(() -> {
-            LOG.info(method + " " + tPhase + " avoidBorder? "+ avoidBorder +" goDangerZone? "+ enterDangerZone +" {" + cmdChain.toString() + "}");
+        if(!boardLogged) {
+            boardLogged = true;
             LOG.info("____________________");
-            for (int y = Y-1; y >= 0; y--) {
+            for (int y = Y - 1; y >= 0; y--) {
                 StringBuffer b = new StringBuffer();
                 b.append('|');
                 for (int x = 0; x < X; x++) {
@@ -493,14 +506,18 @@ LOG.debug("LEFT: NO");
                             if (enemyBodies[y][x] > 0) {
                                 if (enemyBodies[y][x] == 1) {
                                     b.append('-');
-                                }else{
+                                } else {
                                     b.append('+');
                                 }
                             } else {
-                                if(enemyNextMovePossibleLocations[y][x] > 0){
+                                if (enemyNextMovePossibleLocations[y][x] > 0) {
                                     b.append('o');
-                                }else{
-                                    b.append(' ');
+                                } else {
+                                    if(foodPlaces.contains(new Point(y,x))){
+                                        b.append('°');
+                                    }else {
+                                        b.append(' ');
+                                    }
                                 }
                             }
                         }
@@ -510,6 +527,7 @@ LOG.debug("LEFT: NO");
                 LOG.info(b.toString());
             }
             LOG.info("--------------------");
-        //}).start();
+        }
+        LOG.info(method + " " + tPhase + " avoidBorder? " + avoidBorder + " goDangerZone? " + enterDangerZone + " {" + cmdChain.toString() + "}");
     }
 }
