@@ -256,6 +256,19 @@ public class Snake {
             JsonNode you = moveRequest.get("you");
             String myId = you.get("id").asText();
 
+            s.health = you.get("health").asInt();
+            s.len = you.get("length").asInt();
+
+            JsonNode head = you.get("head");
+            s.pos = new Point(head);
+
+            JsonNode myBody = you.get("body");
+            int myBodyLen = myBody.size();
+            for (int i = 1; i < myBodyLen; i++) {
+                Point p = new Point(myBody.get(i));
+                s.myBody[p.y][p.x] = 1;
+            }
+
             // reading about available food...
             JsonNode food = board.get("food");
             if (food != null) {
@@ -272,9 +285,6 @@ public class Snake {
                 JsonNode aSnake = snakes.get(i);
                 if (!aSnake.get("id").asText().equals(myId)) {
                     int len = aSnake.get("length").asInt();
-
-                    JsonNode body = aSnake.get("body");
-                    int bLen = body.size();
 
                     Point h = new Point(aSnake.get("head"));
                     s.enemyBodies[h.y][h.x] = len;
@@ -317,12 +327,14 @@ public class Snake {
                     } catch (IndexOutOfBoundsException e) {
                     }
 
+                    // dealing with the bodies of the other snakes...
+                    JsonNode body = aSnake.get("body");
+                    int bLen = body.size();
                     // IF THERE is NO FOOD directly ahead of the enemySnake, we can ignore the last
                     // PART of the snake as well!!
                     if(!isFoodReachable) {
                         bLen--;
                     }
-
                     // we start from j=1 here - since we have handled the SneakHEAD's already
                     for (int j = 1; j < bLen; j++) {
                         Point p = new Point(body.get(j));
@@ -339,17 +351,6 @@ public class Snake {
                     s.myBody[p.y][p.x] = 1;
                 }
             }
-
-            s.health = you.get("health").asInt();
-            s.len = you.get("length").asInt();
-            JsonNode body = you.get("body");
-            int bLen = body.size();
-            for (int i = 1; i < bLen; i++) {
-                Point p = new Point(body.get(i));
-                s.myBody[p.y][p.x] = 1;
-            }
-            JsonNode head = you.get("head");
-            s.pos = new Point(head);
         }
 
         private String reCalculateNextMove(String moveToIgnore, Session s) {
