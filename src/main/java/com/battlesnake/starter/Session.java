@@ -243,7 +243,7 @@ public class Session {
         }
 
         // if we are in the UPPER-ROW and the x=0 is free, let's move to the LEFT!
-        if (tPhase > 0 && pos.y == yMax && pos.x < xMax / 3) {
+        /*if (tPhase > 0 && pos.y == yMax && pos.x < xMax / 3) {
             if (pos.x > xMax) {
                 LOG.info("SPECIAL MOVE -> LEFT CALLED");
                 return moveLeft();
@@ -251,7 +251,7 @@ public class Session {
                 LOG.info("SPECIAL MOVE -> DOWN CALLED");
                 return moveDown();
             }
-        }
+        }*/
         return null;
     }
 
@@ -440,39 +440,39 @@ LOG.debug("RIGHT: NO");
     public String moveDown() {
         if(cmdChain.size() < 4 && cmdChain.contains(Snake.DOWN)){
             return moveLeft();
-        }
-        if(checkDoomed(Snake.DOWN)){
-            //LOG.debug("DOWN: DOOMED -> "+Snake.U);
-            return Snake.U;
-        }
-        logState("DO");
-
-        if (canMoveDown()) {
-LOG.debug("DOWN: YES");
-            if(goForFood) {
-                return Snake.D;
-            } else {
-                if (tPhase == 2 && pos.y == yMin + 1) {
-                    tPhase = 1;
-                    state = Snake.RIGHT;
-                    return moveRight();
-                } else {
-                    return Snake.D;
-                }
-            }
         } else {
-LOG.debug("DOWN: NO");
-            // can't move...
-            if (tPhase > 0) {
-                state = Snake.RIGHT;
-                return moveRight();
+            if (checkDoomed(Snake.DOWN)) {
+                //LOG.debug("DOWN: DOOMED -> "+Snake.U);
+                return Snake.U;
+            }
+            logState("DO");
+            if (canMoveDown()) {
+LOG.debug("DOWN: YES");
+                if (goForFood) {
+                    return Snake.D;
+                } else {
+                    if (tPhase == 2 && pos.y == yMin + 1) {
+                        tPhase = 1;
+                        state = Snake.RIGHT;
+                        return moveRight();
+                    } else {
+                        return Snake.D;
+                    }
+                }
             } else {
-                if(pos.x < xMax/2 || cmdChain.contains(Snake.LEFT)) {
+LOG.debug("DOWN: NO");
+                // can't move...
+                if (tPhase > 0) {
                     state = Snake.RIGHT;
                     return moveRight();
                 } else {
-                    state = Snake.LEFT;
-                    return moveLeft();
+                    if (pos.x < xMax / 2 || cmdChain.contains(Snake.LEFT)) {
+                        state = Snake.RIGHT;
+                        return moveRight();
+                    } else {
+                        state = Snake.LEFT;
+                        return moveLeft();
+                    }
                 }
             }
         }
