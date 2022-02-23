@@ -362,6 +362,7 @@ public class Snake {
             // after we have read all positions/Objects we might to additionally init the current
             // session status...
             s.initSessionAfterFullBoardRead();
+            s.logState("MOVE CALLED");
         }
 
         private String reCalculateNextMove(String moveToIgnore, Session s) {

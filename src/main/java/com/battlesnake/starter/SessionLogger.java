@@ -19,7 +19,7 @@ class SessionLogger extends ArrayList<String> {
             if (Snake.loggingFailed) {
                 add(s);
             }
-            iLOG.debug(s);
+            iLOG.info(s);
         }
     }
 

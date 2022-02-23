@@ -665,10 +665,15 @@ LOG.debug("LEFT: NO");
         }
     }
 
-    private void logState(final String method) {
+    void logState(final String method) {
+        logStatus(method, false);
         if(!boardStatusLogged) {
             boardStatusLogged = true;
-            LOG.info("____________________");
+            if(X==11){
+                LOG.info("_____________");
+            }else{
+                LOG.info("_____________________");
+            }
             for (int y = Y - 1; y >= 0; y--) {
                 StringBuffer b = new StringBuffer();
                 b.append('|');
@@ -696,9 +701,12 @@ LOG.debug("LEFT: NO");
                 b.append('|');
                 LOG.info(b.toString());
             }
-            LOG.info("--------------------");
+            if(X==11){
+                LOG.info("-------------");
+            }else {
+                LOG.info("---------------------");
+            }
         }
-        logStatus(method, false);
     }
 
     private void logStatus(String msg, boolean isDoomed) {
@@ -720,8 +728,8 @@ LOG.debug("LEFT: NO");
         msg = msg
             + " st:" +stateAsString.substring(0,2).toUpperCase()+"["+state+"]"
             + " ph:"+ tPhase
-            + (preferToGetAwayFromBorder ? " GETAWAY" : "")
-            + " avoidBorder? " + avoidBorder
+            + (preferToGetAwayFromBorder ? " GAWY_BRD" : "")
+            + " avdBorder? " + avoidBorder
             + " goDanger? " + enterDangerZone
             + " goNoGo? " +enterNoGoZone
             +" {" + cmdChain.toString() + "}";
