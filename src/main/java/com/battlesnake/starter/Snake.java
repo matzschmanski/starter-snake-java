@@ -32,6 +32,8 @@ public class Snake {
     static final int DOWN = 2;
     static final int LEFT = 3;
 
+    static final String REPEATLAST = "repeat";
+
     static final String U = "up";
     static final String D = "down";
     static final String L = "left";
@@ -170,12 +172,23 @@ public class Snake {
                 readCurrentBoardStatusIntoSession(moveRequest, s);
 
                 String move = calculateNextMove(s, false);
+                if(move.equals(REPEATLAST)){
+                    // OK we are DOOMED anyhow - so we can do what ever
+                    // we want -> so we just repeat the last move...
+                    move = s.LASTMOVE;
+                    if(move == null){
+                        // WTF?!
+                        move = D;
+                    }
+                }else{
+                    s.LASTMOVE = move;
+                }
 
                 // after we have calculated our next move, we might want to check, IF we can make an additional
                 // move after this one...
                 /*if(!s.doomed){
                     int sessionStateToKeep = s.state;
-                    boolean prefState = s.preferToGetAwayFromBorder;
+                    String lastMoveToKeep = s.LASTMOVE;
 
                     // we have to mark our current position now as just part of our
                     // body... [overwrite the "len"]
@@ -220,7 +233,7 @@ public class Snake {
 
                     // reinit the original board status...
                     s.state = sessionStateToKeep;
-                    s.preferToGetAwayFromBorder = prefState;
+                    s.LASTMOVE = lastMoveToKeep;
 
                     if(s.doomed){
                         LOG.info("=> DUMP MOVE: "+move+" ["+sessionStateToKeep+"]");

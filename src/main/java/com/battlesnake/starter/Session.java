@@ -50,6 +50,8 @@ public class Session {
     private int xMin, yMin, xMax, yMax;
     public boolean boardStatusLogged;
 
+    String LASTMOVE = null;
+
     private void setFullBoardBounds(){
         yMin = 0;
         xMin = 0;
@@ -127,14 +129,6 @@ public class Session {
         };
 
         for(Point p: possibleNoGoPoints) {
-            /*boolean b1 = isNoGo(p.y,p.x);
-            boolean b2 = isNoGo2(p.y,p.x);
-            if(b1!=b2){
-                System.out.println("AAAA");
-                if(!b2){
-                    b2 = isNoGo2(p.y,p.x);
-                }
-            }*/
             if(isNoGo(p.y,p.x)) {
                 noGoArea[p.y][p.x] = 1;
             }
@@ -242,6 +236,7 @@ public class Session {
             }
         }
 
+        // REMOVED cause after REFACTOR moveLeft not needed ?!
         // if we are in the UPPER-ROW and the x=0 is free, let's move to the LEFT!
         /*if (tPhase > 0 && pos.y == yMax && pos.x < xMax / 3) {
             if (pos.x > xMax) {
@@ -321,6 +316,18 @@ public class Session {
         return null;
     }
 
+    private boolean willCreateLoop(int move){
+        // OK we have to check, if with the "planed" next move we will create a closed loop structure (either
+        // with ourselves, with the border or with any enemy...
+        try{
+
+        }catch(IndexOutOfBoundsException e){
+            LOG.info("IoB @ willCreateLoop "+ getMoveIntAsString(move)+" check...", e);
+            return false;
+        }
+        return false;
+    }
+
     private boolean canMoveUp(){
         try {
             if(preferToGetAwayFromBorder && (pos.x == 0 || pos.x == X-1)){
@@ -330,7 +337,8 @@ public class Session {
                         && myBody[pos.y + 1][pos.x] == 0
                         && (enterNoGoZone || noGoArea[pos.y + 1][pos.x] == 0)
                         && snakeBodies[pos.y + 1][pos.x] == 0
-                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y + 1][pos.x] < len);
+                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y + 1][pos.x] < len)
+                        && !willCreateLoop(Snake.UP);
             }
         }catch(IndexOutOfBoundsException e){
             LOG.info("IoB @ canMoveUp check...", e);
@@ -344,8 +352,7 @@ public class Session {
             return moveRight();
         } else {
             if (checkDoomed(Snake.UP)) {
-                //LOG.debug("UP: DOOMED -> "+Snake.D);
-                return Snake.D;
+                return Snake.REPEATLAST;
             }
             logState("UP");
             if (canMoveUp()) {
@@ -376,8 +383,8 @@ LOG.debug("UP: NO");
                         && myBody[pos.y][pos.x + 1] == 0
                         && (enterNoGoZone || noGoArea[pos.y][pos.x + 1] == 0)
                         && snakeBodies[pos.y][pos.x + 1] == 0
-                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x + 1] < len);
-                //&& (enemyHeads[pos.y].length < pos.x + 3 || enemyHeads[pos.y][pos.x + 2] < len)
+                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x + 1] < len)
+                        && !willCreateLoop(Snake.RIGHT);
             }
         }catch(IndexOutOfBoundsException e){
             LOG.info("IoB @ canMoveRight check...", e);
@@ -390,8 +397,7 @@ LOG.debug("UP: NO");
             return moveDown();
         }else {
             if (checkDoomed(Snake.RIGHT)) {
-                //LOG.debug("RIGHT: DOOMED -> "+Snake.L);
-                return Snake.L;
+                return Snake.REPEATLAST;
             }
             logState("RI");
             if (canMoveRight()) {
@@ -428,9 +434,9 @@ LOG.debug("RIGHT: NO");
                         && myBody[pos.y - 1][pos.x] == 0
                         && (enterNoGoZone || noGoArea[pos.y - 1][pos.x] == 0)
                         && snakeBodies[pos.y - 1][pos.x] == 0
-                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y - 1][pos.x] < len);
+                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y - 1][pos.x] < len)
+                        && !willCreateLoop(Snake.DOWN);
             }
-            //&& (pos.y < 2 || enemyHeads[pos.y - 2][pos.x] < len)
         }catch(IndexOutOfBoundsException e){
             LOG.info("IoB @ canMoveDown check...", e);
             return false;
@@ -442,8 +448,7 @@ LOG.debug("RIGHT: NO");
             return moveLeft();
         } else {
             if (checkDoomed(Snake.DOWN)) {
-                //LOG.debug("DOWN: DOOMED -> "+Snake.U);
-                return Snake.U;
+                return Snake.REPEATLAST;
             }
             logState("DO");
             if (canMoveDown()) {
@@ -487,9 +492,9 @@ LOG.debug("DOWN: NO");
                         && myBody[pos.y][pos.x - 1] == 0
                         && (enterNoGoZone || noGoArea[pos.y][pos.x - 1] == 0)
                         && snakeBodies[pos.y][pos.x - 1] == 0
-                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x - 1] < len);
+                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x - 1] < len)
+                        && !willCreateLoop(Snake.LEFT);
             }
-            //&& (pos.y < 2 || enemyHeads[pos.y - 2][pos.x] < len)
         }catch(IndexOutOfBoundsException e){
             LOG.info("IoB @ canMoveLeft check...", e);
             return false;
@@ -501,8 +506,7 @@ LOG.debug("DOWN: NO");
             return moveUp();
         }else {
             if (checkDoomed(Snake.LEFT)) {
-                //LOG.debug("LEFT: DOOMED -> "+Snake.R);
-                return Snake.R;
+                return Snake.REPEATLAST;
             }
             logState("LE");
             if (canMoveLeft()) {
@@ -586,66 +590,7 @@ LOG.debug("LEFT: NO");
                         return decideForUpOrDownUsedFromMoveLeftOrRight(Snake.LEFT);
                     }
                 }
-
-                // if we are in the pending mode, we prefer to go ALWAYS UP
-                //return decideForUpOrDownUsedFromMoveLeftOrRight(Snake.LEFT);
             }
-
-
-            /*boolean canMoveLeft = pos.x > xMin;
-            boolean isSpaceToLeft = false;
-            if(pos.x > 0) {
-                isSpaceToLeft = myBody[pos.y][pos.x - 1] == 0
-                                && enemyBodies[pos.y][pos.x - 1] == 0
-                                && (enterDangerZone || enemyNextMovePossibleLocations[pos.y][pos.x - 1] < len)
-                //&& (pos.x < 2 || enemyHeads[pos.y][pos.x - 2] < len)
-                ;
-            }
-            if (canMoveLeft && (isSpaceToLeft || tPhase > 0)) {
-                if (pos.x == xMin + 1) {
-                    if (pos.y == yMax) {
-                        if (tPhase != 2) {
-                            tPhase = 1;
-                        }
-                        state = Snake.DOWN;
-                        // TODO check if we can MOVE LEFT
-                        return Snake.L;
-                    } else {
-                        if (tPhase != 2) {
-                            tPhase = 1;
-                        }
-                        state = Snake.RIGHT;
-                        // check if we can MOVE UP
-                        return moveUp();// U;
-                    }
-                } else {
-                    if (isSpaceToLeft) {
-                        if ( tPhase > 0 && (yMax - pos.y) % 2 == 1 ) {
-                            // before we instantly decide to go up - we need to check, IF we can GO UP (and if not,
-                            // we simply really move to the LEFT (since we can!))
-                            if(canMoveUp()) {
-                                tPhase = 2;
-                                return moveUp();
-                            }else{
-                                return Snake.L;
-                            }
-                        } else {
-                            return Snake.L;
-                        }
-                    } else {
-                        return moveUp();
-                    }
-                }
-            } else {
-                // can't move...
-                if(pos.y < yMax/2 || cmdChain.contains(Snake.DOWN)) {
-                    state = Snake.UP;
-                    return moveUp();
-                } else {
-                    state = Snake.DOWN;
-                    return moveDown();
-                }
-            }*/
         }
     }
 
@@ -709,24 +654,28 @@ LOG.debug("LEFT: NO");
         }
     }
 
-    private void logStatus(String msg, boolean isDoomed) {
-        String stateAsString = null;
-        switch (state) {
+    private String getMoveIntAsString(int move){
+        String txt = null;
+        switch (move) {
             case Snake.UP:
-                stateAsString = Snake.U;
+                txt = Snake.U;
                 break;
             case Snake.RIGHT:
-                stateAsString = Snake.R;
+                txt = Snake.R;
                 break;
             case Snake.DOWN:
-                stateAsString = Snake.D;
+                txt = Snake.D;
                 break;
             case Snake.LEFT:
-                stateAsString = Snake.L;
+                txt = Snake.L;
                 break;
         }
+        return txt;
+    }
+
+    private void logStatus(String msg, boolean isDoomed) {
         msg = msg
-            + " st:" +stateAsString.substring(0,2).toUpperCase()+"["+state+"]"
+            + " st:" + getMoveIntAsString(state).substring(0,2).toUpperCase()+"["+state+"]"
             + " ph:"+ tPhase
             + (preferToGetAwayFromBorder ? " GAWYBRD" : "")
             + " avdBorder? " + avoidBorder
