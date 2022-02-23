@@ -46,6 +46,7 @@ public class Session {
     private boolean enterNoGoZone = false;
     private boolean avoidBorder = true;
     private boolean goForFood = false;
+    boolean preferToGetAwayFromBorder = false;
     private int xMin, yMin, xMax, yMax;
     public boolean boardStatusLogged;
 
@@ -84,19 +85,23 @@ public class Session {
 
         goForFood = false;
         foodPlaces = new ArrayList<>();
+
+        preferToGetAwayFromBorder = false;
     }
 
     public void initSessionAfterFullBoardRead(){
         // before we check any special moves, we check, if we are already on the borderline, and if this is the
         // case we can/will disable 'avoid borders' flag...
+
         if(avoidBorder) {
             if (pos.y == 0 ||
                 pos.y == Y - 1 ||
                 pos.x == 0 ||
                 pos.x == X - 1
             ) {
-                avoidBorder = false;
-                setFullBoardBounds();
+                //avoidBorder = false;
+                //setFullBoardBounds();
+                preferToGetAwayFromBorder = true;
             }
         }
 
@@ -186,7 +191,13 @@ public class Session {
     private boolean checkDoomed(int cmdToAdd) {
         cmdChain.add(cmdToAdd);
         if(cmdChain.size() > 4){
-            if(avoidBorder){
+            if(preferToGetAwayFromBorder) {
+                LOG.info("activate STAY-ON-BORDER");
+                preferToGetAwayFromBorder = false;
+                cmdChain = new ArrayList<>();
+                cmdChain.addAll(movesToIgnore);
+                cmdChain.add(cmdToAdd);
+            } else if(avoidBorder){
                 LOG.info("activate now GO-TO-BORDERS");
                 avoidBorder = false;
                 setFullBoardBounds();
@@ -207,7 +218,7 @@ public class Session {
                 cmdChain.add(cmdToAdd);
             } else {
                 doomed = true;
-                LOG.error("DOOMED! "+tPhase + " avoidBorder? "+ avoidBorder +" goDangerZone? "+ enterDangerZone + " goNoGoZone? "+enterNoGoZone+" {" + cmdChain.toString() + "}");
+                LOG.error("DOOMED! "+tPhase + " getAwayFromBorder? "+preferToGetAwayFromBorder+" avoidBorder? "+ avoidBorder +" goDangerZone? "+ enterDangerZone + " goNoGoZone? "+enterNoGoZone+" {" + cmdChain.toString() + "}");
                 return true;
             }
         }
@@ -221,6 +232,7 @@ public class Session {
             // ok we need to start to fetch FOOD!
             // we should move into the direction of the next FOOD!
             String possibleFoodMove = checkFoodMove();
+            LOG.info("POSSIBLE FOOD MOVE: "+possibleFoodMove);
             if(possibleFoodMove != null){
                 return possibleFoodMove;
             }else{
@@ -278,7 +290,6 @@ public class Session {
 
         if(closestFood != null && minDist <= X/3 + Y/3){
             goForFood = true;
-
             if(avoidBorder) {
                 if (    closestFood.y == 0 ||
                         closestFood.y == Y - 1 ||
@@ -286,6 +297,7 @@ public class Session {
                         closestFood.x == X - 1
                 ) {
                     avoidBorder = false;
+                    preferToGetAwayFromBorder = false;
                     setFullBoardBounds();
                 }
             }
@@ -301,19 +313,25 @@ public class Session {
             }else if(pos.y > closestFood.y){
                 return moveDown();
             }else{
-                return  moveUp();
+                return moveUp();
             }
+        }else{
+            LOG.info("NO NEARBY FOOD FOUND minDist:"+minDist+" x:"+(X/3)+"+y:"+(Y/3)+"="+((X/3)+(Y/3)));
         }
         return null;
     }
 
     private boolean canMoveUp(){
         try {
-            return  pos.y < yMax
-                    && myBody[pos.y + 1][pos.x] == 0
-                    && (enterNoGoZone || noGoArea[pos.y + 1][pos.x] == 0)
-                    && snakeBodies[pos.y + 1][pos.x] == 0
-                    && (enterDangerZone || snakeNextMovePossibleLocations[pos.y + 1][pos.x] < len);
+            if(preferToGetAwayFromBorder && (pos.x == 0 || pos.x == X-1)){
+                return false;
+            }else {
+                return  pos.y < yMax
+                        && myBody[pos.y + 1][pos.x] == 0
+                        && (enterNoGoZone || noGoArea[pos.y + 1][pos.x] == 0)
+                        && snakeBodies[pos.y + 1][pos.x] == 0
+                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y + 1][pos.x] < len);
+            }
         }catch(IndexOutOfBoundsException e){
             LOG.info("IoB @ canMoveUp check...", e);
             return false;
@@ -351,12 +369,16 @@ LOG.debug("UP: NO");
 
     private boolean canMoveRight(){
         try {
-            return  pos.x < xMax
-                    && myBody[pos.y][pos.x + 1] == 0
-                    && (enterNoGoZone || noGoArea[pos.y][pos.x + 1] == 0)
-                    && snakeBodies[pos.y][pos.x + 1] == 0
-                    && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x + 1] < len);
-                    //&& (enemyHeads[pos.y].length < pos.x + 3 || enemyHeads[pos.y][pos.x + 2] < len)
+            if(preferToGetAwayFromBorder && (pos.y == 0 || pos.y == Y-1)){
+                return false;
+            }else {
+                return  pos.x < xMax
+                        && myBody[pos.y][pos.x + 1] == 0
+                        && (enterNoGoZone || noGoArea[pos.y][pos.x + 1] == 0)
+                        && snakeBodies[pos.y][pos.x + 1] == 0
+                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x + 1] < len);
+                //&& (enemyHeads[pos.y].length < pos.x + 3 || enemyHeads[pos.y][pos.x + 2] < len)
+            }
         }catch(IndexOutOfBoundsException e){
             LOG.info("IoB @ canMoveRight check...", e);
             return false;
@@ -399,11 +421,15 @@ LOG.debug("RIGHT: NO");
 
     private boolean canMoveDown(){
         try {
-            return  pos.y > yMin
-                    && myBody[pos.y - 1][pos.x] == 0
-                    && (enterNoGoZone || noGoArea[pos.y - 1][pos.x] == 0)
-                    && snakeBodies[pos.y - 1][pos.x] == 0
-                    && (enterDangerZone || snakeNextMovePossibleLocations[pos.y - 1][pos.x] < len);
+            if(preferToGetAwayFromBorder && (pos.x == 0 || pos.x == X-1)){
+                return false;
+            }else {
+                return  pos.y > yMin
+                        && myBody[pos.y - 1][pos.x] == 0
+                        && (enterNoGoZone || noGoArea[pos.y - 1][pos.x] == 0)
+                        && snakeBodies[pos.y - 1][pos.x] == 0
+                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y - 1][pos.x] < len);
+            }
             //&& (pos.y < 2 || enemyHeads[pos.y - 2][pos.x] < len)
         }catch(IndexOutOfBoundsException e){
             LOG.info("IoB @ canMoveDown check...", e);
@@ -454,11 +480,15 @@ LOG.debug("DOWN: NO");
 
     private boolean canMoveLeft(){
         try {
-            return  pos.x > xMin
-                    && myBody[pos.y][pos.x - 1] == 0
-                    && (enterNoGoZone || noGoArea[pos.y][pos.x - 1] == 0)
-                    && snakeBodies[pos.y][pos.x - 1] == 0
-                    && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x - 1] < len);
+            if(preferToGetAwayFromBorder && (pos.y == 0 || pos.y == Y-1)){
+                return false;
+            }else {
+                return  pos.x > xMin
+                        && myBody[pos.y][pos.x - 1] == 0
+                        && (enterNoGoZone || noGoArea[pos.y][pos.x - 1] == 0)
+                        && snakeBodies[pos.y][pos.x - 1] == 0
+                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x - 1] < len);
+            }
             //&& (pos.y < 2 || enemyHeads[pos.y - 2][pos.x] < len)
         }catch(IndexOutOfBoundsException e){
             LOG.info("IoB @ canMoveLeft check...", e);
@@ -684,6 +714,6 @@ LOG.debug("LEFT: NO");
                 stateAsString = Snake.L;
                 break;
         }
-        LOG.info(method + " moveState:" +stateAsString.substring(0,2).toUpperCase()+"["+state+"] phase:"+ tPhase + " avoidBorder? " + avoidBorder + " goDangerZone? " + enterDangerZone + " goNoGoZone? "+enterNoGoZone+" {" + cmdChain.toString() + "}");
+        LOG.info(method + " moveState:" +stateAsString.substring(0,2).toUpperCase()+"["+state+"] phase:"+ tPhase + " getAwayFromBorder? "+preferToGetAwayFromBorder+" avoidBorder? " + avoidBorder + " goDangerZone? " + enterDangerZone + " goNoGoZone? "+enterNoGoZone+" {" + cmdChain.toString() + "}");
     }
 }

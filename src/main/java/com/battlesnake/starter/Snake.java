@@ -173,8 +173,9 @@ public class Snake {
 
                 // after we have calculated our next move, we might want to check, IF we can make an additional
                 // move after this one...
-                if(!s.doomed){
+                /*if(!s.doomed){
                     int sessionStateToKeep = s.state;
+                    boolean prefState = s.preferToGetAwayFromBorder;
 
                     // we have to mark our current position now as just part of our
                     // body... [overwrite the "len"]
@@ -213,11 +214,13 @@ public class Snake {
 
                     // ok when we make our next move are we doomed then?!
                     s.doLog(false);
+                    s.preferToGetAwayFromBorder = false;
                     calculateNextMove(s, false);
                     s.doLog(true);
 
                     // reinit the original board status...
                     s.state = sessionStateToKeep;
+                    s.preferToGetAwayFromBorder = prefState;
 
                     if(s.doomed){
                         LOG.info("=> DUMP MOVE: "+move+" ["+sessionStateToKeep+"]");
@@ -226,7 +229,7 @@ public class Snake {
                         move = reCalculateNextMove(move, s);
                         s.movesToIgnore.clear();
                     }
-                }
+                }*/
 
                 LOG.info("=> RESULTING MOVE: "+move+" ["+s.state+"]");
                 Map<String, String> response = new HashMap<>();
