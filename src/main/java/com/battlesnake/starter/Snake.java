@@ -94,7 +94,7 @@ public class Snake {
                 } else {
                     throw new IllegalAccessError("Strange call made to the snake: " + uri);
                 }
-                LOG.info("Responding with: {}", JSON_MAPPER.writeValueAsString(snakeResponse));
+                //LOG.info("Responding with: {}", JSON_MAPPER.writeValueAsString(snakeResponse));
                 return snakeResponse;
             } catch (JsonProcessingException e) {
                 LOG.warn("Something went wrong!", e);
@@ -171,8 +171,6 @@ public class Snake {
 
                 String move = calculateNextMove(s);
 
-                LOG.info("next move: -> "+move+" ["+s.state+"]");
-
                 // after we have calculated our next move, we might want to check, IF we can make an additional
                 // move after this one...
                 /*
@@ -203,9 +201,9 @@ public class Snake {
                             break;
                     }
 
-                    // we have to mark all the possible enemy locations as "taken" and calculate new possible
+                    // we have to mark all the possible otherSnake locations as "taken" and calculate new possible
                     // next steps locations...
-                    // TODO!!! [setting all new ENEMY positions in the Session!]
+                    // TODO!!! [setting all new otherSnake positions in the Session!]
 
                     // ok when we make our next move are we doomed then?!
                     s.doLog(false);
@@ -223,6 +221,7 @@ public class Snake {
                 }
                 */
 
+                LOG.info("=> RESULTING MOVE: "+move+" ["+s.state+"]");
                 Map<String, String> response = new HashMap<>();
                 response.put("move", move);
                 if(loggingFailed) {
@@ -253,6 +252,9 @@ public class Snake {
 
             JsonNode head = you.get("head");
             s.pos = new Point(head);
+            // adding also myHead to the boddy array (to allow
+            // simple NoGoZone-Detection
+            s.myBody[s.pos.y][s.pos.x] = s.len;
 
             JsonNode myBody = you.get("body");
             int myBodyLen = myBody.size();
@@ -277,44 +279,46 @@ public class Snake {
                 JsonNode aSnake = snakes.get(i);
                 if (!aSnake.get("id").asText().equals(myId)) {
                     int len = aSnake.get("length").asInt();
-                    s.maxEnemyLen = Math.max(len, s.maxEnemyLen);
+                    s.maxOtherSnakeLen = Math.max(len, s.maxOtherSnakeLen);
                     Point h = new Point(aSnake.get("head"));
-                    s.enemyBodies[h.y][h.x] = len;
-                    s.enemyHeads.add(h);
+                    s.snakeBodies[h.y][h.x] = len;
+                    s.snakeHeads.add(h);
 
-                    boolean isFoodReachable = false;
+                    boolean isFoodReachableForSnake = false;
                     try {
-                        if (s.enemyBodies[h.y - 1][h.x] == 0) {
-                            s.enemyNextMovePossibleLocations[h.y - 1][h.x] = len;
+                        if (s.snakeBodies[h.y - 1][h.x] == 0) {
+                            s.snakeNextMovePossibleLocations[h.y - 1][h.x] = Math.max(len, s.snakeNextMovePossibleLocations[h.y - 1][h.x]);
                             if(s.foodPlaces.contains(new Point(h.y - 1, h.x))){
-                                isFoodReachable = true;
+                                isFoodReachableForSnake = true;
                             }
                         }
                     } catch (IndexOutOfBoundsException e) {
                     }
                     try {
-                        if (s.enemyBodies[h.y + 1][h.x] == 0) {
-                            s.enemyNextMovePossibleLocations[h.y + 1][h.x] = len;
-                            if(!isFoodReachable && s.foodPlaces.contains(new Point(h.y + 1, h.x))){
-                                isFoodReachable = true;
+                        if (s.snakeBodies[h.y + 1][h.x] == 0) {
+                            // it might be that at the snakeNextMovePossibleLocations we have already a value of another
+                            // snake - so we make sure that's the MAX value!
+                            s.snakeNextMovePossibleLocations[h.y + 1][h.x] = Math.max(len, s.snakeNextMovePossibleLocations[h.y + 1][h.x]);
+                            if(!isFoodReachableForSnake && s.foodPlaces.contains(new Point(h.y + 1, h.x))){
+                                isFoodReachableForSnake = true;
                             }
                         }
                     } catch (IndexOutOfBoundsException e) {
                     }
                     try {
-                        if (s.enemyBodies[h.y][h.x - 1] == 0) {
-                            s.enemyNextMovePossibleLocations[h.y][h.x - 1] = len;
-                            if(!isFoodReachable && s.foodPlaces.contains(new Point(h.y, h.x - 1))){
-                                isFoodReachable = true;
+                        if (s.snakeBodies[h.y][h.x - 1] == 0) {
+                            s.snakeNextMovePossibleLocations[h.y][h.x - 1] = Math.max(len, s.snakeNextMovePossibleLocations[h.y][h.x - 1]);
+                            if(!isFoodReachableForSnake && s.foodPlaces.contains(new Point(h.y, h.x - 1))){
+                                isFoodReachableForSnake = true;
                             }
                         }
                     } catch (IndexOutOfBoundsException e) {
                     }
                     try {
-                        if (s.enemyBodies[h.y][h.x + 1] == 0) {
-                            s.enemyNextMovePossibleLocations[h.y][h.x + 1] = len;
-                            if(!isFoodReachable && s.foodPlaces.contains(new Point(h.y, h.x + 1))){
-                                isFoodReachable = true;
+                        if (s.snakeBodies[h.y][h.x + 1] == 0) {
+                            s.snakeNextMovePossibleLocations[h.y][h.x + 1] = Math.max(len, s.snakeNextMovePossibleLocations[h.y][h.x + 1]);
+                            if(!isFoodReachableForSnake && s.foodPlaces.contains(new Point(h.y, h.x + 1))){
+                                isFoodReachableForSnake = true;
                             }
                         }
                     } catch (IndexOutOfBoundsException e) {
@@ -323,15 +327,15 @@ public class Snake {
                     // dealing with the bodies of the other snakes...
                     JsonNode body = aSnake.get("body");
                     int bLen = body.size();
-                    // IF THERE is NO FOOD directly ahead of the enemySnake, we can ignore the last
+                    // IF THERE is NO FOOD directly ahead of the other Snake, we can ignore the last
                     // PART of the snake as well!!
-                    if(!isFoodReachable) {
+                    if(!isFoodReachableForSnake) {
                         bLen--;
                     }
                     // we start from j=1 here - since we have handled the SneakHEAD's already
                     for (int j = 1; j < bLen; j++) {
                         Point p = new Point(body.get(j));
-                        s.enemyBodies[p.y][p.x] = 1;
+                        s.snakeBodies[p.y][p.x] = 1;
                     }
                 }
             }
@@ -344,6 +348,10 @@ public class Snake {
                     s.myBody[p.y][p.x] = 1;
                 }
             }
+
+            // after we have read all positions/Objects we might to additionally init the current
+            // session status...
+            s.initSessionAfterFullBoardRead();
         }
 
         private String reCalculateNextMove(String moveToIgnore, Session s) {
