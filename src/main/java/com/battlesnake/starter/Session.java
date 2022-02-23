@@ -125,7 +125,7 @@ public class Session {
 
         // if we are in the UPPER-ROW and the x=0 is free, let's move to the LEFT!
         if (tPhase > 0 && pos.y == yMax && pos.x < xMax / 3) {
-            if (pos.x > 0) {
+            if (pos.x > xMax) {
                 LOG.info("SPECIAL MOVE -> LEFT CALLED");
                 return moveLeft();
             } else {
@@ -140,7 +140,8 @@ public class Session {
         Point closestFood = null;
         int minDist = Integer.MAX_VALUE;
 
-        // we remove all food's that are in direct distance of other snakes heads
+        // we remove all food's that are in direct area of other snakes heads
+        // I don't want to battle for food with others (now)
         ArrayList<Point> availableFoods = new ArrayList<>(foodPlaces.size());
         availableFoods.addAll(foodPlaces);
         for(int i=1; i <= 2; i++){
