@@ -169,16 +169,15 @@ public class Snake {
 
                 readCurrentBoardStatusIntoSession(moveRequest, s);
 
-                String move = calculateNextMove(s);
+                String move = calculateNextMove(s, false);
 
                 // after we have calculated our next move, we might want to check, IF we can make an additional
                 // move after this one...
-                /*
                 if(!s.doomed){
                     int sessionStateToKeep = s.state;
 
-                    // we have to mark our current position now as part of our
-                    // body...
+                    // we have to mark our current position now as just part of our
+                    // body... [overwrite the "len"]
                     try{
                         s.myBody[s.pos.y][s.pos.x] = 1;
                     }catch(IndexOutOfBoundsException e){
@@ -201,25 +200,33 @@ public class Snake {
                             break;
                     }
 
+                    // and finally adding the new head to our body...
+                    try{
+                        s.myBody[s.pos.y][s.pos.x] = s.len;
+                    }catch(IndexOutOfBoundsException e){
+                        LOG.info("", e);
+                    }
+
                     // we have to mark all the possible otherSnake locations as "taken" and calculate new possible
                     // next steps locations...
                     // TODO!!! [setting all new otherSnake positions in the Session!]
 
                     // ok when we make our next move are we doomed then?!
                     s.doLog(false);
-                    calculateNextMove(s);
+                    calculateNextMove(s, false);
                     s.doLog(true);
 
                     // reinit the original board status...
                     s.state = sessionStateToKeep;
 
                     if(s.doomed){
+                        LOG.info("=> DUMP MOVE: "+move+" ["+sessionStateToKeep+"]");
                         LOG.info("WE WILL KILL OURSELVES in the NEXT TURN -> so select another one!");
                         readCurrentBoardStatusIntoSession(moveRequest, s);
                         move = reCalculateNextMove(move, s);
+                        s.movesToIgnore.clear();
                     }
                 }
-                */
 
                 LOG.info("=> RESULTING MOVE: "+move+" ["+s.state+"]");
                 Map<String, String> response = new HashMap<>();
@@ -372,11 +379,11 @@ public class Snake {
             }
             s.movesToIgnore.add(moveKeyToIgnore);
             s.cmdChain.add(moveKeyToIgnore);
-            return calculateNextMove(s);
+            return calculateNextMove(s, true);
         }
 
-        private String calculateNextMove(Session s) {
-            String move = s.checkSpecialMoves();
+        private String calculateNextMove(Session s, boolean ignoreFood) {
+            String move = s.checkSpecialMoves(ignoreFood);
             if (move == null) {
                 switch (s.state) {
                     case UP:

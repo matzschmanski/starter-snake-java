@@ -43,6 +43,7 @@ public class Session {
     ArrayList<Point> foodPlaces = null;
 
     private boolean enterDangerZone = false;
+    private boolean enterNoGoZone = false;
     private boolean avoidBorder = true;
     private boolean goForFood = false;
     private int xMin, yMin, xMax, yMax;
@@ -61,6 +62,7 @@ public class Session {
         yMax = Y - 2;
         xMax = X - 2;
         enterDangerZone = false;
+        enterNoGoZone = false;
         avoidBorder = true;
     }
 
@@ -102,20 +104,20 @@ public class Session {
         // 1) corners are NO GO's if the x+1, y+1 fields are taken!
 
         Point[] possibleNoGoPoints = new Point[]{
-                new Point(  0,    1),
-                new Point(  1,    0),
+                //new Point(  0,    1),
+                //new Point(  1,    0),
                 new Point(  0,    0),
 
-                new Point(  Y-2,  X-1),
-                new Point(  Y-1,  X-2),
+                //new Point(  Y-2,  X-1),
+                //new Point(  Y-1,  X-2),
                 new Point(  Y-1,  X-1),
 
-                new Point(  0,    X-2),
-                new Point(  1,    X-1),
+                //new Point(  0,    X-2),
+                //new Point(  1,    X-1),
                 new Point(  0,    X-1),
 
-                new Point(  Y-1,  1),
-                new Point(  Y-2,  0),
+                //new Point(  Y-1,  1),
+                //new Point(  Y-2,  0),
                 new Point(  Y-1,  0)
         };
 
@@ -197,17 +199,23 @@ public class Session {
                 cmdChain = new ArrayList<>();
                 cmdChain.addAll(movesToIgnore);
                 cmdChain.add(cmdToAdd);
+            } else if (!enterNoGoZone) {
+                LOG.info("activate now GO-TO-NO-GO-ZONE");
+                enterNoGoZone = true;
+                cmdChain = new ArrayList<>();
+                cmdChain.addAll(movesToIgnore);
+                cmdChain.add(cmdToAdd);
             } else {
                 doomed = true;
-                LOG.error("DOOMED! "+tPhase + " avoidBorder? "+ avoidBorder +" goDangerZone? "+ enterDangerZone +" {" + cmdChain.toString() + "}");
+                LOG.error("DOOMED! "+tPhase + " avoidBorder? "+ avoidBorder +" goDangerZone? "+ enterDangerZone + " goNoGoZone? "+enterNoGoZone+" {" + cmdChain.toString() + "}");
                 return true;
             }
         }
         return false;
     }
 
-    public String checkSpecialMoves(){
-        if(health < 31 || ( len <= maxOtherSnakeLen) ){
+    public String checkSpecialMoves(boolean ignoreFood){
+        if(!ignoreFood && (health < 31 || ( len <= maxOtherSnakeLen) )){
             LOG.info("Check for FOOD! health:" +health +" len:"+len+"<="+ maxOtherSnakeLen);
 
             // ok we need to start to fetch FOOD!
@@ -243,18 +251,20 @@ public class Session {
         // I don't want to battle for food with others (now)
         ArrayList<Point> availableFoods = new ArrayList<>(foodPlaces.size());
         availableFoods.addAll(foodPlaces);
-        for(int i=1; i <= 2; i++){
-            for (Point h: snakeHeads){
-                availableFoods.remove(new Point(h.y - i, h.x - i));
-                availableFoods.remove(new Point(h.y - i, h.x));
-                availableFoods.remove(new Point(h.y - i, h.x + i));
+        if(health > 15) {
+            for (int i = 1; i <= 2; i++) {
+                for (Point h : snakeHeads) {
+                    availableFoods.remove(new Point(h.y - i, h.x - i));
+                    availableFoods.remove(new Point(h.y - i, h.x));
+                    availableFoods.remove(new Point(h.y - i, h.x + i));
 
-                availableFoods.remove(new Point(h.y + i, h.x - i));
-                availableFoods.remove(new Point(h.y + i, h.x));
-                availableFoods.remove(new Point(h.y + i, h.x + i));
+                    availableFoods.remove(new Point(h.y + i, h.x - i));
+                    availableFoods.remove(new Point(h.y + i, h.x));
+                    availableFoods.remove(new Point(h.y + i, h.x + i));
 
-                availableFoods.remove(new Point(h.y, h.x - i));
-                availableFoods.remove(new Point(h.y, h.x + i));
+                    availableFoods.remove(new Point(h.y, h.x - i));
+                    availableFoods.remove(new Point(h.y, h.x + i));
+                }
             }
         }
 
@@ -281,6 +291,9 @@ public class Session {
             }
 
             LOG.info("TRY TO GET FOOD: at: "+closestFood);
+            // TODO:
+            // here we have to find a smarter way to decide, in which direction we should
+            // go to approach the food -> since currently this causing quite often "self-loops"
             if(pos.x > closestFood.x){
                 return moveLeft();
             }else if(pos.x < closestFood.x){
@@ -298,7 +311,7 @@ public class Session {
         try {
             return  pos.y < yMax
                     && myBody[pos.y + 1][pos.x] == 0
-                    && noGoArea[pos.y + 1][pos.x] == 0
+                    && (enterNoGoZone || noGoArea[pos.y + 1][pos.x] == 0)
                     && snakeBodies[pos.y + 1][pos.x] == 0
                     && (enterDangerZone || snakeNextMovePossibleLocations[pos.y + 1][pos.x] < len);
         }catch(IndexOutOfBoundsException e){
@@ -340,7 +353,7 @@ LOG.debug("UP: NO");
         try {
             return  pos.x < xMax
                     && myBody[pos.y][pos.x + 1] == 0
-                    && noGoArea[pos.y][pos.x + 1] == 0
+                    && (enterNoGoZone || noGoArea[pos.y][pos.x + 1] == 0)
                     && snakeBodies[pos.y][pos.x + 1] == 0
                     && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x + 1] < len);
                     //&& (enemyHeads[pos.y].length < pos.x + 3 || enemyHeads[pos.y][pos.x + 2] < len)
@@ -388,7 +401,7 @@ LOG.debug("RIGHT: NO");
         try {
             return  pos.y > yMin
                     && myBody[pos.y - 1][pos.x] == 0
-                    && noGoArea[pos.y - 1][pos.x] == 0
+                    && (enterNoGoZone || noGoArea[pos.y - 1][pos.x] == 0)
                     && snakeBodies[pos.y - 1][pos.x] == 0
                     && (enterDangerZone || snakeNextMovePossibleLocations[pos.y - 1][pos.x] < len);
             //&& (pos.y < 2 || enemyHeads[pos.y - 2][pos.x] < len)
@@ -443,7 +456,7 @@ LOG.debug("DOWN: NO");
         try {
             return  pos.x > xMin
                     && myBody[pos.y][pos.x - 1] == 0
-                    && noGoArea[pos.y][pos.x - 1] == 0
+                    && (enterNoGoZone || noGoArea[pos.y][pos.x - 1] == 0)
                     && snakeBodies[pos.y][pos.x - 1] == 0
                     && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x - 1] < len);
             //&& (pos.y < 2 || enemyHeads[pos.y - 2][pos.x] < len)
@@ -633,7 +646,7 @@ LOG.debug("LEFT: NO");
                     if (pos.x == x && pos.y == y) {
                         b.append("X");
                     } else if (myBody[y][x] == 1) {
-                        b.append('x');
+                        b.append('i');
                     } else if (snakeBodies[y][x] > 0) {
                         if (snakeBodies[y][x] == 1) {
                             b.append('-');
@@ -671,6 +684,6 @@ LOG.debug("LEFT: NO");
                 stateAsString = Snake.L;
                 break;
         }
-        LOG.info(method + " moveState:" +stateAsString.substring(0,2).toUpperCase()+"["+state+"] phase:"+ tPhase + " avoidBorder? " + avoidBorder + " goDangerZone? " + enterDangerZone + " {" + cmdChain.toString() + "}");
+        LOG.info(method + " moveState:" +stateAsString.substring(0,2).toUpperCase()+"["+state+"] phase:"+ tPhase + " avoidBorder? " + avoidBorder + " goDangerZone? " + enterDangerZone + " goNoGoZone? "+enterNoGoZone+" {" + cmdChain.toString() + "}");
     }
 }
