@@ -681,7 +681,7 @@ LOG.debug("LEFT: NO");
                     if (pos.x == x && pos.y == y) {
                         b.append("X");
                     } else if (myBody[y][x] == 1) {
-                        b.append('i');
+                        b.append('c');
                     } else if (snakeBodies[y][x] > 0) {
                         if (snakeBodies[y][x] == 1) {
                             b.append('-');
@@ -728,7 +728,7 @@ LOG.debug("LEFT: NO");
         msg = msg
             + " st:" +stateAsString.substring(0,2).toUpperCase()+"["+state+"]"
             + " ph:"+ tPhase
-            + (preferToGetAwayFromBorder ? " GAWY_BRD" : "")
+            + (preferToGetAwayFromBorder ? " GAWYBRD" : "")
             + " avdBorder? " + avoidBorder
             + " goDanger? " + enterDangerZone
             + " goNoGo? " +enterNoGoZone
