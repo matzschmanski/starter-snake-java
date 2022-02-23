@@ -218,7 +218,7 @@ public class Session {
                 cmdChain.add(cmdToAdd);
             } else {
                 doomed = true;
-                LOG.error("DOOMED! "+tPhase + " getAwayFromBorder? "+preferToGetAwayFromBorder+" avoidBorder? "+ avoidBorder +" goDangerZone? "+ enterDangerZone + " goNoGoZone? "+enterNoGoZone+" {" + cmdChain.toString() + "}");
+                logStatus("DOOMED!", true);
                 return true;
             }
         }
@@ -698,7 +698,10 @@ LOG.debug("LEFT: NO");
             }
             LOG.info("--------------------");
         }
+        logStatus(method, false);
+    }
 
+    private void logStatus(String msg, boolean isDoomed) {
         String stateAsString = null;
         switch (state) {
             case Snake.UP:
@@ -714,6 +717,20 @@ LOG.debug("LEFT: NO");
                 stateAsString = Snake.L;
                 break;
         }
-        LOG.info(method + " moveState:" +stateAsString.substring(0,2).toUpperCase()+"["+state+"] phase:"+ tPhase + " getAwayFromBorder? "+preferToGetAwayFromBorder+" avoidBorder? " + avoidBorder + " goDangerZone? " + enterDangerZone + " goNoGoZone? "+enterNoGoZone+" {" + cmdChain.toString() + "}");
+        msg = msg
+            + " st:" +stateAsString.substring(0,2).toUpperCase()+"["+state+"]"
+            + " ph:"+ tPhase
+            + (preferToGetAwayFromBorder ? " GETAWAY" : "")
+            + " avoidBorder? " + avoidBorder
+            + " goDanger? " + enterDangerZone
+            + " goNoGo? " +enterNoGoZone
+            +" {" + cmdChain.toString() + "}";
+        if(isDoomed){
+            LOG.error("===================================");
+            LOG.error(msg);
+            LOG.error("===================================");
+        }else{
+            LOG.info(msg);
+        }
     }
 }
