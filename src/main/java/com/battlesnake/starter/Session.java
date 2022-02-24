@@ -40,12 +40,14 @@ public class Session {
     int maxOtherSnakeLen = 0;
     int[][] myBody = null;
     int[][] noGoArea = null;
+
+    private boolean goForFood = false;
     ArrayList<Point> foodPlaces = null;
 
+    private boolean enterBorderZone = false;
     private boolean enterDangerZone = false;
     private boolean enterNoGoZone = false;
-    private boolean avoidBorder = true;
-    private boolean goForFood = false;
+
     boolean preferToGetAwayFromBorder = false;
     private int xMin, yMin, xMax, yMax;
     public boolean boardStatusLogged;
@@ -66,7 +68,7 @@ public class Session {
         xMax = X - 2;
         enterDangerZone = false;
         enterNoGoZone = false;
-        avoidBorder = true;
+        enterBorderZone = false;
     }
 
     public void initSessionForTurn(int height, int width) {
@@ -95,7 +97,7 @@ public class Session {
         // before we check any special moves, we check, if we are already on the borderline, and if this is the
         // case we can/will disable 'avoid borders' flag...
 
-        if(avoidBorder) {
+        if(!enterBorderZone) {
             if (pos.y == 0 ||
                 pos.y == Y - 1 ||
                 pos.x == 0 ||
@@ -191,9 +193,9 @@ public class Session {
                 cmdChain = new ArrayList<>();
                 cmdChain.addAll(movesToIgnore);
                 cmdChain.add(cmdToAdd);
-            } else if(avoidBorder){
+            } else if(!enterBorderZone){
                 LOG.info("activate now GO-TO-BORDERS");
-                avoidBorder = false;
+                enterBorderZone = true;
                 setFullBoardBounds();
                 cmdChain = new ArrayList<>();
                 cmdChain.addAll(movesToIgnore);
@@ -285,13 +287,13 @@ public class Session {
 
         if(closestFood != null && minDist <= X/3 + Y/3){
             goForFood = true;
-            if(avoidBorder) {
+            if(!enterBorderZone) {
                 if (    closestFood.y == 0 ||
                         closestFood.y == Y - 1 ||
                         closestFood.x == 0 ||
                         closestFood.x == X - 1
                 ) {
-                    avoidBorder = false;
+                    enterBorderZone = true;
                     preferToGetAwayFromBorder = false;
                     setFullBoardBounds();
                 }
@@ -395,9 +397,9 @@ public class Session {
             }else {
                 return  pos.y < yMax
                         && myBody[pos.y + 1][pos.x] == 0
-                        && (enterNoGoZone || noGoArea[pos.y + 1][pos.x] == 0)
                         && snakeBodies[pos.y + 1][pos.x] == 0
                         && (enterDangerZone || snakeNextMovePossibleLocations[pos.y + 1][pos.x] < len)
+                        && (enterNoGoZone || noGoArea[pos.y + 1][pos.x] == 0)
                         && !willCreateLoop(Snake.UP);
             }
         }catch(IndexOutOfBoundsException e){
@@ -441,9 +443,9 @@ LOG.debug("UP: NO");
             }else {
                 return  pos.x < xMax
                         && myBody[pos.y][pos.x + 1] == 0
-                        && (enterNoGoZone || noGoArea[pos.y][pos.x + 1] == 0)
                         && snakeBodies[pos.y][pos.x + 1] == 0
                         && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x + 1] < len)
+                        && (enterNoGoZone || noGoArea[pos.y][pos.x + 1] == 0)
                         && !willCreateLoop(Snake.RIGHT);
             }
         }catch(IndexOutOfBoundsException e){
@@ -492,9 +494,9 @@ LOG.debug("RIGHT: NO");
             }else {
                 return  pos.y > yMin
                         && myBody[pos.y - 1][pos.x] == 0
-                        && (enterNoGoZone || noGoArea[pos.y - 1][pos.x] == 0)
                         && snakeBodies[pos.y - 1][pos.x] == 0
                         && (enterDangerZone || snakeNextMovePossibleLocations[pos.y - 1][pos.x] < len)
+                        && (enterNoGoZone || noGoArea[pos.y - 1][pos.x] == 0)
                         && !willCreateLoop(Snake.DOWN);
             }
         }catch(IndexOutOfBoundsException e){
@@ -550,9 +552,9 @@ LOG.debug("DOWN: NO");
             }else {
                 return  pos.x > xMin
                         && myBody[pos.y][pos.x - 1] == 0
-                        && (enterNoGoZone || noGoArea[pos.y][pos.x - 1] == 0)
                         && snakeBodies[pos.y][pos.x - 1] == 0
                         && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x - 1] < len)
+                        && (enterNoGoZone || noGoArea[pos.y][pos.x - 1] == 0)
                         && !willCreateLoop(Snake.LEFT);
             }
         }catch(IndexOutOfBoundsException e){
@@ -738,7 +740,7 @@ LOG.debug("LEFT: NO");
             + " st:" + getMoveIntAsString(state).substring(0,2).toUpperCase()+"["+state+"]"
             + " ph:"+ tPhase
             + (preferToGetAwayFromBorder ? " GAWYBRD" : "")
-            + " avdBorder? " + avoidBorder
+            + " goBorder? " + enterBorderZone
             + " goDanger? " + enterDangerZone
             + " goNoGo? " +enterNoGoZone
             +" {" + cmdChain.toString() + "}";
