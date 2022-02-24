@@ -3,6 +3,7 @@ package com.battlesnake.starter;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.eclipse.jetty.util.IO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -179,5 +180,11 @@ public class SnakeTest {
     void buildArrayTest() throws IOException {
         JsonNode testMoveRequest = OBJECT_MAPPER.readTree("{ \"game\": { \"id\": \"game-00fe20da-94ad-11ea-bb37\", \"ruleset\": { \"name\": \"standard\", \"version\": \"v.1.2.3\" }, \"timeout\": 500 }, \"turn\": 14, \"board\": { \"height\": 11, \"width\": 11, \"food\": [{ \"x\": 5, \"y\": 5 }, { \"x\": 9, \"y\": 0 }, { \"x\": 2, \"y\": 6 }], \"hazards\": [{ \"x\": 3, \"y\": 2 }], \"snakes\": [{ \"id\": \"snake-508e96ac-94ad-11ea-bb37\", \"name\": \"My Snake\", \"health\": 54, \"body\": [{ \"x\": 0, \"y\": 0 }, { \"x\": 1, \"y\": 0 }, { \"x\": 2, \"y\": 0 }], \"latency\": \"111\", \"head\": { \"x\": 0, \"y\": 0 }, \"length\": 3, \"shout\": \"why are we shouting??\", \"squad\": \"\", \"customizations\": { \"color\": \"#FF0000\", \"head\": \"pixel\", \"tail\": \"pixel\" } }, { \"id\": \"snake-b67f4906-94ae-11ea-bb37\", \"name\": \"Another Snake\", \"health\": 16, \"body\": [{ \"x\": 5, \"y\": 4 }, { \"x\": 5, \"y\": 3 }, { \"x\": 6, \"y\": 3 }, { \"x\": 6, \"y\": 2 }], \"latency\": \"222\", \"head\": { \"x\": 5, \"y\": 4 }, \"length\": 4, \"shout\": \"I'm not really sure...\", \"squad\": \"\", \"customizations\": { \"color\": \"#26CF04\", \"head\": \"silly\", \"tail\": \"curled\" } }] }, \"you\": { \"id\": \"snake-508e96ac-94ad-11ea-bb37\", \"name\": \"My Snake\", \"health\": 54, \"body\": [{ \"x\": 0, \"y\": 0 }, { \"x\": 1, \"y\": 0 }, { \"x\": 2, \"y\": 0 }], \"latency\": \"111\", \"head\": { \"x\": 0, \"y\": 0 }, \"length\": 3, \"shout\": \"why are we shouting??\", \"squad\": \"\", \"customizations\": { \"color\": \"#FF0000\", \"head\": \"pixel\", \"tail\": \"pixel\" } } }");
         boardToArray(testMoveRequest);
+    }
+
+    @Test
+    void testFood() throws IOException{
+        JsonNode testMoveRequest = OBJECT_MAPPER.readTree("{\"game\":{\"id\":\"8d65854d-8013-4cb6-977d-b182a56fb748\",\"ruleset\":{\"name\":\"solo\",\"version\":\"v1.0.25\",\"settings\":{\"foodSpawnChance\":0,\"minimumFood\":0,\"hazardDamagePerTurn\":0,\"royale\":{\"shrinkEveryNTurns\":0},\"squad\":{\"allowBodyCollisions\":false,\"sharedElimination\":false,\"sharedHealth\":false,\"sharedLength\":false}}},\"timeout\":500,\"source\":\"challenge\"},\"turn\":17,\"board\":{\"height\":19,\"width\":19,\"snakes\":[{\"id\":\"gs_vbByKtrWWd8JqprXXj7PY9t8\",\"name\":\"tatosCooleSchlange\",\"latency\":\"275\",\"health\":83,\"body\":[{\"x\":1,\"y\":18},{\"x\":1,\"y\":17},{\"x\":1,\"y\":16}],\"head\":{\"x\":1,\"y\":18},\"length\":3,\"shout\":\"\",\"squad\":\"\",\"customizations\":{\"color\":\"#cc33ff\",\"head\":\"sand-worm\",\"tail\":\"skinny\"}}],\"food\":[{\"x\":17,\"y\":17}],\"hazards\":[]},\"you\":{\"id\":\"gs_vbByKtrWWd8JqprXXj7PY9t8\",\"name\":\"tatosCooleSchlange\",\"latency\":\"275\",\"health\":83,\"body\":[{\"x\":1,\"y\":18},{\"x\":1,\"y\":17},{\"x\":1,\"y\":16}],\"head\":{\"x\":1,\"y\":18},\"length\":3,\"shout\":\"\",\"squad\":\"\",\"customizations\":{\"color\":\"#cc33ff\",\"head\":\"sand-worm\",\"tail\":\"skinny\"}}}");
+        handler.move(testMoveRequest);
     }
 }

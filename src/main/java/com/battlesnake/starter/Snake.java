@@ -63,47 +63,90 @@ public class Snake {
          */
         private static final Map<String, String> EMPTY = new HashMap<>();
 
-        private static Node pathExists(int[][] matrix, JsonNode coordinate) {
-            matrix[coordinate.get(X).asInt()][coordinate.get(Y).asInt()] = -1024;
-            Node source = new Node(0, 0, 0);
-            Queue<Node> queue = new LinkedList<Node>();
+        private static QItem minDistance(char[][] grid, QItem source,QItem destination)
+        {
+            char oldChar =grid[destination.row][destination.col];
+            grid[destination.row][destination.col] = Util.DESTINATION;
 
-            queue.add(source);
+            // To keep track of visited QItems. Marking
+            // blocked cells as visited.
+            firstLoop:
+            for (int i = 0; i < grid.length; i++) {
+                for (int j = 0; j < grid[i].length; j++)
+                {
 
-            while (!queue.isEmpty()) {
-                Node poped = queue.poll();
-
-                if (matrix[poped.x][poped.y] == -1024) {
-
-                    return poped;
-                } else {
-                    matrix[poped.x][poped.y] = 0;
-
-                    List<Node> neighbourList = addNeighbours(poped, matrix);
-                    queue.addAll(neighbourList);
+                    // Finding source
+                    if (grid[i][j] == Util.SOURCE) {
+                        source.row = i;
+                        source.col = j;
+                        break firstLoop;
+                    }
                 }
             }
+
+            // applying BFS on matrix cells starting from source
+            Queue<QItem> queue = new LinkedList<>();
+            queue.add(new QItem(source.row, source.col, 0));
+
+            boolean[][] visited
+                    = new boolean[grid.length][grid[0].length];
+            visited[source.row][source.col] = true;
+
+            while (!queue.isEmpty()) {
+                QItem p = queue.remove();
+
+                // Destination found;
+                if (grid[p.row][p.col] == Util.DESTINATION) {
+                    grid[destination.row][destination.col] = oldChar;
+                    return p;
+                }
+
+                // moving up
+                if (isValid(p.row - 1, p.col, grid, visited)) {
+                    queue.add(new QItem(p.row - 1, p.col,
+                            p.dist + 1));
+                    visited[p.row - 1][p.col] = true;
+                }
+
+                // moving down
+                if (isValid(p.row + 1, p.col, grid, visited)) {
+                    queue.add(new QItem(p.row + 1, p.col,
+                            p.dist + 1));
+                    visited[p.row + 1][p.col] = true;
+                }
+
+                // moving left
+                if (isValid(p.row, p.col - 1, grid, visited)) {
+                    queue.add(new QItem(p.row, p.col - 1,
+                            p.dist + 1));
+                    visited[p.row][p.col - 1] = true;
+                }
+
+                // moving right
+                if (isValid(p.row, p.col + 1, grid,
+                        visited)) {
+                    queue.add(new QItem(p.row, p.col + 1,
+                            p.dist + 1));
+                    visited[p.row][p.col + 1] = true;
+                }
+            }
+            grid[destination.row][destination.col] = oldChar;
             return null;
         }
 
-        private static List<Node> addNeighbours(Node poped, int[][] matrix) {
-
-            List<Node> list = new LinkedList<Node>();
-
-            if ((poped.x - 1 >= 0 && poped.x - 1 < matrix.length) && matrix[poped.x - 1][poped.y] != 1024) {
-                list.add(new Node(poped.x - 1, poped.y, poped.distanceFromSource + 1));
+        // checking where it's valid or not
+        private static boolean isValid(int x, int y,
+                                       char[][] grid,
+                                       boolean[][] visited)
+        {
+            if (x >= 0 && y >= 0 && x < grid.length
+                    && y < grid[0].length && grid[x][y] != Util.CAN_NOT_TRAVEL
+                    && !visited[x][y]) {
+                return true;
             }
-            if ((poped.x + 1 >= 0 && poped.x + 1 < matrix.length) && matrix[poped.x + 1][poped.y] != 1024) {
-                list.add(new Node(poped.x + 1, poped.y, poped.distanceFromSource + 1));
-            }
-            if ((poped.y - 1 >= 0 && poped.y - 1 < matrix.length) && matrix[poped.x][poped.y - 1] != 1024) {
-                list.add(new Node(poped.x, poped.y - 1, poped.distanceFromSource + 1));
-            }
-            if ((poped.y + 1 >= 0 && poped.y + 1 < matrix.length) && matrix[poped.x][poped.y + 1] != 1024) {
-                list.add(new Node(poped.x, poped.y + 1, poped.distanceFromSource + 1));
-            }
-            return list;
+            return false;
         }
+
 
         /**
          * Generic processor that prints out the request and response from the methods.
@@ -224,18 +267,28 @@ public class Snake {
             GameLibrary.getInstance().getGames().getOrDefault(gameId, new GameDetails(GameMode.GO_LEFT_BOTTOM));
 
 
-            int[][] board = boardToArray(moveRequest);
+            char[][] board = boardToArray(moveRequest);
             //get food
             // calculate closest food
             JsonNode food = moveRequest.get(BOARD).get(FOOD);
+            JsonNode head = moveRequest.get(YOU).get(HEAD);
+            QItem source = new QItem(head.get(X).asInt(), head.get(Y).asInt(), 0);
 
-            List<Node> foundFood = StreamSupport.stream(food.spliterator(), true).flatMap(jsonNode -> StreamSupport.stream(jsonNode.get(BODY).spliterator(), true)).map(coordinate -> pathExists(board, coordinate)).filter(Objects::nonNull).sorted(Comparator.comparing(Node::getDistanceFromSource)).collect(Collectors.toList());
+            System.out.println();
+
+            List<QItem> foundFood = StreamSupport.stream(food.spliterator(), true)
+                    .map(coordinate -> new QItem(coordinate.get(X).asInt(), coordinate.get(Y).asInt(), 0))
+                    .map(destination -> minDistance(board, source, destination))
+                    .filter(Objects::nonNull).collect(Collectors.toList());
+            foundFood = foundFood.stream()
+                    .sorted(Comparator.comparing(QItem::getDist))
+                    .collect(Collectors.toList());
 
             ArrayList<String> possibleMoves = new ArrayList<>();
             if (foundFood.size() > 0) {
-                Node targetFood = foundFood.get(0);
-                LOG.info("found food at {} with distance of {}", targetFood, targetFood.getDistanceFromSource());
-                JsonNode head = moveRequest.get(YOU).get(HEAD);
+                QItem targetFood = foundFood.get(0);
+                LOG.info("found food at {} with distance of {}", targetFood, targetFood.getDist());
+
                 if (targetFood.getX() < head.get(X).asInt()) {
                     possibleMoves.add(RIGHT);
                 } else if (targetFood.getX() > head.get(X).asInt()) {
