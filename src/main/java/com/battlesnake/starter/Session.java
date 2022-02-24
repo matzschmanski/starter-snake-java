@@ -154,9 +154,28 @@ public class Session {
         return false;
     }
 
+    private int getAdvantage(){
+        // how many foods-ahead we want to be...
+        // is "one" really just enough?
+        int advantage = 1;
+        if(len > 19){
+            advantage++;
+        }
+        if(len > 24){
+            advantage++;
+        }
+        if(len > 29){
+            advantage++;
+        }
+        if(len > 39){
+            advantage++;
+        }
+        return advantage;
+    }
+
     public String checkSpecialMoves() {
-        if (health < 31 || (len-1 <= maxOtherSnakeLen)) {
-            LOG.info("Check for FOOD! health:" + health + " len:" + len + "<=" + maxOtherSnakeLen);
+        if (health < 31 || (len - getAdvantage() <= maxOtherSnakeLen)) {
+            LOG.info("Check for FOOD! health:" + health + " len:" + len+"(-"+getAdvantage()+")"+ "<=" + maxOtherSnakeLen);
 
             // ok we need to start to fetch FOOD!
             // we should move into the direction of the next FOOD!
