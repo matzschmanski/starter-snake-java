@@ -155,7 +155,7 @@ public class Session {
     }
 
     public String checkSpecialMoves() {
-        if (health < 31 || (len <= maxOtherSnakeLen)) {
+        if (health < 31 || (len-1 <= maxOtherSnakeLen)) {
             LOG.info("Check for FOOD! health:" + health + " len:" + len + "<=" + maxOtherSnakeLen);
 
             // ok we need to start to fetch FOOD!
