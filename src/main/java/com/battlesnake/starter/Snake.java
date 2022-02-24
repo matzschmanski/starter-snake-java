@@ -3,24 +3,25 @@ package com.battlesnake.starter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
 import java.awt.*;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import static spark.Spark.port;
-import static spark.Spark.post;
-import static spark.Spark.get;
+import static com.battlesnake.starter.SnakeAttribute.*;
+import static com.battlesnake.starter.Util.boardToArray;
+import static spark.Spark.*;
 
 /**
  * This is a simple Battlesnake server written in Java.
- *
+ * <p>
  * For instructions see
  * https://github.com/BattlesnakeOfficial/starter-snake-java/README.md
  */
@@ -30,7 +31,6 @@ public class Snake {
     private static final Logger LOG = LoggerFactory.getLogger(Snake.class);
 
     private static final HashMap<String, char[][]> boards = new HashMap<>();
-
 
 
     /**
@@ -62,22 +62,7 @@ public class Snake {
          * For the start/end request
          */
         private static final Map<String, String> EMPTY = new HashMap<>();
-        public static final String LEFT = "left";
-        public static final String RIGHT = "right";
-        public static final String DOWN = "down";
-        public static final String UP = "up";
-        public static final String X = "x";
-        public static final String Y = "y";
-        public static final String BOARD = "board";
-        public static final String ID = "id";
-        public static final String HEIGHT = "height";
-        public static final String WIDTH = "width";
-        public static final String GAME = "game";
-        public static final String YOU = "you";
-        public static final String HEAD = "head";
-        public static final String BODY = "body";
-        public static final String SNAKES = "snakes";
-        public static final String FOOD = "food";
+
 
         /**
          * Generic processor that prints out the request and response from the methods.
@@ -87,6 +72,7 @@ public class Snake {
          * @return
          */
         public Map<String, String> process(Request req, Response res) {
+
             try {
                 JsonNode parsedRequest = JSON_MAPPER.readTree(req.body());
                 String uri = req.uri();
@@ -115,11 +101,11 @@ public class Snake {
 
         /**
          * This method is called everytime your Battlesnake is entered into a game.
-         *
+         * <p>
          * Use this method to decide how your Battlesnake is going to look on the board.
          *
          * @return a response back to the engine containing the Battlesnake setup
-         *         values.
+         * values.
          */
         public Map<String, String> index() {
             Map<String, String> response = new HashMap<>();
@@ -133,7 +119,7 @@ public class Snake {
 
         /**
          * This method is called everytime your Battlesnake is entered into a game.
-         *
+         * <p>
          * Use this method to decide how your Battlesnake is going to look on the board.
          *
          * @param startRequest a JSON data map containing the information about the game
@@ -143,18 +129,16 @@ public class Snake {
         public Map<String, String> start(JsonNode startRequest) {
 
 
-
-
             String id = startRequest.get(GAME).get(ID).asText();
             int height = startRequest.get(BOARD).get(HEIGHT).asInt();
             int width = startRequest.get(BOARD).get(WIDTH).asInt();
-            LOG.info("Creating board '{}' with height: {} and width: {}",id, height,width);
+            LOG.info("Creating board '{}' with height: {} and width: {}", id, height, width);
             boards.put(id, createBoard(height, width));
             LOG.info("START");
             return EMPTY;
         }
 
-        private char[][] createBoard(int height, int width){
+        private char[][] createBoard(int height, int width) {
             char[][] board = new char[height][width];
 
             return board;
@@ -163,21 +147,20 @@ public class Snake {
         /**
          * This method is called on every turn of a game. It's how your snake decides
          * where to move.
-         *
+         * <p>
          * Use the information in 'moveRequest' to decide your next move. The
          * 'moveRequest' variable can be interacted with as
          * com.fasterxml.jackson.databind.JsonNode, and contains all of the information
          * about the Battlesnake board for each move of the game.
-         *
+         * <p>
          * For a full example of 'json', see
          * https://docs.battlesnake.com/references/api/sample-move-request
          *
          * @param moveRequest JsonNode of all Game Board data as received from the
          *                    Battlesnake Engine.
          * @return a Map<String,String> response back to the engine the single move to
-         *         make. One of "up", "down", "left" or "right".
+         * make. One of "up", "down", "left" or "right".
          */
-        static int mode = 0;
         public Map<String, String> move(JsonNode moveRequest) {
 
             try {
@@ -195,36 +178,37 @@ public class Snake {
              *
              */
 
-            JsonNode head = moveRequest.get(YOU).get(HEAD);
-            JsonNode body = moveRequest.get(YOU).get(BODY);
 
             String gameId = moveRequest.get(GAME).get(ID).asText();
+            GameLibrary.getInstance().getGames().getOrDefault(gameId, new GameDetails(GameMode.GO_LEFT_BOTTOM));
 
 
-            JsonNode board = moveRequest.get(BOARD);
-            int height = board.get(HEIGHT).asInt();
-            int width = board.get(WIDTH).asInt();
-            JsonNode snakes = board.get(SNAKES);
-//            boardToArray(moveRequest);
-            ArrayList<String> possibleMoves = new ArrayList<>(Arrays.asList(UP, DOWN, LEFT, RIGHT));
-            Map<String, Point> nextPositions = generateNextPositions(head);
-            // Don't allow your Battlesnake to move back in on it's own neck
-            avoidMyNeck(head, body, possibleMoves);
 
-            // TODO: Using information from 'moveRequest', find the edges of the board and
-            // don't
-            // let your Battlesnake move beyond them board_height = ? board_width = ?
-            avoidWalls(head,height,width,possibleMoves);
 
-            // TODO Using information from 'moveRequest', don't let your Battlesnake pick a
-            // move
-            // that would hit its own body
-            avoidSelf(head, body, possibleMoves, nextPositions);
+            int[][] board = boardToArray(moveRequest);
+            //get food
+            // calculate closest food
+                    JsonNode food = moveRequest.get(BOARD).get(FOOD);
 
-            // TODO: Using information from 'moveRequest', don't let your Battlesnake pick a
-            // move
-            // that would collide with another Battlesnake
-            avoidOthers(snakes, possibleMoves, nextPositions);
+            List<Node> collect = StreamSupport.stream(food.spliterator(), true).flatMap(jsonNode -> StreamSupport.stream(jsonNode.get(BODY).spliterator(), true)).map(coordinate -> pathExists(board, coordinate)).filter(Objects::nonNull).sorted(Comparator.comparing(Node::getDistanceFromSource)).collect(Collectors.toList());
+
+            Node targetFood = collect.get(0);
+            LOG.info("found food at {} with distance of {}", targetFood, targetFood.getDistanceFromSource());
+//            ArrayList<String> possibleMoves = new ArrayList<>(Arrays.asList(UP, DOWN, LEFT, RIGHT));
+            ArrayList<String> possibleMoves = new ArrayList<>();
+            JsonNode head = moveRequest.get(YOU).get(HEAD);
+            if(targetFood.getX()<head.get(X).asInt()){
+                possibleMoves.add(RIGHT);
+            }else if(targetFood.getX()>head.get(X).asInt()){
+                possibleMoves.add(LEFT);
+            }
+            if(targetFood.getX()<head.get(Y).asInt()){
+                possibleMoves.add(UP);
+            }else if(targetFood.getX()>head.get(Y).asInt()){
+                possibleMoves.add(DOWN);
+            }
+
+            possibleMoves = survive(moveRequest, possibleMoves);
 
             // TODO: Using information from 'moveRequest', make your Battlesnake move
             // towards a
@@ -236,60 +220,108 @@ public class Snake {
             //aways go right, then always down
 
             //calculate mode
-            if((head.get(Y).asInt() !=0 || head.get(X).asInt() != 0) && mode ==0){
-                mode =0;
-            }else{
-                mode=1;
-            }
-            if(head.get(Y).asInt() ==0 && head.get(X).asInt()==0){
-                mode=2;
-            }
+//            GameMode mode = GameLibrary.getMode(gameId);
 
-            String move = RIGHT;
-            if(mode==0) {
-                if (!possibleMoves.contains(RIGHT)) {
-                    move = DOWN;
-                    if (!possibleMoves.contains(DOWN)) {
-                        //we are bottom right,
-                        //start le snaking!
-                        mode=1;
-                    }
-                }
-            }
+//            System.out.println(""+11%2);1
+//            System.out.println(""+10%2);0
+//            System.out.println(""+0%2);0
 
-
-            if(mode == 1){
-                //go left until x =0;
-                move = LEFT;
-
-            }
-            if(mode ==2){
-                //go up
-                move= UP;
-            }
-            if( mode==3){
-                //go right until length -2
-                move = RIGHT;
-            }
-            if(mode==4){
-                //go right once more
-                move = RIGHT;
-            }
-
-
-
-
-
+//            switch (mode) {
+//                case GO_LEFT_BOTTOM:
+//                    possibleMoves.remove(UP);
+//                    possibleMoves.remove(RIGHT);
+//                    break;
+//                case GO_UP:
+//                    possibleMoves.remove(RIGHT);
+//                    possibleMoves.remove(DOWN);
+//                    possibleMoves.remove(LEFT);
+//                    break;
+//                case GO_RIGHT:
+//                    possibleMoves.remove(UP);
+//                    possibleMoves.remove(DOWN);
+//                    possibleMoves.remove(LEFT);
+//                    break;
+//                case GO_DOWN:
+//                    possibleMoves.remove(RIGHT);
+//                    possibleMoves.remove(UP);
+//                    possibleMoves.remove(LEFT);
+//                    break;
+//                case GO_LEFT:
+//                    possibleMoves.remove(RIGHT);
+//                    possibleMoves.remove(DOWN);
+//                    possibleMoves.remove(UP);
+//                    break;
+//                default:
+//                    break;
+//            }
+            final int choice = new Random().nextInt(possibleMoves.size());
+            final String move = possibleMoves.get(choice);
             LOG.info("MOVE {}", move);
 
             Map<String, String> response = new HashMap<>();
             response.put("move", move);
             return response;
         }
-        private void moveToBottomRight(ArrayList<String> possibleMoves){
-            if(possibleMoves.size()>1){
-                //always go right, then go down
+
+        private static Node pathExists(int[][] matrix, JsonNode coordinate) {
+            matrix[coordinate.get(X).asInt()][coordinate.get(Y).asInt()] = -1024;
+            Node source = new Node(0, 0, 0);
+            Queue<Node> queue = new LinkedList<Node>();
+
+            queue.add(source);
+
+            while(!queue.isEmpty()) {
+                Node poped = queue.poll();
+
+                if(matrix[poped.x][poped.y] == -1024 ) {
+
+                    return poped;
+                }
+                else {
+                    matrix[poped.x][poped.y]=0;
+
+                    List<Node> neighbourList = addNeighbours(poped, matrix);
+                    queue.addAll(neighbourList);
+                }
             }
+            return null;
+        }
+
+        private static List<Node> addNeighbours(Node poped, int[][] matrix) {
+
+            List<Node> list = new LinkedList<Node>();
+
+            if((poped.x-1 >= 0 && poped.x-1 < matrix.length) && matrix[poped.x-1][poped.y] != 1024) {
+                list.add(new Node(poped.x-1, poped.y, poped.distanceFromSource+1));
+            }
+            if((poped.x+1 >= 0 && poped.x+1 < matrix.length) && matrix[poped.x+1][poped.y] != 1024) {
+                list.add(new Node(poped.x+1, poped.y, poped.distanceFromSource+1));
+            }
+            if((poped.y-1 >= 0 && poped.y-1 < matrix.length) && matrix[poped.x][poped.y-1] != 1024) {
+                list.add(new Node(poped.x, poped.y-1, poped.distanceFromSource+1));
+            }
+            if((poped.y+1 >= 0 && poped.y+1 < matrix.length) && matrix[poped.x][poped.y+1] != 1024) {
+                list.add(new Node(poped.x, poped.y+1, poped.distanceFromSource+1));
+            }
+            return list;
+        }
+
+        private ArrayList<String> survive(JsonNode moveRequest, ArrayList<String> possibleMoves) {
+            JsonNode board = moveRequest.get(BOARD);
+
+            int height = board.get(HEIGHT).asInt();
+            int width = board.get(WIDTH).asInt();
+            JsonNode snakes = board.get(SNAKES);
+            JsonNode head = moveRequest.get(YOU).get(HEAD);
+            JsonNode body = moveRequest.get(YOU).get(BODY);
+
+            Map<String, Point> nextPositions = generateNextPositions(head);
+
+            possibleMoves = avoidMyNeck(head, body, possibleMoves);
+            possibleMoves = avoidWalls(head, height, width, possibleMoves);
+            possibleMoves = avoidSelf(head, body, possibleMoves, nextPositions);
+            possibleMoves = avoidOthers(snakes, possibleMoves, nextPositions);
+            return possibleMoves;
         }
 
         /**
@@ -301,7 +333,7 @@ public class Snake {
          *                      {X: 2, Y: 0} ]
          * @param possibleMoves ArrayList of String. Moves to pick from.
          */
-        public void avoidMyNeck(JsonNode head, JsonNode body, ArrayList<String> possibleMoves) {
+        public ArrayList<String> avoidMyNeck(JsonNode head, JsonNode body, ArrayList<String> possibleMoves) {
             JsonNode neck = body.get(1);
 
             if (neck.get(X).asInt() < head.get(X).asInt()) {
@@ -313,65 +345,69 @@ public class Snake {
             } else if (neck.get(Y).asInt() > head.get(Y).asInt()) {
                 possibleMoves.remove(UP);
             }
+            return possibleMoves;
         }
 
-        public void avoidWalls(JsonNode head, int boardHeight, int boardWidth, ArrayList<String> possibleMoves){
-            if(head.get(X).asInt()+1 == boardHeight){
+        public ArrayList<String> avoidWalls(JsonNode head, int boardHeight, int boardWidth, ArrayList<String> possibleMoves) {
+            if (head.get(X).asInt() + 1 == boardHeight) {
                 possibleMoves.remove(RIGHT);
             }
-            if(head.get(X).asInt()-1 <0){
+            if (head.get(X).asInt() - 1 < 0) {
                 possibleMoves.remove(LEFT);
             }
-            if(head.get(Y).asInt()+1 == boardWidth){
+            if (head.get(Y).asInt() + 1 == boardWidth) {
                 possibleMoves.remove(UP);
             }
-            if(head.get(Y).asInt()-1 <0){
+            if (head.get(Y).asInt() - 1 < 0) {
                 possibleMoves.remove(DOWN);
             }
+            return possibleMoves;
         }
-        public Map<String, Point> generateNextPositions(JsonNode head){
+
+        public Map<String, Point> generateNextPositions(JsonNode head) {
             int currentX = head.get(X).asInt();
             int currentY = head.get(Y).asInt();
-            Point right = new Point(currentX+1,currentY);
-            Point left = new Point(currentX-1,currentY);
-            Point up = new Point(currentX,currentY+1);
-            Point down = new Point(currentX,currentY-1);
-            Map<String,Point> moves = Map.of(RIGHT,right,LEFT,left,DOWN,down,UP,up);
+            Point right = new Point(currentX + 1, currentY);
+            Point left = new Point(currentX - 1, currentY);
+            Point up = new Point(currentX, currentY + 1);
+            Point down = new Point(currentX, currentY - 1);
+            Map<String, Point> moves = Map.of(RIGHT, right, LEFT, left, DOWN, down, UP, up);
             return moves;
         }
 
-        public void avoidOthers(JsonNode snakes ,ArrayList<String> possibleMoves, Map<String, Point> nextPositions){
-            List<Point> noGoAreas = StreamSupport.stream(snakes.spliterator(),false).flatMap(jsonNode -> StreamSupport.stream(jsonNode.get(BODY).spliterator(),false)).map(coordinate -> new Point(coordinate.get(X).asInt(), coordinate.get(Y).asInt())).collect(Collectors.toList());
+        public ArrayList<String> avoidOthers(JsonNode snakes, ArrayList<String> possibleMoves, Map<String, Point> nextPositions) {
+            List<Point> noGoAreas = StreamSupport.stream(snakes.spliterator(), false).flatMap(jsonNode -> StreamSupport.stream(jsonNode.get(BODY).spliterator(), false)).map(coordinate -> new Point(coordinate.get(X).asInt(), coordinate.get(Y).asInt())).collect(Collectors.toList());
             for (Map.Entry<String, Point> pair : nextPositions.entrySet()) {
-                if(noGoAreas.contains(pair.getValue())){
+                if (noGoAreas.contains(pair.getValue())) {
                     possibleMoves.remove(pair.getKey());
                 }
 
             }
+            return possibleMoves;
 
         }
 
 
-        public void avoidSelf(JsonNode head, JsonNode body,ArrayList<String> possibleMoves, Map<String, Point> nextPositions){
+        public ArrayList<String> avoidSelf(JsonNode head, JsonNode body, ArrayList<String> possibleMoves, Map<String, Point> nextPositions) {
 
             List<Point> noGoAreas = new ArrayList<>();
-            noGoAreas.add(new Point(head.get(X).asInt(),head.get(Y).asInt()));
+            noGoAreas.add(new Point(head.get(X).asInt(), head.get(Y).asInt()));
             for (final JsonNode objNode : body) {
-                noGoAreas.add(new Point(objNode.get(X).asInt(),objNode.get(Y).asInt()));
+                noGoAreas.add(new Point(objNode.get(X).asInt(), objNode.get(Y).asInt()));
             }
 
             for (Map.Entry<String, Point> pair : nextPositions.entrySet()) {
-                if(noGoAreas.contains(pair.getValue())){
+                if (noGoAreas.contains(pair.getValue())) {
                     possibleMoves.remove(pair.getKey());
                 }
 
             }
-
+            return possibleMoves;
         }
 
         /**
          * This method is called when a game your Battlesnake was in ends.
-         *
+         * <p>
          * It is purely for informational purposes, you don't have to make any decisions
          * here.
          *
@@ -382,11 +418,9 @@ public class Snake {
         public Map<String, String> end(JsonNode endRequest) {
             String gameId = endRequest.get("game").get("id").asText();
             boards.remove(gameId);
-            LOG.info("ENDED ({})",gameId);
+            LOG.info("ENDED ({})", gameId);
             return EMPTY;
         }
-
-
 
 
     }
