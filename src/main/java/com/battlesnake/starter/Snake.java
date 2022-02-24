@@ -410,9 +410,14 @@ public class Snake {
 
             List<Point> noGoAreas = new ArrayList<>();
             noGoAreas.add(new Point(head.get(X).asInt(), head.get(Y).asInt()));
-            for (final JsonNode objNode : body) {
+            //ignore tail
+            for (int i = 0; i < body.size()-1; i++) {
+                final JsonNode objNode = body.get(i);
                 noGoAreas.add(new Point(objNode.get(X).asInt(), objNode.get(Y).asInt()));
             }
+//            for (final JsonNode objNode : body) {
+//                noGoAreas.add(new Point(objNode.get(X).asInt(), objNode.get(Y).asInt()));
+//            }
 
             for (Map.Entry<String, Point> pair : nextPositions.entrySet()) {
                 if (noGoAreas.contains(pair.getValue())) {
