@@ -66,7 +66,7 @@ public class Snake {
         private static QItem minDistance(char[][] grid, QItem source,QItem destination)
         {
             char oldChar =grid[destination.row][destination.col];
-            grid[destination.row][destination.col] = Util.DESTINATION;
+            grid[grid.length-1-destination.row][destination.col] = Util.DESTINATION;
 
             // To keep track of visited QItems. Marking
             // blocked cells as visited.
@@ -98,6 +98,7 @@ public class Snake {
                 // Destination found;
                 if (grid[p.row][p.col] == Util.DESTINATION) {
                     grid[destination.row][destination.col] = oldChar;
+                    p.setX(grid.length-p.getX()-1);
                     return p;
                 }
 
@@ -290,18 +291,19 @@ public class Snake {
                 LOG.info("found food at {} with distance of {}", targetFood, targetFood.getDist());
 
                 if (targetFood.getX() < head.get(X).asInt()) {
-                    possibleMoves.add(RIGHT);
-                } else if (targetFood.getX() > head.get(X).asInt()) {
                     possibleMoves.add(LEFT);
+                } else if (targetFood.getX() > head.get(X).asInt()) {
+                    possibleMoves.add(RIGHT);
                 }
                 if (targetFood.getY() < head.get(Y).asInt()) {
-                    possibleMoves.add(UP);
-                } else if (targetFood.getY() > head.get(Y).asInt()) {
                     possibleMoves.add(DOWN);
+                } else if (targetFood.getY() > head.get(Y).asInt()) {
+                    possibleMoves.add(UP);
                 }
             } else {
                 possibleMoves = new ArrayList<>(Arrays.asList(UP, DOWN, LEFT, RIGHT));
             }
+
 
             possibleMoves = survive(moveRequest, possibleMoves);
 
@@ -309,46 +311,6 @@ public class Snake {
             // towards a
             // piece of food on the board
 
-            // Choose a random direction to move in
-//            final int choice = new Random().nextInt(possibleMoves.size());
-//            final String move = possibleMoves.get(choice);
-            //aways go right, then always down
-
-            //calculate mode
-//            GameMode mode = GameLibrary.getMode(gameId);
-
-//            System.out.println(""+11%2);1
-//            System.out.println(""+10%2);0
-//            System.out.println(""+0%2);0
-
-//            switch (mode) {
-//                case GO_LEFT_BOTTOM:
-//                    possibleMoves.remove(UP);
-//                    possibleMoves.remove(RIGHT);
-//                    break;
-//                case GO_UP:
-//                    possibleMoves.remove(RIGHT);
-//                    possibleMoves.remove(DOWN);
-//                    possibleMoves.remove(LEFT);
-//                    break;
-//                case GO_RIGHT:
-//                    possibleMoves.remove(UP);
-//                    possibleMoves.remove(DOWN);
-//                    possibleMoves.remove(LEFT);
-//                    break;
-//                case GO_DOWN:
-//                    possibleMoves.remove(RIGHT);
-//                    possibleMoves.remove(UP);
-//                    possibleMoves.remove(LEFT);
-//                    break;
-//                case GO_LEFT:
-//                    possibleMoves.remove(RIGHT);
-//                    possibleMoves.remove(DOWN);
-//                    possibleMoves.remove(UP);
-//                    break;
-//                default:
-//                    break;
-//            }
             LOG.info("possible moves:");
             for (String move: possibleMoves){
                 System.out.println(move);

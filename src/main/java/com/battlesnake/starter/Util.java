@@ -27,7 +27,7 @@ public class Util {
         //self, other snakes, walls
         StreamSupport.stream(board.get(SNAKES).spliterator(),false).flatMap(jsonNode -> StreamSupport.stream(jsonNode.get(BODY).spliterator(),false)).forEach(coordinate -> boardArray[coordinate.get(X).asInt()][coordinate.get(Y).asInt()] = CAN_NOT_TRAVEL);
         JsonNode head = moveRequest.get(YOU).get(HEAD);
-        boardArray[head.get(X).asInt()][head.get(Y).asInt()] = SOURCE;
+        boardArray[boardArray.length-1-head.get(X).asInt()][head.get(Y).asInt()] = SOURCE;
 
         // mark closest food as target
 //        JsonNode food = board.get(FOOD);
