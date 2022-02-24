@@ -34,4 +34,13 @@ class QItem {
     public void setDist(int dist) {
         this.dist = dist;
     }
+
+    @Override
+    public String toString() {
+        return "QItem{" +
+                "X=" + row +
+                ", Y=" + col +
+                ", distance=" + dist +
+                '}';
+    }
 }

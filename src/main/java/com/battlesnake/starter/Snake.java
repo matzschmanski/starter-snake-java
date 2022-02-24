@@ -349,6 +349,10 @@ public class Snake {
 //                default:
 //                    break;
 //            }
+            LOG.info("possible moves:");
+            for (String move: possibleMoves){
+                System.out.println(move);
+            }
             final int choice = new Random().nextInt(possibleMoves.size());
             final String move = possibleMoves.get(choice);
             LOG.info("MOVE {}", move);
