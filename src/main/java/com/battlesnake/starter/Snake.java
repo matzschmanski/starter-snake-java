@@ -376,6 +376,7 @@ public class Snake {
             // session status...
             s.initSessionAfterFullBoardRead();
             s.logState("MOVE CALLED");
+            s.logBoard();
         }
 
         private String reCalculateNextMove(String moveToIgnore, Session s) {
