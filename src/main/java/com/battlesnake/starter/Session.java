@@ -229,6 +229,12 @@ public class Session {
             }
         }*/
         if (health > 15) {
+            // food in CORNERS is TOXIC
+            availableFoods.remove(new Point(0, 0));
+            availableFoods.remove(new Point(0, X-1));
+            availableFoods.remove(new Point(Y-1, 0));
+            availableFoods.remove(new Point(Y-1, X-1));
+
             for (Point h : snakeHeads) {
                 availableFoods.remove(new Point(h.y+1, h.x+1));
                 availableFoods.remove(new Point(h.y+1, h.x+0));
