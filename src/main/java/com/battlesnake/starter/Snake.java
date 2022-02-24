@@ -3,7 +3,6 @@ package com.battlesnake.starter;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import spark.Request;
@@ -11,6 +10,7 @@ import spark.Response;
 
 import java.awt.*;
 import java.util.List;
+import java.util.Queue;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -63,6 +63,47 @@ public class Snake {
          */
         private static final Map<String, String> EMPTY = new HashMap<>();
 
+        private static Node pathExists(int[][] matrix, JsonNode coordinate) {
+            matrix[coordinate.get(X).asInt()][coordinate.get(Y).asInt()] = -1024;
+            Node source = new Node(0, 0, 0);
+            Queue<Node> queue = new LinkedList<Node>();
+
+            queue.add(source);
+
+            while (!queue.isEmpty()) {
+                Node poped = queue.poll();
+
+                if (matrix[poped.x][poped.y] == -1024) {
+
+                    return poped;
+                } else {
+                    matrix[poped.x][poped.y] = 0;
+
+                    List<Node> neighbourList = addNeighbours(poped, matrix);
+                    queue.addAll(neighbourList);
+                }
+            }
+            return null;
+        }
+
+        private static List<Node> addNeighbours(Node poped, int[][] matrix) {
+
+            List<Node> list = new LinkedList<Node>();
+
+            if ((poped.x - 1 >= 0 && poped.x - 1 < matrix.length) && matrix[poped.x - 1][poped.y] != 1024) {
+                list.add(new Node(poped.x - 1, poped.y, poped.distanceFromSource + 1));
+            }
+            if ((poped.x + 1 >= 0 && poped.x + 1 < matrix.length) && matrix[poped.x + 1][poped.y] != 1024) {
+                list.add(new Node(poped.x + 1, poped.y, poped.distanceFromSource + 1));
+            }
+            if ((poped.y - 1 >= 0 && poped.y - 1 < matrix.length) && matrix[poped.x][poped.y - 1] != 1024) {
+                list.add(new Node(poped.x, poped.y - 1, poped.distanceFromSource + 1));
+            }
+            if ((poped.y + 1 >= 0 && poped.y + 1 < matrix.length) && matrix[poped.x][poped.y + 1] != 1024) {
+                list.add(new Node(poped.x, poped.y + 1, poped.distanceFromSource + 1));
+            }
+            return list;
+        }
 
         /**
          * Generic processor that prints out the request and response from the methods.
@@ -183,29 +224,30 @@ public class Snake {
             GameLibrary.getInstance().getGames().getOrDefault(gameId, new GameDetails(GameMode.GO_LEFT_BOTTOM));
 
 
-
-
             int[][] board = boardToArray(moveRequest);
             //get food
             // calculate closest food
-                    JsonNode food = moveRequest.get(BOARD).get(FOOD);
+            JsonNode food = moveRequest.get(BOARD).get(FOOD);
 
-            List<Node> collect = StreamSupport.stream(food.spliterator(), true).flatMap(jsonNode -> StreamSupport.stream(jsonNode.get(BODY).spliterator(), true)).map(coordinate -> pathExists(board, coordinate)).filter(Objects::nonNull).sorted(Comparator.comparing(Node::getDistanceFromSource)).collect(Collectors.toList());
+            List<Node> foundFood = StreamSupport.stream(food.spliterator(), true).flatMap(jsonNode -> StreamSupport.stream(jsonNode.get(BODY).spliterator(), true)).map(coordinate -> pathExists(board, coordinate)).filter(Objects::nonNull).sorted(Comparator.comparing(Node::getDistanceFromSource)).collect(Collectors.toList());
 
-            Node targetFood = collect.get(0);
-            LOG.info("found food at {} with distance of {}", targetFood, targetFood.getDistanceFromSource());
-//            ArrayList<String> possibleMoves = new ArrayList<>(Arrays.asList(UP, DOWN, LEFT, RIGHT));
             ArrayList<String> possibleMoves = new ArrayList<>();
-            JsonNode head = moveRequest.get(YOU).get(HEAD);
-            if(targetFood.getX()<head.get(X).asInt()){
-                possibleMoves.add(RIGHT);
-            }else if(targetFood.getX()>head.get(X).asInt()){
-                possibleMoves.add(LEFT);
-            }
-            if(targetFood.getX()<head.get(Y).asInt()){
-                possibleMoves.add(UP);
-            }else if(targetFood.getX()>head.get(Y).asInt()){
-                possibleMoves.add(DOWN);
+            if (foundFood.size() > 0) {
+                Node targetFood = foundFood.get(0);
+                LOG.info("found food at {} with distance of {}", targetFood, targetFood.getDistanceFromSource());
+                JsonNode head = moveRequest.get(YOU).get(HEAD);
+                if (targetFood.getX() < head.get(X).asInt()) {
+                    possibleMoves.add(RIGHT);
+                } else if (targetFood.getX() > head.get(X).asInt()) {
+                    possibleMoves.add(LEFT);
+                }
+                if (targetFood.getX() < head.get(Y).asInt()) {
+                    possibleMoves.add(UP);
+                } else if (targetFood.getX() > head.get(Y).asInt()) {
+                    possibleMoves.add(DOWN);
+                }
+            } else {
+                possibleMoves = new ArrayList<>(Arrays.asList(UP, DOWN, LEFT, RIGHT));
             }
 
             possibleMoves = survive(moveRequest, possibleMoves);
@@ -261,49 +303,6 @@ public class Snake {
             Map<String, String> response = new HashMap<>();
             response.put("move", move);
             return response;
-        }
-
-        private static Node pathExists(int[][] matrix, JsonNode coordinate) {
-            matrix[coordinate.get(X).asInt()][coordinate.get(Y).asInt()] = -1024;
-            Node source = new Node(0, 0, 0);
-            Queue<Node> queue = new LinkedList<Node>();
-
-            queue.add(source);
-
-            while(!queue.isEmpty()) {
-                Node poped = queue.poll();
-
-                if(matrix[poped.x][poped.y] == -1024 ) {
-
-                    return poped;
-                }
-                else {
-                    matrix[poped.x][poped.y]=0;
-
-                    List<Node> neighbourList = addNeighbours(poped, matrix);
-                    queue.addAll(neighbourList);
-                }
-            }
-            return null;
-        }
-
-        private static List<Node> addNeighbours(Node poped, int[][] matrix) {
-
-            List<Node> list = new LinkedList<Node>();
-
-            if((poped.x-1 >= 0 && poped.x-1 < matrix.length) && matrix[poped.x-1][poped.y] != 1024) {
-                list.add(new Node(poped.x-1, poped.y, poped.distanceFromSource+1));
-            }
-            if((poped.x+1 >= 0 && poped.x+1 < matrix.length) && matrix[poped.x+1][poped.y] != 1024) {
-                list.add(new Node(poped.x+1, poped.y, poped.distanceFromSource+1));
-            }
-            if((poped.y-1 >= 0 && poped.y-1 < matrix.length) && matrix[poped.x][poped.y-1] != 1024) {
-                list.add(new Node(poped.x, poped.y-1, poped.distanceFromSource+1));
-            }
-            if((poped.y+1 >= 0 && poped.y+1 < matrix.length) && matrix[poped.x][poped.y+1] != 1024) {
-                list.add(new Node(poped.x, poped.y+1, poped.distanceFromSource+1));
-            }
-            return list;
         }
 
         private ArrayList<String> survive(JsonNode moveRequest, ArrayList<String> possibleMoves) {
