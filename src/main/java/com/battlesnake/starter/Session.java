@@ -48,7 +48,7 @@ public class Session {
     private boolean enterDangerZone = false;
     private boolean enterNoGoZone = false;
 
-    boolean preferToGetAwayFromBorder = false;
+    boolean escapeFromBorder = false;
     private int xMin, yMin, xMax, yMax;
     public boolean boardStatusLogged;
 
@@ -90,7 +90,7 @@ public class Session {
         goForFood = false;
         foodPlaces = new ArrayList<>();
 
-        preferToGetAwayFromBorder = false;
+        escapeFromBorder = false;
     }
 
     public void initSessionAfterFullBoardRead(){
@@ -103,9 +103,7 @@ public class Session {
                 pos.x == 0 ||
                 pos.x == X - 1
             ) {
-                //avoidBorder = false;
-                //setFullBoardBounds();
-                preferToGetAwayFromBorder = true;
+                escapeFromBorder = true;
             }
         }
 
@@ -187,9 +185,9 @@ public class Session {
     private boolean checkDoomed(int cmdToAdd) {
         cmdChain.add(cmdToAdd);
         if(cmdChain.size() > 4){
-            if(preferToGetAwayFromBorder) {
+            if(escapeFromBorder) {
                 LOG.info("activate STAY-ON-BORDER");
-                preferToGetAwayFromBorder = false;
+                escapeFromBorder = false;
                 cmdChain = new ArrayList<>();
                 cmdChain.addAll(movesToIgnore);
                 cmdChain.add(cmdToAdd);
@@ -294,7 +292,7 @@ public class Session {
                         closestFood.x == X - 1
                 ) {
                     enterBorderZone = true;
-                    preferToGetAwayFromBorder = false;
+                    escapeFromBorder = false;
                     setFullBoardBounds();
                 }
             }
@@ -392,7 +390,7 @@ public class Session {
 
     private boolean canMoveUp(){
         try {
-            if(preferToGetAwayFromBorder && (pos.x == 0 || pos.x == X-1)){
+            if(escapeFromBorder && (pos.x == 0 || pos.x == X-1)){
                 return false;
             }else {
                 return  pos.y < yMax
@@ -438,7 +436,7 @@ LOG.debug("UP: NO");
 
     private boolean canMoveRight(){
         try {
-            if(preferToGetAwayFromBorder && (pos.y == 0 || pos.y == Y-1)){
+            if(escapeFromBorder && (pos.y == 0 || pos.y == Y-1)){
                 return false;
             }else {
                 return  pos.x < xMax
@@ -489,7 +487,7 @@ LOG.debug("RIGHT: NO");
 
     private boolean canMoveDown(){
         try {
-            if(preferToGetAwayFromBorder && (pos.x == 0 || pos.x == X-1)){
+            if(escapeFromBorder && (pos.x == 0 || pos.x == X-1)){
                 return false;
             }else {
                 return  pos.y > yMin
@@ -547,7 +545,7 @@ LOG.debug("DOWN: NO");
 
     private boolean canMoveLeft(){
         try {
-            if(preferToGetAwayFromBorder && (pos.y == 0 || pos.y == Y-1)){
+            if(escapeFromBorder && (pos.y == 0 || pos.y == Y-1)){
                 return false;
             }else {
                 return  pos.x > xMin
@@ -739,7 +737,7 @@ LOG.debug("LEFT: NO");
         msg = msg
             + " st:" + getMoveIntAsString(state).substring(0,2).toUpperCase()+"["+state+"]"
             + " ph:"+ tPhase
-            + (preferToGetAwayFromBorder ? " GAWYBRD" : "")
+            + (escapeFromBorder ? " GAWYBRD" : "")
             + " goBorder? " + enterBorderZone
             + " goDanger? " + enterDangerZone
             + " goNoGo? " +enterNoGoZone
