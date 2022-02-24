@@ -294,9 +294,9 @@ public class Snake {
                 } else if (targetFood.getX() > head.get(X).asInt()) {
                     possibleMoves.add(LEFT);
                 }
-                if (targetFood.getX() < head.get(Y).asInt()) {
+                if (targetFood.getY() < head.get(Y).asInt()) {
                     possibleMoves.add(UP);
-                } else if (targetFood.getX() > head.get(Y).asInt()) {
+                } else if (targetFood.getY() > head.get(Y).asInt()) {
                     possibleMoves.add(DOWN);
                 }
             } else {
