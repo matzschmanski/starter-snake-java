@@ -88,7 +88,7 @@ public class Session {
         maxOtherSnakeLen = 0;
 
         myBody = new int[Y][X];
-        MAXDEEP = Math.min(len, 20);
+        MAXDEEP = len;//Math.min(len, 20);
 
         goForFood = false;
         foodPlaces = new ArrayList<>();
@@ -193,7 +193,7 @@ public class Session {
         // I don't want to battle for food with others (now)
         ArrayList<Point> availableFoods = new ArrayList<>(foodPlaces.size());
         availableFoods.addAll(foodPlaces);
-        if (health > 15) {
+        /* if (health > 15) {
             for (int i = 1; i <= 2; i++) {
                 for (Point h : snakeHeads) {
                     availableFoods.remove(new Point(h.y - i, h.x - i));
@@ -208,6 +208,13 @@ public class Session {
                     availableFoods.remove(new Point(h.y, h.x + i));
                 }
             }
+        }*/
+        if (health > 15) {
+            for (Point h : snakeHeads) {
+                availableFoods.remove(new Point(h.y+1, h.x+1));
+                availableFoods.remove(new Point(h.y+1, h.x+0));
+                availableFoods.remove(new Point(h.y+0, h.x+1));
+            }
         }
 
         for (Point f : availableFoods) {
@@ -218,7 +225,8 @@ public class Session {
             }
         }
 
-        if (closestFood != null && minDist <= X / 3 + Y / 3) {
+        // we GO FOR ANY FOOD!
+        if (closestFood != null /*&& minDist <= X / 3 + Y / 3 */) {
             goForFood = true;
             if (!enterBorderZone) {
                 if (closestFood.y == 0 ||
