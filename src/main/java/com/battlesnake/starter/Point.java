@@ -26,4 +26,9 @@ public class Point {
         }
         return super.equals(obj);
     }
+
+    @Override
+    protected Point clone() {
+        return new Point(y, x);
+    }
 }

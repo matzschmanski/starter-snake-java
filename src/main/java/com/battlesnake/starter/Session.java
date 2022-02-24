@@ -319,7 +319,67 @@ public class Session {
     private boolean willCreateLoop(int move){
         // OK we have to check, if with the "planed" next move we will create a closed loop structure (either
         // with ourselves, with the border or with any enemy...
-        try{
+        try {
+            /*
+
+            Point resPos = pos.clone();
+            switch (move){
+                case Snake.UP:
+                    resPos.y++;
+                    break;
+                case Snake.RIGHT:
+                    resPos.x++;
+                    break;
+                case Snake.DOWN:
+                    resPos.y--;
+                    break;
+                case Snake.LEFT:
+                    resPos.x--;
+                    break;
+            }
+            int[][] finalMap = new int[Y][X];
+            finalMap[resPos.y][resPos.x] = 1;
+            finalMap[pos.y][pos.x] = 1;
+            for (int y = 0; y < X; y++) {
+                for (int x = 0; x < X; x++) {
+                    if (myBody[y][x] > 0) {
+                        finalMap[y][x] = 1;
+                    } else if (snakeBodies[y][x] > 0) {
+                        finalMap[y][x] = 1;
+                    } else if (snakeNextMovePossibleLocations[y][x] > 0) {
+                        finalMap[y][x] = 1;
+                    }
+                }
+            }
+            // so in the finalMap we have the picture of the MOVE RESULT
+
+
+
+            if(X == 11){
+                LOG.info("_____________");
+            }else{
+                LOG.info("_____________________");
+            }
+            for (int y = Y - 1; y >= 0; y--) {
+                StringBuffer b = new StringBuffer();
+                b.append('|');
+                for (int x = 0; x < X; x++) {
+                    if(finalMap[y][x]>0){
+                        b.append('X');
+                    }else{
+                        b.append(' ');
+                    }
+                }
+                b.append('|');
+                LOG.info(b.toString());
+            }
+            if(X == 11){
+                LOG.info("-------------");
+            }else {
+                LOG.info("---------------------");
+            }
+
+            */
 
         }catch(IndexOutOfBoundsException e){
             LOG.info("IoB @ willCreateLoop "+ getMoveIntAsString(move)+" check...", e);
