@@ -161,7 +161,7 @@ public class Session {
 
     private int getAdvantage(){
         if( hungerMode ){
-            return ((int) (X/2)) + 1;
+            return X;
         }else {
             // how many foods-ahead we want to be...
             // is "one" really just enough?
@@ -272,30 +272,36 @@ public class Session {
             LOG.info("TRY TO GET FOOD: at: " + closestFood);
             // TODO:
             // here we have to find a smarter way to decide, in which direction we should
-            // go to approach the food -> since currently this causing quite often "self-loops"
+            // go to approach the food -> since currently me are blocked by ourselves
 
             int yDelta = pos.y - closestFood.y;
             int xDelta = pos.x - closestFood.x;
-            if(Math.abs(yDelta)/3 > Math.abs(xDelta)/3){
+            if(Math.abs(yDelta) > Math.abs(xDelta)){
                 // we have to move more on the Y-axis
                 if (yDelta > 0) {
                     return moveDown();
                 } else if (yDelta < 0){
                     return moveUp();
-                } else if (xDelta > 0) {
+                }/* else if (xDelta > 0) {
                     return moveLeft();
                 } else {
                     return moveRight();
+                }*/
+                else{
+LOG.error("==============================================");
                 }
             }else{
                 if (xDelta > 0) {
                     return moveLeft();
                 } else if (xDelta < 0) {
                     return moveRight();
-                } else if (yDelta > 0) {
+                }/* else if (yDelta > 0) {
                     return moveDown();
                 } else {
                     return moveUp();
+                }*/
+                else{
+LOG.error("==============================================");
                 }
             }
 
