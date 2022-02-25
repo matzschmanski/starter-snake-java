@@ -1,4 +1,4 @@
-package com.emacberry.battlesnake.ifthenelse;
+package com.emb.bs.ife;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;

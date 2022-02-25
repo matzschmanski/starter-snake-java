@@ -1,4 +1,4 @@
-package com.emacberry.battlesnake.ifthenelse;
+package com.emb.bs.ife;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
