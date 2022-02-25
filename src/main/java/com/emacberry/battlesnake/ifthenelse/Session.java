@@ -157,7 +157,8 @@ public class Session {
     private int getAdvantage(){
         // how many foods-ahead we want to be...
         // is "one" really just enough?
-        int advantage = 1;
+        return 4;
+        /*int advantage = 1;
         if(len > 19){
             advantage++;
         }
@@ -170,7 +171,7 @@ public class Session {
         if(len > 39){
             advantage++;
         }
-        return advantage;
+        return advantage;*/
     }
 
     public String checkSpecialMoves() {
@@ -244,9 +245,15 @@ public class Session {
 
         for (Point f : availableFoods) {
             int dist = Math.abs(f.x - pos.x) + Math.abs(f.y - pos.y);
-            minDist = Math.min(minDist, dist);
-            if (minDist == dist) {
-                closestFood = f;
+            int otherSnakesMinDist = Integer.MAX_VALUE;
+            for (Point h : snakeHeads) {
+                otherSnakesMinDist = Math.min(otherSnakesMinDist, Math.abs(f.x - h.x) + Math.abs(f.y - h.y));
+            }
+            if(dist <= otherSnakesMinDist) {
+                minDist = Math.min(minDist, dist);
+                if (minDist == dist) {
+                    closestFood = f;
+                }
             }
         }
 
@@ -359,7 +366,7 @@ public class Session {
                 return pos.y < yMax
                         && myBody[pos.y + 1][pos.x] == 0
                         && snakeBodies[pos.y + 1][pos.x] == 0
-                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y + 1][pos.x] < len)
+                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y + 1][pos.x] <= len)
                         && (enterNoGoZone || !willCreateLoop(Snake.UP, pos, null,0));
             }
         } catch (IndexOutOfBoundsException e) {
@@ -416,7 +423,7 @@ public class Session {
                 return pos.x < xMax
                         && myBody[pos.y][pos.x + 1] == 0
                         && snakeBodies[pos.y][pos.x + 1] == 0
-                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x + 1] < len)
+                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x + 1] <= len)
                         && (enterNoGoZone || !willCreateLoop(Snake.RIGHT, pos, null, 0))
                         ;
             }
@@ -479,7 +486,7 @@ public class Session {
                 return  pos.y > yMin
                         && myBody[pos.y - 1][pos.x] == 0
                         && snakeBodies[pos.y - 1][pos.x] == 0
-                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y - 1][pos.x] < len)
+                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y - 1][pos.x] <= len)
                         && (enterNoGoZone || !willCreateLoop(Snake.DOWN, pos, null, 0))
                         ;
             }
@@ -549,7 +556,7 @@ public class Session {
                 return pos.x > xMin
                         && myBody[pos.y][pos.x - 1] == 0
                         && snakeBodies[pos.y][pos.x - 1] == 0
-                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x - 1] < len)
+                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x - 1] <= len)
                         && (enterNoGoZone || !willCreateLoop(Snake.LEFT, pos, null, 0))
                         ;
             }
