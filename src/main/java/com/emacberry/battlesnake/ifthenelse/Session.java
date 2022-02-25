@@ -213,22 +213,7 @@ public class Session {
         // I don't want to battle for food with others (now)
         ArrayList<Point> availableFoods = new ArrayList<>(foodPlaces.size());
         availableFoods.addAll(foodPlaces);
-        /* if (health > 15) {
-            for (int i = 1; i <= 2; i++) {
-                for (Point h : snakeHeads) {
-                    availableFoods.remove(new Point(h.y - i, h.x - i));
-                    availableFoods.remove(new Point(h.y - i, h.x));
-                    availableFoods.remove(new Point(h.y - i, h.x + i));
 
-                    availableFoods.remove(new Point(h.y + i, h.x - i));
-                    availableFoods.remove(new Point(h.y + i, h.x));
-                    availableFoods.remove(new Point(h.y + i, h.x + i));
-
-                    availableFoods.remove(new Point(h.y, h.x - i));
-                    availableFoods.remove(new Point(h.y, h.x + i));
-                }
-            }
-        }*/
         if (health > 15) {
             // food in CORNERS is TOXIC
             availableFoods.remove(new Point(0, 0));
