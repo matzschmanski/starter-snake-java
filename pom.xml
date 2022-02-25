@@ -52,7 +52,7 @@
                     <arguments>
                         <argument>-classpath</argument>
                         <classpath/>
-                        <argument>com.battlesnake.starter.Snake</argument>
+                        <argument>com.emacberry.battlesnake.ifthenelse.Snake</argument>
                     </arguments>
                 </configuration>
             </plugin>
@@ -85,7 +85,7 @@
                             <archive>
                                 <manifest>
                                     <mainClass>
-                                        com.battlesnake.starter.Snake
+                                        com.emacberry.battlesnake.ifthenelse.Snake
                                     </mainClass>
                                 </manifest>
                             </archive>

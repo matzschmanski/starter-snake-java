@@ -1,4 +1,4 @@
-package com.battlesnake.starter;
+package com.emacberry.battlesnake.ifthenelse;
 
 import com.fasterxml.jackson.databind.JsonNode;
 

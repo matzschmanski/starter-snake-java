@@ -1,4 +1,4 @@
-package com.battlesnake.starter;
+package com.emacberry.battlesnake.ifthenelse;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -70,7 +70,7 @@ public class Snake {
          * For the start/end request
          */
         private static final Map<String, String> EMPTY = new HashMap<>();
-        private HashMap<String, com.battlesnake.starter.Session> sessions = new HashMap();
+        private HashMap<String, Session> sessions = new HashMap();
 
         /**
          * Generic processor that prints out the request and response from the methods.
