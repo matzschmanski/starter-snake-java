@@ -48,10 +48,12 @@ public class Snake {
         }
         port(Integer.parseInt(port));
         get("/", HANDLER::process, JSON_MAPPER::writeValueAsString);
+        get("/gameLib/:gameId", HANDLER::getGameById, JSON_MAPPER::writeValueAsString);
         post("/start", HANDLER::process, JSON_MAPPER::writeValueAsString);
         post("/move", HANDLER::process, JSON_MAPPER::writeValueAsString);
         post("/end", HANDLER::process, JSON_MAPPER::writeValueAsString);
     }
+
 
     /**
      * Handler class for dealing with the routes set up in the main method.
@@ -148,6 +150,13 @@ public class Snake {
             return false;
         }
 
+        public Map<String, String> getGameById(Request req, Response res){
+            String gameId = req.params(":gameId");
+            HashMap<String,String> game = new HashMap<>();
+            game.put(gameId,game.toString());
+            return game;
+        }
+
 
         /**
          * Generic processor that prints out the request and response from the methods.
@@ -157,7 +166,11 @@ public class Snake {
          * @return
          */
         public Map<String, String> process(Request req, Response res) {
-
+//
+//            "application/json", ((request, response) -> {
+//                response.type("application/json");
+//                return  request.params(":gameId");
+//            }), gson::toJson);
             try {
                 JsonNode parsedRequest = JSON_MAPPER.readTree(req.body());
                 String uri = req.uri();
@@ -170,8 +183,8 @@ public class Snake {
                 } else if (uri.equals("/move")) {
                     snakeResponse = move(parsedRequest);
                 } else if (uri.equals("/end")) {
-                    snakeResponse = end(parsedRequest);
-                } else {
+                    snakeResponse = end(parsedRequest);}
+                else {
                     throw new IllegalAccessError("Strange call made to the snake: " + uri);
                 }
 
