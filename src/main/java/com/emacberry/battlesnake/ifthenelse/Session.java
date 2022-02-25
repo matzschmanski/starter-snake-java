@@ -700,12 +700,19 @@ public class Session {
                     } else {
                         b.append('+');
                     }
-                } else if (snakeNextMovePossibleLocations[y][x] > 0) {
-                    b.append('o');
-                } else if (foodPlaces.contains(new Point(y, x))) {
-                    b.append('.');
                 } else {
-                    b.append(' ');
+                    boolean isFoodPlace = foodPlaces.contains(new Point(y, x));
+                    if (snakeNextMovePossibleLocations[y][x] > 0) {
+                        if(isFoodPlace){
+                            b.append('O');
+                        }else {
+                            b.append('o');
+                        }
+                    } else if (isFoodPlace) {
+                        b.append('.');
+                    } else {
+                        b.append(' ');
+                    }
                 }
             }
             b.append('|');
