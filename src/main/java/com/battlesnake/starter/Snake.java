@@ -265,7 +265,7 @@ public class Snake {
 
 
             String gameId = moveRequest.get(GAME).get(ID).asText();
-            GameLibrary.getInstance().getGames().getOrDefault(gameId, new GameDetails(GameMode.GO_LEFT_BOTTOM));
+            GameLibrary.getInstance().updateGame(gameId,moveRequest);
 
 
             char[][] board = boardToArray(moveRequest);

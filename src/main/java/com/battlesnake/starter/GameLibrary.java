@@ -1,26 +1,33 @@
 package com.battlesnake.starter;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 public class GameLibrary {
     private static final GameLibrary INSTANCE = new GameLibrary();
-    private final HashMap<String, GameDetails> games;
-
+    Cache<String, JsonNode> cache;
 
 
     private GameLibrary() {
-        games = new HashMap<>();
+        cache = Caffeine.newBuilder()
+                .maximumSize(100)
+                .build();
     }
 
     public static GameLibrary getInstance() {
         return INSTANCE;
     }
 
-    public HashMap<String, GameDetails> getGames() {
-        return games;
+    public JsonNode getGame(String gameId) {
+        return cache.getIfPresent(gameId);
     }
 
-    public static GameMode getMode(String gameId){
-        return getInstance().getGames().getOrDefault(gameId, new GameDetails(GameMode.GO_DOWN)).getMode();
+    public void updateGame(String gameId, JsonNode moveRequest){
+        cache.put(gameId,moveRequest);
     }
+
 }
