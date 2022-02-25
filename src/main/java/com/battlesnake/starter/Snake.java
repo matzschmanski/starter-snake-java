@@ -306,15 +306,14 @@ public class Snake {
 
 
             possibleMoves = survive(moveRequest, possibleMoves);
+
             if(possibleMoves.size()==0){
                 //SNAP
                 possibleMoves = new ArrayList<>(Arrays.asList(UP, DOWN, LEFT, RIGHT));
                 possibleMoves = survive(moveRequest, possibleMoves);
                 LOG.warn("Avoided sending same command because out of moves");
             }
-            // TODO: Using information from 'moveRequest', make your Battlesnake move
-            // towards a
-            // piece of food on the board
+
 
             LOG.info("possible moves:");
             for (String move: possibleMoves){
@@ -337,15 +336,36 @@ public class Snake {
             JsonNode snakes = board.get(SNAKES);
             JsonNode head = moveRequest.get(YOU).get(HEAD);
             JsonNode body = moveRequest.get(YOU).get(BODY);
-
+            int myLength = moveRequest.get("you").get("length").asInt();
             Map<String, Point> nextPositions = generateNextPositions(head);
 
             possibleMoves = avoidMyNeck(head, body, possibleMoves);
             possibleMoves = avoidWalls(head, height, width, possibleMoves);
             possibleMoves = avoidSelf(head, body, possibleMoves, nextPositions);
             possibleMoves = avoidOthers(snakes, possibleMoves, nextPositions);
+            possibleMoves = avoidBiggerHeads(head,myLength,snakes,possibleMoves, nextPositions);
             return possibleMoves;
         }
+
+        public ArrayList<String> avoidBiggerHeads(JsonNode head,int myLength, JsonNode snakes, ArrayList<String> possibleMoves, Map<String, Point> nextPositions){
+            //TODO for survive calculate possible next head moves for other snakes, remove those fields if snake has more points
+            for(JsonNode snake : snakes){
+                JsonNode potentialEnemyHead = snake.get("head");
+                if(!potentialEnemyHead.equals(head)){
+                    if(snake.get("length").asInt()>=myLength){
+                        //avoid!
+                        Map<String, Point> nextPositionsForEnemy = generateNextPositions(potentialEnemyHead);
+                        for (Map.Entry<String, Point> entry : nextPositionsForEnemy.entrySet()) {
+                            if(entry.getValue().equals(nextPositions.get(entry.getKey()))){
+                                possibleMoves.remove(entry.getKey());
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
 
         /**
          * Remove the 'neck' direction from the list of possible moves
