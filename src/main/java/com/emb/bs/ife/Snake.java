@@ -136,6 +136,7 @@ public class Snake {
         public Map<String, String> start(JsonNode startRequest) {
             LOG.info("START");
             Session s = new Session();
+            s.clearLogs();
             if(loggingFailed) {
                 s.logReq(startRequest);
             }

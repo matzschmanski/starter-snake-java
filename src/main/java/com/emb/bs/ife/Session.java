@@ -26,6 +26,10 @@ public class Session {
         LOG.doIt = b;
     }
 
+    public void clearLogs() {
+        LOG.clear();
+    }
+
     int state = 0;
     int tPhase = 0;
     int MAXDEEP = 0;

@@ -50,6 +50,11 @@ class SessionLogger extends ArrayList<String> {
         }
     }
 
+    public void clear(){
+        super.clear();
+        req.clear();
+    }
+
     void write() {
         if (Snake.loggingFailed) {
             Long ts = System.currentTimeMillis();
