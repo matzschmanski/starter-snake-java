@@ -237,7 +237,7 @@ public class Session {
             availableFoods.remove(new Point(Y-1, X-1));
 
             for (Point h : snakeHeads) {
-                // food that is head of a other snake that is longer or has
+                // food that is head of another snake that is longer or has
                 // the same length should be ignored...
                 if (snakeBodies[h.y][h.x] >= len){
                     availableFoods.remove(new Point(h.y + 1, h.x + 1));
