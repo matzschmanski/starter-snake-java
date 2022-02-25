@@ -1,7 +1,7 @@
 {
-  "name": "Battlesnake Java Starter Snake",
+  "name": "MARQ24-IF-THEN-ELSE-Snake",
   "description": "A sample starter snake for Battlesnake written in Java",
-  "repository": "https://github.com/battlesnakeofficial/starter-snake-java",
+  "repository": "https://github.com/marq24/doedel-snake",
   "keywords": [
     "battlesnake",
     "java"
