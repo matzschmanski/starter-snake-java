@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,7 +19,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SnakeTest {
 
+    private static final Logger LOG = LoggerFactory.getLogger(SnakeTest.class);
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
     static {
         OBJECT_MAPPER.configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
     }
@@ -37,6 +41,7 @@ public class SnakeTest {
             for (String fName : currentDir) {
                 if (fName.startsWith("req_")) {
                     List<String> simJson = readFileLineByLineAsList((new File(fName).toPath()));
+                    LOG.info("REPLAY: "+fName);
                     handler.start(OBJECT_MAPPER.readTree(simJson.remove(0)));
                     for (String line : simJson) {
                         handler.move(OBJECT_MAPPER.readTree(line));

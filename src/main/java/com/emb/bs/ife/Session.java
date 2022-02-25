@@ -346,7 +346,7 @@ public class Session {
                 return pos.y < yMax
                         && myBody[pos.y + 1][pos.x] == 0
                         && snakeBodies[pos.y + 1][pos.x] == 0
-                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y + 1][pos.x] <= len)
+                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y + 1][pos.x] < len)
                         && (enterNoGoZone || !willCreateLoop(Snake.UP, pos, null,0));
             }
         } catch (IndexOutOfBoundsException e) {
@@ -403,7 +403,7 @@ public class Session {
                 return pos.x < xMax
                         && myBody[pos.y][pos.x + 1] == 0
                         && snakeBodies[pos.y][pos.x + 1] == 0
-                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x + 1] <= len)
+                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x + 1] < len)
                         && (enterNoGoZone || !willCreateLoop(Snake.RIGHT, pos, null, 0))
                         ;
             }
@@ -466,7 +466,7 @@ public class Session {
                 return  pos.y > yMin
                         && myBody[pos.y - 1][pos.x] == 0
                         && snakeBodies[pos.y - 1][pos.x] == 0
-                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y - 1][pos.x] <= len)
+                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y - 1][pos.x] < len)
                         && (enterNoGoZone || !willCreateLoop(Snake.DOWN, pos, null, 0))
                         ;
             }
@@ -536,7 +536,7 @@ public class Session {
                 return pos.x > xMin
                         && myBody[pos.y][pos.x - 1] == 0
                         && snakeBodies[pos.y][pos.x - 1] == 0
-                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x - 1] <= len)
+                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x - 1] < len)
                         && (enterNoGoZone || !willCreateLoop(Snake.LEFT, pos, null, 0))
                         ;
             }
