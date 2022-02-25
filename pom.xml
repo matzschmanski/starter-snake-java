@@ -52,7 +52,7 @@
                     <arguments>
                         <argument>-classpath</argument>
                         <classpath/>
-                        <argument>com.emb.bs.ife.Snake</argument>
+                        <argument>com.emb.bs.ite.Snake</argument>
                     </arguments>
                 </configuration>
             </plugin>
@@ -85,7 +85,7 @@
                             <archive>
                                 <manifest>
                                     <mainClass>
-                                        com.emb.bs.ife.Snake
+                                        com.emb.bs.ite.Snake
                                     </mainClass>
                                 </manifest>
                             </archive>

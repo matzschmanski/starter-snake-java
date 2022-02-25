@@ -1,4 +1,4 @@
-package com.emb.bs.ife;
+package com.emb.bs.ite;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
@@ -161,7 +161,7 @@ public class Session {
     private int getAdvantage(){
         // how many foods-ahead we want to be...
         // is "one" really just enough?
-        return 4;
+        return 15;
         /*int advantage = 1;
         if(len > 19){
             advantage++;
