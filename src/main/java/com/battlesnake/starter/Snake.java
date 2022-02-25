@@ -363,7 +363,7 @@ public class Snake {
                     }
                 }
             }
-            return null;
+            return possibleMoves;
         }
 
 
