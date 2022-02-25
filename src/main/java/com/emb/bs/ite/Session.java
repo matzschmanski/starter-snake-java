@@ -60,6 +60,7 @@ public class Session {
     boolean escapeFromBorder = false;
     private int xMin, yMin, xMax, yMax;
 
+    boolean hungerMode = false;
     String LASTMOVE = null;
 
     private void setFullBoardBounds() {
@@ -159,23 +160,26 @@ public class Session {
     }
 
     private int getAdvantage(){
-        // how many foods-ahead we want to be...
-        // is "one" really just enough?
-        return 15;
-        /*int advantage = 1;
-        if(len > 19){
-            advantage++;
+        if( hungerMode ){
+            return len;
+        }else {
+            // how many foods-ahead we want to be...
+            // is "one" really just enough?
+            int advantage = 1;
+            if (len > 19) {
+                advantage++;
+            }
+            if (len > 24) {
+                advantage++;
+            }
+            if (len > 29) {
+                advantage++;
+            }
+            if (len > 39) {
+                advantage++;
+            }
+            return advantage;
         }
-        if(len > 24){
-            advantage++;
-        }
-        if(len > 29){
-            advantage++;
-        }
-        if(len > 39){
-            advantage++;
-        }
-        return advantage;*/
     }
 
     public String checkSpecialMoves() {

@@ -243,6 +243,10 @@ public class Snake {
             for (int i = 0; i < sLen; i++) {
                 JsonNode aSnake = snakes.get(i);
                 if (!aSnake.get("id").asText().equals(myId)) {
+                    String fof = aSnake.get("name").asText().toLowerCase();
+                    if(!s.hungerMode && checkFoF(fof)){
+                        s.hungerMode = true;
+                    }
                     int len = aSnake.get("length").asInt();
                     s.maxOtherSnakeLen = Math.max(len, s.maxOtherSnakeLen);
                     Point h = new Point(aSnake.get("head"));
@@ -324,6 +328,13 @@ public class Snake {
             s.initSessionAfterFullBoardRead();
             s.logState("MOVE CALLED");
             s.logBoard();
+        }
+
+        private boolean checkFoF(String fof) {
+            return  fof.indexOf("tatos") > -1
+                    || fof.indexOf("sr2") > -1
+                    || fof.indexOf("paranoidba") > -1
+                    ;
         }
 
         private String calculateNextMove(Session s) {
