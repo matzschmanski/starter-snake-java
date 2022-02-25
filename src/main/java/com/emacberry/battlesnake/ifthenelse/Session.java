@@ -237,9 +237,13 @@ public class Session {
             availableFoods.remove(new Point(Y-1, X-1));
 
             for (Point h : snakeHeads) {
-                availableFoods.remove(new Point(h.y+1, h.x+1));
-                availableFoods.remove(new Point(h.y+1, h.x+0));
-                availableFoods.remove(new Point(h.y+0, h.x+1));
+                // food that is head of a other snake that is longer or has
+                // the same length should be ignored...
+                if (snakeBodies[h.y][h.x] >= len){
+                    availableFoods.remove(new Point(h.y + 1, h.x + 1));
+                    availableFoods.remove(new Point(h.y + 1, h.x + 0));
+                    availableFoods.remove(new Point(h.y + 0, h.x + 1));
+                }
             }
         }
 
@@ -314,10 +318,6 @@ public class Session {
                 }
 
                 // simple check, if we can move from the new position to any other location
-                //int[][] myBodyCopy = myBody.clone();
-                //myBody[newPos.y][newPos.x] = 1;
-
-//LOG.info("CHECK-LOOP: "+newPos);
 
                 // so in the finalMap we have the picture of the MOVE RESULT
                 if(finalMap == null) {
@@ -337,16 +337,11 @@ public class Session {
                 }
                 finalMap[newPos.y][newPos.x] = 1;
 
-/*if(turn > 160 && turn < 163) {
-    logMap(finalMap, count);
-}*/
-
                 boolean noUP = !canMoveUp(newPos, finalMap, count);
                 boolean noDW = !canMoveDown(newPos, finalMap, count);
                 boolean noLF = !canMoveLeft(newPos, finalMap, count);
                 boolean noRT = !canMoveRight(newPos, finalMap, count);
 
-                //myBody = myBodyCopy;
                 if (noUP && noDW && noLF && noRT) {
                     return true;
                 }
