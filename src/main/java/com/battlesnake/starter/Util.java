@@ -22,11 +22,11 @@ public class Util {
         for (char[] chars : boardArray) {
             Arrays.fill(chars, CAN_TRAVEL);
         }
-
+        JsonNode head = moveRequest.get(YOU).get(HEAD);
         //not reachable:
         //self, other snakes, walls
-        StreamSupport.stream(board.get(SNAKES).spliterator(),false).flatMap(jsonNode -> StreamSupport.stream(jsonNode.get(BODY).spliterator(),false)).forEach(coordinate -> boardArray[coordinate.get(X).asInt()][coordinate.get(Y).asInt()] = CAN_NOT_TRAVEL);
-        JsonNode head = moveRequest.get(YOU).get(HEAD);
+        StreamSupport.stream(board.get(SNAKES).spliterator(),false).flatMap(jsonNode -> StreamSupport.stream(jsonNode.get(BODY).spliterator(),false)).forEach(coordinate -> boardArray[boardArray.length-1-head.get(X).asInt()][coordinate.get(Y).asInt()] = CAN_NOT_TRAVEL);
+
         boardArray[boardArray.length-1-head.get(X).asInt()][head.get(Y).asInt()] = SOURCE;
 
         // mark closest food as target
@@ -35,5 +35,9 @@ public class Util {
 //        StreamSupport.stream(board.get(FOOD).spliterator(),false).flatMap(jsonNode -> StreamSupport.stream(jsonNode.get(BODY).spliterator(),false)).forEach(coordinate -> boardArray[coordinate.get(X).asInt()][coordinate.get(Y).asInt()] = -1024);
 
         return boardArray;
+    }
+
+    public static int xSnakeToXBoard(char[][] board, int xValue){
+        return board.length-1-xValue;
     }
 }

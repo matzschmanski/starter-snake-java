@@ -273,7 +273,7 @@ public class Snake {
             // calculate closest food
             JsonNode food = moveRequest.get(BOARD).get(FOOD);
             JsonNode head = moveRequest.get(YOU).get(HEAD);
-            QItem source = new QItem(head.get(X).asInt(), head.get(Y).asInt(), 0);
+            QItem source = new QItem(Util.xSnakeToXBoard(board,head.get(X).asInt()), head.get(Y).asInt(), 0);
 
             System.out.println();
 
@@ -291,14 +291,14 @@ public class Snake {
                 LOG.info("found food at {} with distance of {}", targetFood, targetFood.getDist());
 
                 if (targetFood.getX() < head.get(X).asInt()) {
-                    possibleMoves.add(LEFT);
+                    possibleMoves.add(DOWN);
                 } else if (targetFood.getX() > head.get(X).asInt()) {
-                    possibleMoves.add(RIGHT);
+                    possibleMoves.add(UP);
                 }
                 if (targetFood.getY() < head.get(Y).asInt()) {
-                    possibleMoves.add(DOWN);
+                    possibleMoves.add(RIGHT);
                 } else if (targetFood.getY() > head.get(Y).asInt()) {
-                    possibleMoves.add(UP);
+                    possibleMoves.add(LEFT);
                 }
             } else {
                 possibleMoves = new ArrayList<>(Arrays.asList(UP, DOWN, LEFT, RIGHT));
