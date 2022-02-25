@@ -306,7 +306,12 @@ public class Snake {
 
 
             possibleMoves = survive(moveRequest, possibleMoves);
-
+            if(possibleMoves.size()==0){
+                //SNAP
+                possibleMoves = new ArrayList<>(Arrays.asList(UP, DOWN, LEFT, RIGHT));
+                possibleMoves = survive(moveRequest, possibleMoves);
+                LOG.warn("Avoided sending same command because out of moves");
+            }
             // TODO: Using information from 'moveRequest', make your Battlesnake move
             // towards a
             // piece of food on the board
