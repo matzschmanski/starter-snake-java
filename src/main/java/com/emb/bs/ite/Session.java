@@ -161,11 +161,11 @@ public class Session {
 
     private int getAdvantage(){
         if( hungerMode ){
-            return len;
+            return ((int) (X/2)) + 1;
         }else {
             // how many foods-ahead we want to be...
             // is "one" really just enough?
-            int advantage = 1;
+            int advantage = 2;
             if (len > 19) {
                 advantage++;
             }
@@ -255,7 +255,7 @@ public class Session {
         }
 
         // we GO FOR ANY FOOD!
-        if (closestFood != null /*&& minDist <= X / 3 + Y / 3 */) {
+        if (closestFood != null) {
             goForFood = true;
             if (!enterBorderZone) {
                 if (closestFood.y == 0 ||
@@ -273,15 +273,32 @@ public class Session {
             // TODO:
             // here we have to find a smarter way to decide, in which direction we should
             // go to approach the food -> since currently this causing quite often "self-loops"
-            if (pos.x > closestFood.x) {
-                return moveLeft();
-            } else if (pos.x < closestFood.x) {
-                return moveRight();
-            } else if (pos.y > closestFood.y) {
-                return moveDown();
-            } else {
-                return moveUp();
+
+            int yDelta = pos.y - closestFood.y;
+            int xDelta = pos.x - closestFood.x;
+            if(Math.abs(yDelta)/3 > Math.abs(xDelta)/3){
+                // we have to move more on the Y-axis
+                if (yDelta > 0) {
+                    return moveDown();
+                } else if (yDelta < 0){
+                    return moveUp();
+                } else if (xDelta > 0) {
+                    return moveLeft();
+                } else {
+                    return moveRight();
+                }
+            }else{
+                if (xDelta > 0) {
+                    return moveLeft();
+                } else if (xDelta < 0) {
+                    return moveRight();
+                } else if (yDelta > 0) {
+                    return moveDown();
+                } else {
+                    return moveUp();
+                }
             }
+
         } else {
             LOG.info("NO NEARBY FOOD FOUND minDist:" + minDist + " x:" + (X / 3) + "+y:" + (Y / 3) + "=" + ((X / 3) + (Y / 3)));
         }
