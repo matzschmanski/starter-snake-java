@@ -65,8 +65,8 @@ public class Snake {
 
         private static QItem minDistance(char[][] grid, QItem source,QItem destination)
         {
-            char oldChar =grid[destination.row][destination.col];
-            grid[grid.length-1-destination.row][destination.col] = Util.DESTINATION;
+            char oldChar =grid[destination.x][destination.y];
+            grid[destination.x][destination.y] = Util.DESTINATION;
 
             // To keep track of visited QItems. Marking
             // blocked cells as visited.
@@ -77,8 +77,8 @@ public class Snake {
 
                     // Finding source
                     if (grid[i][j] == Util.SOURCE) {
-                        source.row = i;
-                        source.col = j;
+                        source.x = i;
+                        source.y = j;
                         break firstLoop;
                     }
                 }
@@ -86,52 +86,52 @@ public class Snake {
 
             // applying BFS on matrix cells starting from source
             Queue<QItem> queue = new LinkedList<>();
-            queue.add(new QItem(source.row, source.col, 0));
+            queue.add(new QItem(source.x, source.y, 0));
 
             boolean[][] visited
                     = new boolean[grid.length][grid[0].length];
-            visited[source.row][source.col] = true;
+            visited[source.x][source.y] = true;
 
             while (!queue.isEmpty()) {
                 QItem p = queue.remove();
 
                 // Destination found;
-                if (grid[p.row][p.col] == Util.DESTINATION) {
-                    grid[destination.row][destination.col] = oldChar;
+                if (grid[p.x][p.y] == Util.DESTINATION) {
+                    grid[destination.x][destination.y] = oldChar;
                     p.setX(grid.length-p.getX()-1);
                     return p;
                 }
 
                 // moving up
-                if (isValid(p.row - 1, p.col, grid, visited)) {
-                    queue.add(new QItem(p.row - 1, p.col,
+                if (isValid(p.x - 1, p.y, grid, visited)) {
+                    queue.add(new QItem(p.x - 1, p.y,
                             p.dist + 1));
-                    visited[p.row - 1][p.col] = true;
+                    visited[p.x - 1][p.y] = true;
                 }
 
                 // moving down
-                if (isValid(p.row + 1, p.col, grid, visited)) {
-                    queue.add(new QItem(p.row + 1, p.col,
+                if (isValid(p.x + 1, p.y, grid, visited)) {
+                    queue.add(new QItem(p.x + 1, p.y,
                             p.dist + 1));
-                    visited[p.row + 1][p.col] = true;
+                    visited[p.x + 1][p.y] = true;
                 }
 
                 // moving left
-                if (isValid(p.row, p.col - 1, grid, visited)) {
-                    queue.add(new QItem(p.row, p.col - 1,
+                if (isValid(p.x, p.y - 1, grid, visited)) {
+                    queue.add(new QItem(p.x, p.y - 1,
                             p.dist + 1));
-                    visited[p.row][p.col - 1] = true;
+                    visited[p.x][p.y - 1] = true;
                 }
 
                 // moving right
-                if (isValid(p.row, p.col + 1, grid,
+                if (isValid(p.x, p.y + 1, grid,
                         visited)) {
-                    queue.add(new QItem(p.row, p.col + 1,
+                    queue.add(new QItem(p.x, p.y + 1,
                             p.dist + 1));
-                    visited[p.row][p.col + 1] = true;
+                    visited[p.x][p.y + 1] = true;
                 }
             }
-            grid[destination.row][destination.col] = oldChar;
+            grid[destination.x][destination.y] = oldChar;
             return null;
         }
 
@@ -273,12 +273,12 @@ public class Snake {
             // calculate closest food
             JsonNode food = moveRequest.get(BOARD).get(FOOD);
             JsonNode head = moveRequest.get(YOU).get(HEAD);
-            QItem source = new QItem(Util.xSnakeToXBoard(board,head.get(X).asInt()), head.get(Y).asInt(), 0);
+            QItem source = new QItem(Util.snakeToBoard(board,head.get(Y).asInt()),Util.snakeToBoard(board,head.get(X).asInt()) , 0);
 
             System.out.println();
 
             List<QItem> foundFood = StreamSupport.stream(food.spliterator(), true)
-                    .map(coordinate -> new QItem(coordinate.get(X).asInt(), coordinate.get(Y).asInt(), 0))
+                    .map(coordinate -> new QItem(Util.snakeToBoard(board,coordinate.get(X).asInt()), coordinate.get(Y).asInt(), 0))
                     .map(destination -> minDistance(board, source, destination))
                     .filter(Objects::nonNull).collect(Collectors.toList());
             foundFood = foundFood.stream()
@@ -291,14 +291,14 @@ public class Snake {
                 LOG.info("found food at {} with distance of {}", targetFood, targetFood.getDist());
 
                 if (targetFood.getX() < head.get(X).asInt()) {
-                    possibleMoves.add(DOWN);
+                    possibleMoves.add(LEFT);
                 } else if (targetFood.getX() > head.get(X).asInt()) {
-                    possibleMoves.add(UP);
+                    possibleMoves.add(RIGHT);
                 }
                 if (targetFood.getY() < head.get(Y).asInt()) {
-                    possibleMoves.add(RIGHT);
+                    possibleMoves.add(DOWN);
                 } else if (targetFood.getY() > head.get(Y).asInt()) {
-                    possibleMoves.add(LEFT);
+                    possibleMoves.add(UP);
                 }
             } else {
                 possibleMoves = new ArrayList<>(Arrays.asList(UP, DOWN, LEFT, RIGHT));

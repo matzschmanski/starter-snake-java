@@ -1,30 +1,30 @@
 package com.battlesnake.starter;
 
 class QItem {
-    int row;
-    int col;
+    int x;
+    int y;
     int dist;
-    public QItem(int row, int col, int dist)
+    public QItem(int x, int col, int dist)
     {
-        this.row = row;
-        this.col = col;
+        this.x = x;
+        this.y = col;
         this.dist = dist;
     }
 
     public int getX() {
-        return row;
+        return x;
     }
 
     public void setX(int row) {
-        this.row = row;
+        this.x = row;
     }
 
     public int getY() {
-        return col;
+        return y;
     }
 
     public void setY(int col) {
-        this.col = col;
+        this.y = col;
     }
 
     public int getDist() {
@@ -38,8 +38,8 @@ class QItem {
     @Override
     public String toString() {
         return "QItem{" +
-                "X=" + row +
-                ", Y=" + col +
+                "X=" + x +
+                ", Y=" + y +
                 ", distance=" + dist +
                 '}';
     }

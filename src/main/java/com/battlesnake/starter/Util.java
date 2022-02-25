@@ -25,7 +25,7 @@ public class Util {
         JsonNode head = moveRequest.get(YOU).get(HEAD);
         //not reachable:
         //self, other snakes, walls
-        StreamSupport.stream(board.get(SNAKES).spliterator(),false).flatMap(jsonNode -> StreamSupport.stream(jsonNode.get(BODY).spliterator(),false)).forEach(coordinate -> boardArray[boardArray.length-1-head.get(X).asInt()][coordinate.get(Y).asInt()] = CAN_NOT_TRAVEL);
+        StreamSupport.stream(board.get(SNAKES).spliterator(),false).flatMap(jsonNode -> StreamSupport.stream(jsonNode.get(BODY).spliterator(),false)).forEach(coordinate -> boardArray[snakeToBoard(boardArray,coordinate.get(Y).asInt())][snakeToBoard(boardArray,coordinate.get(X).asInt())] = CAN_NOT_TRAVEL);
 
         boardArray[boardArray.length-1-head.get(X).asInt()][head.get(Y).asInt()] = SOURCE;
 
@@ -37,7 +37,7 @@ public class Util {
         return boardArray;
     }
 
-    public static int xSnakeToXBoard(char[][] board, int xValue){
-        return board.length-1-xValue;
+    public static int snakeToBoard(char[][] board, int value){
+        return board.length-1-value;
     }
 }
