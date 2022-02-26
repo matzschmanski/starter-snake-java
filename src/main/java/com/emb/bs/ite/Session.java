@@ -145,7 +145,7 @@ public class Session {
 
     private int getAdvantage(){
         if( hungerMode ){
-            return Math.max((int) (len/2.5), 4);
+            return 8;
         }else {
             // how many foods-ahead we want to be...
             // is "one" really just enough?
