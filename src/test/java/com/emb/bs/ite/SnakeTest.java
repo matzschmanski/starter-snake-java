@@ -64,7 +64,9 @@ public class SnakeTest {
                 if (fName.endsWith(".json")) {
                     String simJsonString = readFileAsString((new File(fName).toPath()));
                     LOG.info("REPLAY: "+fName);
-                    JsonNode list = OBJECT_MAPPER.readTree(simJsonString);
+                    // when a snake move out of bounds in the /event WS, then the position can be -1
+                    // also I guess it can be larger then the MAX X/Y... mhhh
+                    JsonNode list = OBJECT_MAPPER.readTree(simJsonString.toLowerCase().replaceAll("-1", "0"));
                     JsonNode first = list.get(0);
                     handler.start(convertToGame(first));
                     for(int i=1; i < list.size(); i++){
@@ -76,7 +78,7 @@ public class SnakeTest {
         }
     }
 
-    private static final String gameID = "myId";
+    private static final String gameID = "myDUMMY-Id";
     private JsonNode convertToGame(JsonNode gamePlay) {
         ObjectNode root = OBJECT_MAPPER.createObjectNode();
         ObjectNode game = OBJECT_MAPPER.createObjectNode();
@@ -87,8 +89,10 @@ public class SnakeTest {
 
         ObjectNode board = OBJECT_MAPPER.createObjectNode();
         root.put("board", board);
-        board.put("height", 25);
-        board.put("width", 25);
+
+        // WARING HARDCODE BOARD SIZE!
+        board.put("height", 11);
+        board.put("width", 11);
 
         board.put("food", gamePlay.get("food"));
 
@@ -107,7 +111,7 @@ public class SnakeTest {
             }else{
                 targetSnakes.add(dest);
             }
-            dest.put("id", srcS.get("_id").asText());
+            dest.put("id", srcS.get("_id") != null ? srcS.get("_id").asText() : srcS.get("id").asText());
             dest.put("name", srcS.get("name").asText());
             dest.put("body", srcS.get("body"));
             dest.put("head", srcS.get("body").get(0));
