@@ -62,7 +62,7 @@ public class Session {
     boolean escapeFromBorder = false;
     private int xMin, yMin, xMax, yMax;
 
-    boolean hungerMode = false;
+    boolean hungerMode = true;
     Point activeFood = null;
 
     String LASTMOVE = null;
@@ -165,7 +165,7 @@ public class Session {
 
     private int getAdvantage(){
         if( hungerMode ){
-            return X;
+            return Math.max((int) (len/2.5), 4);
         }else {
             // how many foods-ahead we want to be...
             // is "one" really just enough?
@@ -246,14 +246,19 @@ public class Session {
 
         for (Point f : availableFoods) {
             int dist = Math.abs(f.x - pos.x) + Math.abs(f.y - pos.y);
-            int otherSnakesMinDist = Integer.MAX_VALUE;
+
             for (Point h : snakeHeads) {
-                otherSnakesMinDist = Math.min(otherSnakesMinDist, Math.abs(f.x - h.x) + Math.abs(f.y - h.y));
-            }
-            if(dist <= otherSnakesMinDist) {
-                minDist = Math.min(minDist, dist);
-                if (minDist == dist) {
-                    closestFood = f;
+                int otherSnakesDist = Math.abs(f.x - h.x) + Math.abs(f.y - h.y);
+                boolean otherIsStronger = snakeBodies[h.y][h.x] >= len;
+
+                if(dist < otherSnakesDist || (dist == otherSnakesDist && !otherIsStronger)) {
+                    minDist = Math.min(minDist, dist);
+                    if (minDist == dist) {
+                        boolean isFoodAtBorder = isLocatedAtBorder(f);
+                        if(!isFoodAtBorder || dist < 3 || health < 16) {
+                            closestFood = f;
+                        }
+                    }
                 }
             }
         }
@@ -262,11 +267,7 @@ public class Session {
         if (closestFood != null) {
             goForFood = true;
             if (!enterBorderZone) {
-                if (closestFood.y == 0 ||
-                        closestFood.y == Y - 1 ||
-                        closestFood.x == 0 ||
-                        closestFood.x == X - 1
-                ) {
+                if(isLocatedAtBorder(closestFood)){
                     enterBorderZone = true;
                     escapeFromBorder = false;
                     setFullBoardBounds();
@@ -278,7 +279,7 @@ public class Session {
             }
             activeFood = closestFood;
 
-            LOG.info("TRY TO GET FOOD: at: " + closestFood +" moving: "+lastFoodState);
+            LOG.info("TRY TO GET FOOD: at: " + closestFood +" moving: "+getMoveIntAsString(lastFoodState));
             // TODO:
             // here we have to find a smarter way to decide, in which direction we should
             // go to approach the food -> since currently me are blocked by ourselves
@@ -347,6 +348,13 @@ LOG.error("==============================================");
             LOG.info("NO NEARBY FOOD FOUND minDist:" + minDist + " x:" + (X / 3) + "+y:" + (Y / 3) + "=" + ((X / 3) + (Y / 3)));
         }
         return null;
+    }
+
+    private boolean isLocatedAtBorder(Point p) {
+        return  p.y == 0 ||
+                p.y == Y - 1 ||
+                p.x == 0 ||
+                p.x == X - 1;
     }
 
     private boolean willCreateLoop(int move, Point aPos, int[][] finalMap, int count) {
@@ -806,22 +814,18 @@ LOG.error("==============================================");
     }
 
     private String getMoveIntAsString(int move) {
-        String txt = null;
         switch (move) {
             case Snake.UP:
-                txt = Snake.U;
-                break;
+                return Snake.U;
             case Snake.RIGHT:
-                txt = Snake.R;
-                break;
+                return Snake.R;
             case Snake.DOWN:
-                txt = Snake.D;
-                break;
+                return Snake.D;
             case Snake.LEFT:
-                txt = Snake.L;
-                break;
+                return Snake.L;
+            default:
+                return "UNKNOWN";
         }
-        return txt;
     }
 
     private void logMap(int[][] aMap, int c) {
