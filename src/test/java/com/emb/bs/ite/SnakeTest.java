@@ -1,7 +1,10 @@
 package com.emb.bs.ite;
 
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -51,6 +54,70 @@ public class SnakeTest {
             }
         }
     }
+
+    @Test
+    void replayJSON() throws Exception{
+        String[] currentDir = new File(new File("").getAbsolutePath()).list();
+        if(currentDir != null && currentDir.length >0) {
+            Arrays.sort(currentDir, Collections.reverseOrder());
+            for (String fName : currentDir) {
+                if (fName.endsWith(".json")) {
+                    String simJsonString = readFileAsString((new File(fName).toPath()));
+                    LOG.info("REPLAY: "+fName);
+                    JsonNode list = OBJECT_MAPPER.readTree(simJsonString);
+                    JsonNode first = list.get(0);
+                    handler.start(convertToGame(first));
+                    for(int i=1; i < list.size(); i++){
+                        handler.move(convertToGame(list.get(i)));
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
+    private static final String gameID = "myId";
+    private JsonNode convertToGame(JsonNode gamePlay) {
+        ObjectNode root = OBJECT_MAPPER.createObjectNode();
+        ObjectNode game = OBJECT_MAPPER.createObjectNode();
+        root.put("game", game);
+        game.put("id", gameID);
+
+        root.put("turn", gamePlay.get("turn").asInt());
+
+        ObjectNode board = OBJECT_MAPPER.createObjectNode();
+        root.put("board", board);
+        board.put("height", 11);
+        board.put("width", 11);
+
+        board.put("food", gamePlay.get("food"));
+
+        ArrayNode targetSnakes = OBJECT_MAPPER.createArrayNode();
+        board.put("snakes", targetSnakes);
+
+        ObjectNode you = OBJECT_MAPPER.createObjectNode();
+        root.put("you", you);
+
+        JsonNode srcSnakes = gamePlay.get("snakes");
+        for(int i=0; i<srcSnakes.size(); i++){
+            ObjectNode dest = OBJECT_MAPPER.createObjectNode();
+            JsonNode srcS = srcSnakes.get(i);
+            if(srcS.get("name").asText().indexOf("lend")>-1){
+                dest = you;
+            }else{
+                targetSnakes.add(dest);
+            }
+            dest.put("id", srcS.get("_id").asText());
+            dest.put("name", srcS.get("name").asText());
+            dest.put("body", srcS.get("body"));
+            dest.put("head", srcS.get("body").get(0));
+            dest.put("length", srcS.get("body").size());
+            dest.put("health", srcS.get("health").intValue());
+        }
+
+        return root;
+    }
+
 
     /*
     @Test
@@ -187,5 +254,17 @@ public class SnakeTest {
             e.printStackTrace();
         }
         return stringList;
+    }
+    private static String readFileAsString(Path inputFilePath) {
+        Charset charset = Charset.defaultCharset();
+        String data = null;
+        try {
+            byte[] bytes = Files.readAllBytes(inputFilePath);
+            data = new String(bytes, charset);
+            //data = Files.readString(inputFilePath, charset);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return data;
     }
 }

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.TreeMap;
 
 public class Session {
 
@@ -227,11 +228,20 @@ public class Session {
         availableFoods.addAll(foodPlaces);
 
         if (health > 15) {
-            // food in CORNERS is TOXIC
-            availableFoods.remove(new Point(0, 0));
-            availableFoods.remove(new Point(0, X-1));
-            availableFoods.remove(new Point(Y-1, 0));
-            availableFoods.remove(new Point(Y-1, X-1));
+            // food in CORNERS is TOXIC (but if we are already IN the corner we will
+            // take it!
+            if(!(pos.x == 0 && pos.y <= 1) || (pos.x <= 1 && pos.y == 0)){
+                availableFoods.remove(new Point(0, 0));
+            }
+            if(!(pos.x == X-1 && pos.y <= 1) || (pos.x <= X-2 && pos.y == 0)) {
+                availableFoods.remove(new Point(0, X - 1));
+            }
+            if(!(pos.x == 0 && pos.y <= Y-2) || (pos.x <= 1 && pos.y == Y-1)) {
+                availableFoods.remove(new Point(Y - 1, 0));
+            }
+            if(!(pos.x == X-1 && pos.y >= Y-2) || (pos.x >= X-2 && pos.y == Y-1)) {
+                availableFoods.remove(new Point(Y - 1, X - 1));
+            }
 
             for (Point h : snakeHeads) {
                 // food that is head of another snake that is longer or has
@@ -244,6 +254,7 @@ public class Session {
             }
         }
 
+        TreeMap<Integer, ArrayList<Point>> foodTargetsByDistance = new TreeMap<>();
         for (Point f : availableFoods) {
             int dist = Math.abs(f.x - pos.x) + Math.abs(f.y - pos.y);
 
@@ -252,19 +263,71 @@ public class Session {
                 boolean otherIsStronger = snakeBodies[h.y][h.x] >= len;
 
                 if(dist < otherSnakesDist || (dist == otherSnakesDist && !otherIsStronger)) {
-                    minDist = Math.min(minDist, dist);
-                    if (minDist == dist) {
-                        boolean isFoodAtBorder = isLocatedAtBorder(f);
-                        if(!isFoodAtBorder || dist < 3 || health < 16) {
-                            closestFood = f;
+                    if(!isLocatedAtBorder(f) || dist < 3 || health < 16) {
+                        ArrayList<Point> foodsInDist = foodTargetsByDistance.get(dist);
+                        if(foodsInDist == null){
+                            foodsInDist = new ArrayList<>();
+                            foodTargetsByDistance.put(dist, foodsInDist);
                         }
+                        foodsInDist.add(f);
                     }
                 }
             }
         }
+        if(foodTargetsByDistance.size() > 0){
+            ArrayList<Point> closestFoodList = foodTargetsByDistance.get(foodTargetsByDistance.firstKey());
+            if(closestFoodList.size() == 1){
+                closestFood = closestFoodList.get(0);
+            } else {
+                int minBlocks = Integer.MAX_VALUE;
+                closestFood = closestFoodList.get(0);
+                // need to decided which food is better?!
+                for(Point cfp: closestFoodList){
+                    int blocks = 0;
+                    int yDelta = pos.y - cfp.y;
+                    int xDelta = pos.x - cfp.x;
+                    if (Math.abs(yDelta) > Math.abs(xDelta)) {
+                        if (yDelta > 0) {
+                            // we need to go DOWN to the food...
+                            for(int i = cfp.y+1; i < pos.y; i++){
+                                if(myBody[i][pos.x] > 0 || snakeBodies[i][pos.x] > 0){
+                                    blocks++;
+                                }
+                            }
+                        } else {
+                            // we need to go UP to the food...
+                            for(int i = pos.y+1; i < cfp.y;i++){
+                                if(myBody[i][pos.x] > 0 || snakeBodies[i][pos.x] > 0){
+                                    blocks++;
+                                }
+                            }
+                        }
+                    }else{
+                        if (xDelta > 0) {
+                            // we need to go LEFT to the food...
+                            for(int i = cfp.x+1; i < pos.x; i++){
+                                if(myBody[pos.y][i] > 0 || snakeBodies[pos.y][i] > 0){
+                                    blocks++;
+                                }
+                            }
+                        } else {
+                            // we need to go RIGHT to the food...
+                            for(int i = pos.x+1; i < cfp.x; i++){
+                                if(myBody[pos.y][i] > 0 || snakeBodies[pos.y][i] > 0){
+                                    blocks++;
+                                }
+                            }
+                        }
+                    }
+                    minBlocks = Math.min(minBlocks, blocks);
+                    if(minBlocks == blocks){
+                        closestFood = cfp;
+                    } else{
+                        LOG.info("FOOD at "+cfp+" blocked by "+blocks+" - stay on: "+closestFood+ "(blocked by "+minBlocks+")");
+                    }
+                }
+            }
 
-        // we GO FOR ANY FOOD!
-        if (closestFood != null) {
             goForFood = true;
             if (!enterBorderZone) {
                 if(isLocatedAtBorder(closestFood)){
@@ -341,7 +404,6 @@ LOG.error("==============================================");
 LOG.error("==============================================");
                 }
             }*/
-
         } else {
             activeFood = null;
             lastFoodState = -1;
