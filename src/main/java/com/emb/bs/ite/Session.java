@@ -258,7 +258,7 @@ public class Session {
         TreeMap<Integer, ArrayList<Point>> foodTargetsByDistance = new TreeMap<>();
         for (Point f : availableFoods) {
             int dist = Math.abs(f.x - pos.x) + Math.abs(f.y - pos.y);
-            if(!isLocatedAtBorder(f) || dist < 3 || health < 16) {
+            if(!isLocatedAtBorder(f) || dist < 3 || (dist < 4 && health < 65) || health < 16) {
                 boolean addFoodAsTarget = true;
                 for (Point h : snakeHeads) {
                     int otherSnakesDist = Math.abs(f.x - h.x) + Math.abs(f.y - h.y);

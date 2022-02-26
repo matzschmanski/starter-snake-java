@@ -105,6 +105,7 @@ public class SnakeTest {
     void replayGameWithId() throws Exception{
         String gameId= "cb3fea8a-92b7-404b-85e5-918e562d30b2";
         gameId = "e8be10c8-4dd3-4427-9904-6f93ae5c3458";
+        gameId = "28384e42-ccd4-4e1b-8dab-dae207b83c2d";
         String yourNameIdentifier = "lender";
         int Y = 11;
         int X = 11;
