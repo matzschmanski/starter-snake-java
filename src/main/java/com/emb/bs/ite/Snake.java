@@ -39,7 +39,6 @@ public class Snake {
     static final String L = "left";
     static final String R = "right";
 
-    static boolean loggingFailed = false;
     /**
      * Main entry point.
      *
@@ -50,7 +49,6 @@ public class Snake {
         if (port == null) {
             LOG.info("Using default port: {}", port);
             port = "9191";
-            loggingFailed = true;
         } else {
             LOG.info("Found system provided port: {}", port);
         }
@@ -135,12 +133,7 @@ public class Snake {
          */
         public Map<String, String> start(JsonNode startRequest) {
             LOG.info("START");
-            Session s = new Session();
-            s.clearLogs();
-            if(loggingFailed) {
-                s.logReq(startRequest);
-            }
-            sessions.put(startRequest.get("game").get("id").asText(), s);
+            sessions.put(startRequest.get("game").get("id").asText(), new Session());
             return EMPTY;
         }
 
@@ -166,10 +159,6 @@ public class Snake {
             String sessId = moveRequest.get("game").get("id").asText();
             Session s = sessions.get(sessId);
             if(s != null) {
-                if(loggingFailed) {
-                    s.logReq(moveRequest);
-                }
-
                 readCurrentBoardStatusIntoSession(moveRequest, s);
 
                 String move = calculateNextMove(s);
@@ -188,9 +177,6 @@ public class Snake {
                 LOG.info("=> RESULTING MOVE: "+move+" ["+s.state+"]");
                 Map<String, String> response = new HashMap<>();
                 response.put("move", move);
-                if(loggingFailed) {
-                    s.logMove(move);
-                }
                 return response;
             }else{
                 // session is null ?!
@@ -373,9 +359,6 @@ public class Snake {
         public Map<String, String> end(JsonNode endRequest) {
             LOG.info("END");
             Session s = sessions.remove(endRequest.get("game").get("id").asText());
-            if(s != null && loggingFailed) {
-                s.logReq(endRequest);
-            }
 
             // get OWN ID
             JsonNode you = endRequest.get("you");
@@ -394,18 +377,10 @@ public class Snake {
                         LOG.info("****************");
                     } else {
                         LOG.info("that's not us... " + aSnake);
-                        if (s != null && loggingFailed) {
-                            // KEEP GAME FOR LATER!
-                            s.writeLogDataToFS();
-                        }
                     }
                 }
             } else {
                 LOG.info("that's not us... ");
-                if (s != null && loggingFailed) {
-                    // KEEP GAME FOR LATER!
-                    s.writeLogDataToFS();
-                }
             }
             return EMPTY;
         }

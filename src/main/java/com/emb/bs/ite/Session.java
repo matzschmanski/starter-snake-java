@@ -1,35 +1,14 @@
 package com.emb.bs.ite;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.TreeMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Session {
 
-    //private static final Logger LOG = LoggerFactory.getLogger(Session.class);
-    private static final SessionLogger LOG = new SessionLogger();
-
-    public void writeLogDataToFS() {
-        LOG.write();
-    }
-
-    public void logReq(JsonNode json) {
-        LOG.logReq(json);
-    }
-
-    public void logMove(String move) {
-        LOG.add("=> RESULTING MOVE: " + move + " [" + state + "]");
-    }
-
-    public void doLog(boolean b) {
-        LOG.doIt = b;
-    }
-
-    public void clearLogs() {
-        LOG.clear();
-    }
+    private static final Logger LOG = LoggerFactory.getLogger(Session.class);
 
     int tPhase = 0;
     int state = 0;
