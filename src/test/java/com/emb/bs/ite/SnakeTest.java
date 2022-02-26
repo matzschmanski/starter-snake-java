@@ -62,7 +62,7 @@ public class SnakeTest {
     }
 
     @ClientEndpoint
-    private class SimpleWSSHandler implements OnOpen, OnClose, OnMessage{
+    public class SimpleWSSHandler implements OnOpen, OnClose, OnMessage{
         ArrayNode list = OBJECT_MAPPER.createArrayNode();
         Session session = null;
 
