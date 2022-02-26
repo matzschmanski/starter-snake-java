@@ -64,7 +64,7 @@ public class Session {
         enterBorderZone = false;
     }
 
-    public void initSessionForTurn(int height, int width) {
+    public void initSessionForTurn(String gameType, int height, int width) {
         Y = height;
         X = width;
         initSaveBoardBounds();
@@ -83,6 +83,26 @@ public class Session {
         foodPlaces = new ArrayList<>();
 
         escapeFromBorder = false;
+
+        if(gameType != null) {
+            switch (gameType) {
+                case "standard":
+                case "royale":
+                case "squad":
+                case "wrapped":
+                    break;
+
+                case "constrictor":
+                    // NOT sure yet, if moving totally
+                    // to the border is smart...
+                    enterBorderZone = true;
+                    hungerMode = false;
+                    setFullBoardBounds();
+                    break;
+            }
+        }else{
+            // no game mode provided? [do we read from a REPLAY?!]
+        }
     }
 
     public void initSessionAfterFullBoardRead() {
@@ -170,13 +190,15 @@ public class Session {
         if (health < 31 || (len - getAdvantage() <= maxOtherSnakeLen)) {
             LOG.info("Check for FOOD! health:" + health + " len:" + len+"(-"+getAdvantage()+")"+ "<=" + maxOtherSnakeLen);
 
+            boolean resetSaveBounds = !enterBorderZone;
             // ok we need to start to fetch FOOD!
             // we should move into the direction of the next FOOD!
             String possibleFoodMove = checkFoodMove();
             LOG.info("POSSIBLE FOOD MOVE: " + possibleFoodMove);
+
             if (possibleFoodMove != null) {
                 return possibleFoodMove;
-            } else {
+            } else if(resetSaveBounds) {
                 // checkFoodMove() might set the MIN/MAX to the total bounds...
                 // this needs to be reset...
                 initSaveBoardBounds();

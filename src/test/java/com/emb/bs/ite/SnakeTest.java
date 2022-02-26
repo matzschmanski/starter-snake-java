@@ -104,6 +104,7 @@ public class SnakeTest {
     @Test
     void replayGameWithId() throws Exception{
         String gameId= "cb3fea8a-92b7-404b-85e5-918e562d30b2";
+        gameId = "e8be10c8-4dd3-4427-9904-6f93ae5c3458";
         String yourNameIdentifier = "lender";
         int Y = 11;
         int X = 11;
@@ -116,18 +117,17 @@ public class SnakeTest {
         // wait 5 seconds for messages from websocket
         Thread.sleep(5000);
 
-        handler.start(convertToGame(collector.list.get(0), Y, X, yourNameIdentifier));
+        handler.start(convertToGame(gameId, collector.list.get(0), Y, X, yourNameIdentifier));
         for(int i=0; i < collector.list.size(); i++){
-            handler.move(convertToGame(collector.list.get(i), Y, X, yourNameIdentifier));
+            handler.move(convertToGame(gameId, collector.list.get(i), Y, X, yourNameIdentifier));
         }
     }
 
-    private static final String gameID = "myDUMMY-Id";
-    private JsonNode convertToGame(JsonNode gamePlay, int Y, int X, String selfIdentifier) {
+    private JsonNode convertToGame(String gameId, JsonNode gamePlay, int Y, int X, String selfIdentifier) {
         ObjectNode root = OBJECT_MAPPER.createObjectNode();
         ObjectNode game = OBJECT_MAPPER.createObjectNode();
         root.put("game", game);
-        game.put("id", gameID);
+        game.put("id", gameId);
 
         root.put("turn", gamePlay.get("turn").asInt());
 

@@ -156,10 +156,15 @@ public class Snake {
          */
 
         public Map<String, String> move(JsonNode moveRequest) {
-            String sessId = moveRequest.get("game").get("id").asText();
+            JsonNode game = moveRequest.get("game");
+            String sessId = game.get("id").asText();
             Session s = sessions.get(sessId);
             if(s != null) {
-                readCurrentBoardStatusIntoSession(moveRequest, s);
+                String gameType = null;
+                if(game.has("ruleset")){
+                    gameType = game.get("ruleset").get("name").asText().toLowerCase();
+                }
+                readCurrentBoardStatusIntoSession(moveRequest, gameType, s);
 
                 String move = calculateNextMove(s);
                 if(move.equals(REPEATLAST)){
@@ -187,12 +192,12 @@ public class Snake {
             }
         }
 
-        private void readCurrentBoardStatusIntoSession(JsonNode moveRequest, Session s) {
+        private void readCurrentBoardStatusIntoSession(JsonNode moveRequest, String rulesetName, Session s) {
             s.turn = moveRequest.get("turn").asInt();
             JsonNode board = moveRequest.get("board");
 
             // clearing the used session fields...
-            s.initSessionForTurn(board.get("height").asInt(), board.get("width").asInt());
+            s.initSessionForTurn(rulesetName, board.get("height").asInt(), board.get("width").asInt());
 
             // get OWN SnakeID
             JsonNode you = moveRequest.get("you");
