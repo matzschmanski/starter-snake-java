@@ -1,6 +1,7 @@
 package com.emb.bs.ite;
 
 import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -10,8 +11,13 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.websocket.*;
+import javax.websocket.Session;
 import java.io.File;
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.net.URI;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -55,31 +61,69 @@ public class SnakeTest {
         }
     }
 
-    @Test
-    void replayJSON() throws Exception{
-        String[] currentDir = new File(new File("").getAbsolutePath()).list();
-        if(currentDir != null && currentDir.length >0) {
-            Arrays.sort(currentDir, Collections.reverseOrder());
-            for (String fName : currentDir) {
-                if (fName.endsWith(".json")) {
-                    String simJsonString = readFileAsString((new File(fName).toPath()));
-                    LOG.info("REPLAY: "+fName);
-                    // when a snake move out of bounds in the /event WS, then the position can be -1
-                    // also I guess it can be larger then the MAX X/Y... mhhh
-                    JsonNode list = OBJECT_MAPPER.readTree(simJsonString.toLowerCase().replaceAll("-1", "0"));
-                    JsonNode first = list.get(0);
-                    handler.start(convertToGame(first));
-                    for(int i=1; i < list.size(); i++){
-                        handler.move(convertToGame(list.get(i)));
-                    }
-                    break;
+    @ClientEndpoint
+    private class SimpleWSSHandler implements OnOpen, OnClose, OnMessage{
+        ArrayNode list = OBJECT_MAPPER.createArrayNode();
+        Session session = null;
+
+        @OnOpen
+        public void onOpen(Session userSession) {
+            this.session = userSession;
+        }
+
+        @OnClose
+        public void onClose(Session aSession, CloseReason reason) {
+            this.session = null;
+        }
+
+        @OnMessage
+        public void onMessage(String message) {
+            try {
+                JsonNode json = OBJECT_MAPPER.readTree(message.toLowerCase().replaceAll("-1", "0"));
+                JsonNode content = json.get("data");
+                if(content.has("turn")) {
+                    list.add(content);
                 }
-            }
+            } catch (JsonProcessingException e) {}
+        }
+
+        @OnMessage
+        public void onMessage(ByteBuffer bytes) {}
+
+        @Override
+        public long maxMessageSize() {
+            return Integer.MAX_VALUE;
+        }
+
+        @Override
+        public Class<? extends Annotation> annotationType() {
+            return null;
+        }
+    }
+
+    @Test
+    void replayGameWithId() throws Exception{
+        String gameId= "cb3fea8a-92b7-404b-85e5-918e562d30b2";
+        String yourNameIdentifier = "lender";
+        int Y = 11;
+        int X = 11;
+
+        SimpleWSSHandler collector = new SimpleWSSHandler();
+        URI uri = new URI("wss://engine.battlesnake.com/games/"+gameId+"/events");
+        WebSocketContainer container = ContainerProvider.getWebSocketContainer();
+        container.connectToServer(collector, uri);
+
+        // wait 5 seconds for messages from websocket
+        Thread.sleep(5000);
+
+        handler.start(convertToGame(collector.list.get(0), Y, X, yourNameIdentifier));
+        for(int i=0; i < collector.list.size(); i++){
+            handler.move(convertToGame(collector.list.get(i), Y, X, yourNameIdentifier));
         }
     }
 
     private static final String gameID = "myDUMMY-Id";
-    private JsonNode convertToGame(JsonNode gamePlay) {
+    private JsonNode convertToGame(JsonNode gamePlay, int Y, int X, String selfIdentifier) {
         ObjectNode root = OBJECT_MAPPER.createObjectNode();
         ObjectNode game = OBJECT_MAPPER.createObjectNode();
         root.put("game", game);
@@ -91,8 +135,8 @@ public class SnakeTest {
         root.put("board", board);
 
         // WARING HARDCODE BOARD SIZE!
-        board.put("height", 11);
-        board.put("width", 11);
+        board.put("height", Y);
+        board.put("width", X);
 
         board.put("food", gamePlay.get("food"));
 
@@ -106,12 +150,12 @@ public class SnakeTest {
         for(int i=0; i<srcSnakes.size(); i++){
             ObjectNode dest = OBJECT_MAPPER.createObjectNode();
             JsonNode srcS = srcSnakes.get(i);
-            if(srcS.get("name").asText().indexOf("lend")>-1){
+            if(srcS.get("name").asText().indexOf(selfIdentifier)>-1){
                 dest = you;
             }else{
                 targetSnakes.add(dest);
             }
-            dest.put("id", srcS.get("_id") != null ? srcS.get("_id").asText() : srcS.get("id").asText());
+            dest.put("id", srcS.get("id").asText());
             dest.put("name", srcS.get("name").asText());
             dest.put("body", srcS.get("body"));
             dest.put("head", srcS.get("body").get(0));
@@ -121,7 +165,6 @@ public class SnakeTest {
 
         return root;
     }
-
 
     /*
     @Test
@@ -259,6 +302,7 @@ public class SnakeTest {
         }
         return stringList;
     }
+
     private static String readFileAsString(Path inputFilePath) {
         Charset charset = Charset.defaultCharset();
         String data = null;
