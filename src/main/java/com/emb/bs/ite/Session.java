@@ -30,8 +30,10 @@ public class Session {
         LOG.clear();
     }
 
-    int state = 0;
     int tPhase = 0;
+    int state = 0;
+    int lastFoodState = -1;
+
     int MAXDEEP = 0;
 
     int turn;
@@ -61,6 +63,8 @@ public class Session {
     private int xMin, yMin, xMax, yMax;
 
     boolean hungerMode = false;
+    Point activeFood = null;
+
     String LASTMOVE = null;
 
     private void setFullBoardBounds() {
@@ -269,14 +273,46 @@ public class Session {
                 }
             }
 
-            LOG.info("TRY TO GET FOOD: at: " + closestFood);
+            if(activeFood == null || !activeFood.equals(closestFood)){
+                lastFoodState = -1;
+            }
+            activeFood = closestFood;
+
+            LOG.info("TRY TO GET FOOD: at: " + closestFood +" moving: "+lastFoodState);
             // TODO:
             // here we have to find a smarter way to decide, in which direction we should
             // go to approach the food -> since currently me are blocked by ourselves
 
             int yDelta = pos.y - closestFood.y;
             int xDelta = pos.x - closestFood.x;
-            if(Math.abs(yDelta) > Math.abs(xDelta)){
+            if(lastFoodState == -1 || yDelta==0 || xDelta == 0) {
+                if (Math.abs(yDelta) > Math.abs(xDelta)) {
+                    if (yDelta > 0) {
+                        lastFoodState = Snake.DOWN;
+                    } else {
+                        lastFoodState = Snake.UP;
+                    }
+                }else{
+                    if (xDelta > 0) {
+                        lastFoodState = Snake.LEFT;
+                    } else {
+                        lastFoodState = Snake.RIGHT;
+                    }
+                }
+            }
+
+            switch (lastFoodState){
+                case Snake.DOWN:
+                    return moveDown();
+                case Snake.UP:
+                    return moveUp();
+                case Snake.LEFT:
+                    return moveLeft();
+                case Snake.RIGHT:
+                    return moveRight();
+            }
+
+            /*if (Math.abs(yDelta) > Math.abs(xDelta)) {
                 // we have to move more on the Y-axis
                 if (yDelta > 0) {
                     return moveDown();
@@ -286,7 +322,7 @@ public class Session {
                     return moveLeft();
                 } else {
                     return moveRight();
-                }*/
+                }*/ /*
                 else{
 LOG.error("==============================================");
                 }
@@ -299,13 +335,15 @@ LOG.error("==============================================");
                     return moveDown();
                 } else {
                     return moveUp();
-                }*/
+                }*/ /*
                 else{
 LOG.error("==============================================");
                 }
-            }
+            }*/
 
         } else {
+            activeFood = null;
+            lastFoodState = -1;
             LOG.info("NO NEARBY FOOD FOUND minDist:" + minDist + " x:" + (X / 3) + "+y:" + (Y / 3) + "=" + ((X / 3) + (Y / 3)));
         }
         return null;
