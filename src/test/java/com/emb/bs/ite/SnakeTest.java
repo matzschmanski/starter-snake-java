@@ -87,8 +87,8 @@ public class SnakeTest {
 
         ObjectNode board = OBJECT_MAPPER.createObjectNode();
         root.put("board", board);
-        board.put("height", 11);
-        board.put("width", 11);
+        board.put("height", 25);
+        board.put("width", 25);
 
         board.put("food", gamePlay.get("food"));
 

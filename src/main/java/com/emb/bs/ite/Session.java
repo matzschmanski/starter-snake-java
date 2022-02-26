@@ -257,20 +257,23 @@ public class Session {
         TreeMap<Integer, ArrayList<Point>> foodTargetsByDistance = new TreeMap<>();
         for (Point f : availableFoods) {
             int dist = Math.abs(f.x - pos.x) + Math.abs(f.y - pos.y);
-
-            for (Point h : snakeHeads) {
-                int otherSnakesDist = Math.abs(f.x - h.x) + Math.abs(f.y - h.y);
-                boolean otherIsStronger = snakeBodies[h.y][h.x] >= len;
-
-                if(dist < otherSnakesDist || (dist == otherSnakesDist && !otherIsStronger)) {
-                    if(!isLocatedAtBorder(f) || dist < 3 || health < 16) {
-                        ArrayList<Point> foodsInDist = foodTargetsByDistance.get(dist);
-                        if(foodsInDist == null){
-                            foodsInDist = new ArrayList<>();
-                            foodTargetsByDistance.put(dist, foodsInDist);
-                        }
-                        foodsInDist.add(f);
+            if(!isLocatedAtBorder(f) || dist < 3 || health < 16) {
+                boolean addFoodAsTarget = true;
+                for (Point h : snakeHeads) {
+                    int otherSnakesDist = Math.abs(f.x - h.x) + Math.abs(f.y - h.y);
+                    boolean otherIsStronger = snakeBodies[h.y][h.x] >= len;
+                    if(dist > otherSnakesDist || (dist == otherSnakesDist && otherIsStronger)) {
+                        addFoodAsTarget = false;
+                        break;
                     }
+                }
+                if(addFoodAsTarget){
+                    ArrayList<Point> foodsInDist = foodTargetsByDistance.get(dist);
+                    if(foodsInDist == null){
+                        foodsInDist = new ArrayList<>();
+                        foodTargetsByDistance.put(dist, foodsInDist);
+                    }
+                    foodsInDist.add(f);
                 }
             }
         }
@@ -810,7 +813,7 @@ LOG.error("==============================================");
 
     private String decideForUpOrDownUsedFromMoveLeftOrRight(int cmd) {
         // if we are in the pending mode, we prefer to go ALWAYS-UP
-        if (tPhase > 0 && !cmdChain.contains(Snake.UP)) {
+        if (tPhase > 0 && !cmdChain.contains(Snake.UP) && pos.y < yMax) {
             state = Snake.UP;
             return moveUp();
         } else {
