@@ -274,51 +274,24 @@ public class Session {
                 }
             }
         }
+
         if(foodTargetsByDistance.size() > 0){
+            // get the list of the closest food...
             ArrayList<Point> closestFoodList = foodTargetsByDistance.get(foodTargetsByDistance.firstKey());
             if(closestFoodList.size() == 1){
+                // cool only one
                 closestFood = closestFoodList.get(0);
             } else {
+                // ok we have to decide which of the foods in the same distance can be caught
+                // most easily
                 int minBlocks = Integer.MAX_VALUE;
+
+                // ok take the first as default...
                 closestFood = closestFoodList.get(0);
+
                 // need to decided which food is better?!
                 for(Point cfp: closestFoodList){
-                    int blocks = 0;
-                    int yDelta = pos.y - cfp.y;
-                    int xDelta = pos.x - cfp.x;
-                    if (Math.abs(yDelta) > Math.abs(xDelta)) {
-                        if (yDelta > 0) {
-                            // we need to go DOWN to the food...
-                            for(int i = cfp.y+1; i < pos.y; i++){
-                                if(myBody[i][pos.x] > 0 || snakeBodies[i][pos.x] > 0){
-                                    blocks++;
-                                }
-                            }
-                        } else {
-                            // we need to go UP to the food...
-                            for(int i = pos.y+1; i < cfp.y;i++){
-                                if(myBody[i][pos.x] > 0 || snakeBodies[i][pos.x] > 0){
-                                    blocks++;
-                                }
-                            }
-                        }
-                    }else{
-                        if (xDelta > 0) {
-                            // we need to go LEFT to the food...
-                            for(int i = cfp.x+1; i < pos.x; i++){
-                                if(myBody[pos.y][i] > 0 || snakeBodies[pos.y][i] > 0){
-                                    blocks++;
-                                }
-                            }
-                        } else {
-                            // we need to go RIGHT to the food...
-                            for(int i = pos.x+1; i < cfp.x; i++){
-                                if(myBody[pos.y][i] > 0 || snakeBodies[pos.y][i] > 0){
-                                    blocks++;
-                                }
-                            }
-                        }
-                    }
+                    int blocks = countBlockingsBetweenFoodAndHead(cfp);
                     minBlocks = Math.min(minBlocks, blocks);
                     if(minBlocks == blocks){
                         closestFood = cfp;
@@ -410,6 +383,51 @@ LOG.error("==============================================");
             LOG.info("NO NEARBY FOOD FOUND minDist:" + minDist + " x:" + (X / 3) + "+y:" + (Y / 3) + "=" + ((X / 3) + (Y / 3)));
         }
         return null;
+    }
+
+    private int countBlockingsBetweenFoodAndHead(Point cfp) {
+        try {
+            int blocks = 0;
+            int yDelta = pos.y - cfp.y;
+            int xDelta = pos.x - cfp.x;
+            if (Math.abs(yDelta) > Math.abs(xDelta)) {
+                if (yDelta > 0) {
+                    // we need to go DOWN to the food...
+                    for (int i = cfp.y + 1; i < pos.y; i++) {
+                        if (myBody[i][pos.x] > 0 || snakeBodies[i][pos.x] > 0) {
+                            blocks++;
+                        }
+                    }
+                } else {
+                    // we need to go UP to the food...
+                    for (int i = pos.y + 1; i < cfp.y; i++) {
+                        if (myBody[i][pos.x] > 0 || snakeBodies[i][pos.x] > 0) {
+                            blocks++;
+                        }
+                    }
+                }
+            } else {
+                if (xDelta > 0) {
+                    // we need to go LEFT to the food...
+                    for (int i = cfp.x + 1; i < pos.x; i++) {
+                        if (myBody[pos.y][i] > 0 || snakeBodies[pos.y][i] > 0) {
+                            blocks++;
+                        }
+                    }
+                } else {
+                    // we need to go RIGHT to the food...
+                    for (int i = pos.x + 1; i < cfp.x; i++) {
+                        if (myBody[pos.y][i] > 0 || snakeBodies[pos.y][i] > 0) {
+                            blocks++;
+                        }
+                    }
+                }
+            }
+            return blocks;
+        }catch(IndexOutOfBoundsException e){
+            LOG.error("IoB when try to count blocking... ");
+            return Integer.MAX_VALUE;
+        }
     }
 
     private boolean isLocatedAtBorder(Point p) {
