@@ -106,9 +106,9 @@ public class SnakeTest {
         String gameId= "cb3fea8a-92b7-404b-85e5-918e562d30b2";
         gameId = "e8be10c8-4dd3-4427-9904-6f93ae5c3458";
         gameId = "28384e42-ccd4-4e1b-8dab-dae207b83c2d";
-        gameId = "31010751-cd7f-4fd2-b3ba-88b0ea39c1b0";
+        gameId = "14239397-eca0-4974-9a80-0bfda73a3c50/";
         String yourNameIdentifier = "lender";
-        String gameMode = "wrapped";
+        String gameMode = null;//"wrapped";
         int Y = 11;
         int X = 11;
 
