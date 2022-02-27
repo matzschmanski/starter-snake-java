@@ -461,10 +461,10 @@ public class Session {
         if(wrappedMode){
             return  false;//hazardNearbyPlaces.contains(p);
         }else {
-            return  p.y == 0
-                    || p.y == Y - 1
-                    || p.x == 0
-                    || p.x == X - 1
+            return  p.y <= yMin
+                    || p.y >= yMax
+                    || p.x <= xMin
+                    || p.x >= xMax
                     //|| hazardNearbyPlaces.contains(p)
                     ;
         }
@@ -528,6 +528,8 @@ public class Session {
                     }
                 }
                 finalMap[newPos.y][newPos.x] = 1;
+
+                /*if(turn == 167){logMap(finalMap, count);}*/
 
                 boolean noUP = !canMoveUp(newPos, finalMap, count);
                 boolean noDW = !canMoveDown(newPos, finalMap, count);
