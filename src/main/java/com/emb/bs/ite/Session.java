@@ -45,6 +45,8 @@ public class Session {
     boolean hungerMode = true;
     Point activeFood = null;
 
+    boolean wrappedMode = false;
+
     String LASTMOVE = null;
 
     private void setFullBoardBounds() {
@@ -89,7 +91,12 @@ public class Session {
                 case "standard":
                 case "royale":
                 case "squad":
+                    break;
+
                 case "wrapped":
+                    enterBorderZone = true;
+                    wrappedMode = true;
+                    setFullBoardBounds();
                     break;
 
                 case "constrictor":
@@ -229,21 +236,22 @@ public class Session {
         availableFoods.addAll(foodPlaces);
 
         if (health > 15) {
-            // food in CORNERS is TOXIC (but if we are already IN the corner we will
-            // take it!
-            if(!(pos.x == 0 && pos.y <= 1) || (pos.x <= 1 && pos.y == 0)){
-                availableFoods.remove(new Point(0, 0));
+            if(! wrappedMode) {
+                // food in CORNERS is TOXIC (but if we are already IN the corner we will
+                // take it!
+                if (!(pos.x == 0 && pos.y <= 1) || (pos.x <= 1 && pos.y == 0)) {
+                    availableFoods.remove(new Point(0, 0));
+                }
+                if (!(pos.x == X - 1 && pos.y <= 1) || (pos.x <= X - 2 && pos.y == 0)) {
+                    availableFoods.remove(new Point(0, X - 1));
+                }
+                if (!(pos.x == 0 && pos.y <= Y - 2) || (pos.x <= 1 && pos.y == Y - 1)) {
+                    availableFoods.remove(new Point(Y - 1, 0));
+                }
+                if (!(pos.x == X - 1 && pos.y >= Y - 2) || (pos.x >= X - 2 && pos.y == Y - 1)) {
+                    availableFoods.remove(new Point(Y - 1, X - 1));
+                }
             }
-            if(!(pos.x == X-1 && pos.y <= 1) || (pos.x <= X-2 && pos.y == 0)) {
-                availableFoods.remove(new Point(0, X - 1));
-            }
-            if(!(pos.x == 0 && pos.y <= Y-2) || (pos.x <= 1 && pos.y == Y-1)) {
-                availableFoods.remove(new Point(Y - 1, 0));
-            }
-            if(!(pos.x == X-1 && pos.y >= Y-2) || (pos.x >= X-2 && pos.y == Y-1)) {
-                availableFoods.remove(new Point(Y - 1, X - 1));
-            }
-
             for (Point h : snakeHeads) {
                 // food that is head of another snake that is longer or has
                 // the same length should be ignored...
@@ -435,10 +443,11 @@ LOG.error("==============================================");
     }
 
     private boolean isLocatedAtBorder(Point p) {
-        return  p.y == 0 ||
+        return  !wrappedMode &&
+                (p.y == 0 ||
                 p.y == Y - 1 ||
                 p.x == 0 ||
-                p.x == X - 1;
+                p.x == X - 1);
     }
 
     private boolean willCreateLoop(int move, Point aPos, int[][] finalMap, int count) {
@@ -450,16 +459,16 @@ LOG.error("==============================================");
                 Point newPos = aPos.clone();
                 switch (move){
                     case Snake.UP:
-                        newPos.y++;
+                        newPos.y = (newPos.y + 1)%Y;
                         break;
                     case Snake.RIGHT:
-                        newPos.x++;
+                        newPos.x = (newPos.x + 1)%X;
                         break;
                     case Snake.DOWN:
-                        newPos.y--;
+                        newPos.y = newPos.y > 0 ? newPos.y - 1 : Y-1;
                         break;
                     case Snake.LEFT:
-                        newPos.x--;
+                        newPos.x = newPos.x > 0 ? newPos.x - 1 : X-1;
                         break;
                 }
 
@@ -504,10 +513,10 @@ LOG.error("==============================================");
             if (escapeFromBorder && (pos.x == 0 || pos.x == X - 1)) {
                 return false;
             } else {
-                return pos.y < yMax
-                        && myBody[pos.y + 1][pos.x] == 0
-                        && snakeBodies[pos.y + 1][pos.x] == 0
-                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y + 1][pos.x] < len)
+                return  (wrappedMode || pos.y < yMax)
+                        && myBody[(pos.y + 1)%Y][pos.x] == 0
+                        && snakeBodies[(pos.y + 1)%Y][pos.x] == 0
+                        && (enterDangerZone || snakeNextMovePossibleLocations[(pos.y + 1)%Y][pos.x] < len)
                         && (enterNoGoZone || !willCreateLoop(Snake.UP, pos, null,0));
             }
         } catch (IndexOutOfBoundsException e) {
@@ -518,8 +527,8 @@ LOG.error("==============================================");
 
     private boolean canMoveUp(Point aPos, int[][] map, int c) {
         try {
-            return  aPos.y < yMax
-                    && map[aPos.y + 1][aPos.x] == 0
+            return  (wrappedMode || aPos.y < yMax)
+                    && map[(pos.y + 1)%Y][aPos.x] == 0
                     && (enterNoGoZone || !willCreateLoop(Snake.UP, aPos, map, c))
                     ;
         } catch (IndexOutOfBoundsException e) {
@@ -561,10 +570,10 @@ LOG.error("==============================================");
             if (escapeFromBorder && (pos.y == 0 || pos.y == Y - 1)) {
                 return false;
             } else {
-                return pos.x < xMax
-                        && myBody[pos.y][pos.x + 1] == 0
-                        && snakeBodies[pos.y][pos.x + 1] == 0
-                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x + 1] < len)
+                return  (wrappedMode || pos.x < xMax)
+                        && myBody[pos.y][(pos.x + 1)%X] == 0
+                        && snakeBodies[pos.y][(pos.x + 1)%X] == 0
+                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][(pos.x + 1)%X] < len)
                         && (enterNoGoZone || !willCreateLoop(Snake.RIGHT, pos, null, 0))
                         ;
             }
@@ -576,8 +585,8 @@ LOG.error("==============================================");
 
     private boolean canMoveRight(Point aPos, int[][] map, int c) {
         try {
-            return  aPos.x < xMax
-                    && map[aPos.y][aPos.x + 1] == 0
+            return  (wrappedMode || aPos.x < xMax)
+                    && map[aPos.y][(pos.x + 1)%X] == 0
                     && (enterNoGoZone || !willCreateLoop(Snake.RIGHT, aPos, map, c))
                     ;
         } catch (IndexOutOfBoundsException e) {
@@ -624,10 +633,11 @@ LOG.error("==============================================");
             if (escapeFromBorder && (pos.x == 0 || pos.x == X - 1)) {
                 return false;
             } else {
-                return  pos.y > yMin
-                        && myBody[pos.y - 1][pos.x] == 0
-                        && snakeBodies[pos.y - 1][pos.x] == 0
-                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y - 1][pos.x] < len)
+                int newY = pos.y > 0 ? pos.y - 1 : Y-1;
+                return  (wrappedMode || pos.y > yMin)
+                        && myBody[newY][pos.x] == 0
+                        && snakeBodies[newY][pos.x] == 0
+                        && (enterDangerZone || snakeNextMovePossibleLocations[newY][pos.x] < len)
                         && (enterNoGoZone || !willCreateLoop(Snake.DOWN, pos, null, 0))
                         ;
             }
@@ -639,8 +649,9 @@ LOG.error("==============================================");
 
     private boolean canMoveDown(Point aPos, int[][] map, int c) {
         try {
-            return  aPos.y > yMin
-                    && map[aPos.y - 1][aPos.x] == 0
+            int newY = aPos.y > 0 ? aPos.y - 1 : Y-1;
+            return  (wrappedMode || aPos.y > yMin)
+                    && map[newY][aPos.x] == 0
                     && (enterNoGoZone || !willCreateLoop(Snake.DOWN, aPos, map, c))
                     ;
         } catch (IndexOutOfBoundsException e) {
@@ -694,10 +705,11 @@ LOG.error("==============================================");
             if (escapeFromBorder && (pos.y == 0 || pos.y == Y - 1)) {
                 return false;
             } else {
-                return pos.x > xMin
-                        && myBody[pos.y][pos.x - 1] == 0
-                        && snakeBodies[pos.y][pos.x - 1] == 0
-                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][pos.x - 1] < len)
+                int newX = pos.x > 0 ? pos.x - 1 : X-1;
+                return  (wrappedMode || pos.x > xMin)
+                        && myBody[pos.y][newX] == 0
+                        && snakeBodies[pos.y][newX] == 0
+                        && (enterDangerZone || snakeNextMovePossibleLocations[pos.y][newX] < len)
                         && (enterNoGoZone || !willCreateLoop(Snake.LEFT, pos, null, 0))
                         ;
             }
@@ -709,8 +721,9 @@ LOG.error("==============================================");
 
     private boolean canMoveLeft(Point aPos, int[][] map, int c) {
         try {
-            return aPos.x > xMin
-                    && map[aPos.y][aPos.x - 1] == 0
+            int newX = aPos.x > 0 ? aPos.x - 1 : X-1;
+            return  (wrappedMode || aPos.x > xMin)
+                    && map[aPos.y][newX] == 0
                     && (enterNoGoZone || !willCreateLoop(Snake.LEFT, aPos, map, c))
                     ;
         } catch (IndexOutOfBoundsException e) {

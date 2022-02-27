@@ -106,7 +106,9 @@ public class SnakeTest {
         String gameId= "cb3fea8a-92b7-404b-85e5-918e562d30b2";
         gameId = "e8be10c8-4dd3-4427-9904-6f93ae5c3458";
         gameId = "28384e42-ccd4-4e1b-8dab-dae207b83c2d";
+        gameId = "31010751-cd7f-4fd2-b3ba-88b0ea39c1b0";
         String yourNameIdentifier = "lender";
+        String gameMode = "wrapped";
         int Y = 11;
         int X = 11;
 
@@ -118,19 +120,24 @@ public class SnakeTest {
         // wait 5 seconds for messages from websocket
         Thread.sleep(5000);
 
-        handler.start(convertToGame(gameId, collector.list.get(0), Y, X, yourNameIdentifier));
+        handler.start(convertToReq(collector.list.get(0), gameId, gameMode, Y, X, yourNameIdentifier));
         for(int i=0; i < collector.list.size(); i++){
-            handler.move(convertToGame(gameId, collector.list.get(i), Y, X, yourNameIdentifier));
+            handler.move(convertToReq(collector.list.get(i), gameId, gameMode, Y, X, yourNameIdentifier));
         }
     }
 
-    private JsonNode convertToGame(String gameId, JsonNode gamePlay, int Y, int X, String selfIdentifier) {
+    private JsonNode convertToReq(JsonNode replayJson, String gameId, String gameMode, int Y, int X, String selfIdentifier) {
         ObjectNode root = OBJECT_MAPPER.createObjectNode();
         ObjectNode game = OBJECT_MAPPER.createObjectNode();
         root.put("game", game);
         game.put("id", gameId);
+        if(gameMode != null){
+            ObjectNode ruleset = OBJECT_MAPPER.createObjectNode();
+            game.put("ruleset", ruleset);
+            ruleset.put("name", gameMode);
+        }
 
-        root.put("turn", gamePlay.get("turn").asInt());
+        root.put("turn", replayJson.get("turn").asInt());
 
         ObjectNode board = OBJECT_MAPPER.createObjectNode();
         root.put("board", board);
@@ -139,7 +146,7 @@ public class SnakeTest {
         board.put("height", Y);
         board.put("width", X);
 
-        board.put("food", gamePlay.get("food"));
+        board.put("food", replayJson.get("food"));
 
         ArrayNode targetSnakes = OBJECT_MAPPER.createArrayNode();
         board.put("snakes", targetSnakes);
@@ -147,7 +154,7 @@ public class SnakeTest {
         ObjectNode you = OBJECT_MAPPER.createObjectNode();
         root.put("you", you);
 
-        JsonNode srcSnakes = gamePlay.get("snakes");
+        JsonNode srcSnakes = replayJson.get("snakes");
         for(int i=0; i<srcSnakes.size(); i++){
             ObjectNode dest = OBJECT_MAPPER.createObjectNode();
             JsonNode srcS = srcSnakes.get(i);
