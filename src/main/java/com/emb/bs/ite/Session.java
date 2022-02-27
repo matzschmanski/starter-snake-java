@@ -1,7 +1,6 @@
 package com.emb.bs.ite;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.TreeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +22,6 @@ public class Session {
     int myHealth;
 
     ArrayList<Integer> cmdChain = null;
-    HashSet<Integer> movesToIgnore = new HashSet<>();
     int X = -1;
     int Y = -1;
     boolean doomed = false;
@@ -35,14 +33,19 @@ public class Session {
 
     private boolean goForFood = false;
     ArrayList<Point> foodPlaces = null;
-    ArrayList<Point> hazardPlaces = null;
-    ArrayList<Point> hazardNearbyPlaces = null;
 
+
+    int[][] hazardZone = null;
+    //ArrayList<Point> hazardNearbyPlaces = null;
+
+    private boolean enterHazardZone = false;
     private boolean enterBorderZone = false;
     private boolean enterDangerZone = false;
     private boolean enterNoGoZone = false;
 
     boolean escapeFromBorder = false;
+    boolean escapeFromHazard = false;
+
     private int xMin, yMin, xMax, yMax;
 
     boolean hungerMode = true;
@@ -67,6 +70,7 @@ public class Session {
         enterDangerZone = false;
         enterNoGoZone = false;
         enterBorderZone = false;
+        enterHazardZone = false;
     }
 
     public void initSessionForTurn(String gameType, int height, int width) {
@@ -86,10 +90,12 @@ public class Session {
 
         goForFood = false;
         foodPlaces = new ArrayList<>();
-        hazardPlaces = new ArrayList();
-        hazardNearbyPlaces = new ArrayList<>();
+
+        hazardZone = new int[Y][X];
+        //hazardNearbyPlaces = new ArrayList<>();
 
         escapeFromBorder = false;
+        escapeFromHazard = false;
 
         if(gameType != null) {
             switch (gameType) {
@@ -122,7 +128,7 @@ public class Session {
         // case we can/will disable 'avoid borders' flag...
 
         if (!enterBorderZone) {
-            if (myPos.y == 0 ||
+            if (    myPos.y == 0 ||
                     myPos.y == Y - 1 ||
                     myPos.x == 0 ||
                     myPos.x == X - 1
@@ -130,42 +136,42 @@ public class Session {
                 escapeFromBorder = true;
             }
         }
+
+        if(!enterHazardZone){
+            if(hazardZone[myPos.y][myPos.x] > 0 && myHealth < 50) {
+                escapeFromHazard = true;
+            }
+        }
     }
 
     private boolean checkDoomed(int cmdToAdd) {
         cmdChain.add(cmdToAdd);
         if (cmdChain.size() > 4) {
+            cmdChain = new ArrayList<>();
+            cmdChain.add(cmdToAdd);
+
             if (escapeFromBorder) {
-                LOG.info("activate STAY-ON-BORDER");
+                LOG.info("deactivate ESCAPE-FROM-BORDER");
                 escapeFromBorder = false;
-                cmdChain = new ArrayList<>();
-                cmdChain.addAll(movesToIgnore);
-                cmdChain.add(cmdToAdd);
+            } else if(escapeFromHazard){
+                LOG.info("deactivate ESCAPE-FROM-HAZARD");
+                escapeFromHazard = false;
             } else if (!enterBorderZone) {
                 LOG.info("activate now GO-TO-BORDERS");
                 enterBorderZone = true;
                 setFullBoardBounds();
-                cmdChain = new ArrayList<>();
-                cmdChain.addAll(movesToIgnore);
-                cmdChain.add(cmdToAdd);
+            } else if (!enterHazardZone) {
+                LOG.info("activate now GO-TO-HAZARD");
+                enterHazardZone = true;
             } else if(MAXDEEP > 1){
-                MAXDEEP--;
                 LOG.info("activate MAXDEEP TO: "+MAXDEEP);
-                cmdChain = new ArrayList<>();
-                cmdChain.addAll(movesToIgnore);
-                cmdChain.add(cmdToAdd);
+                MAXDEEP--;
             } else if (!enterDangerZone) {
                 LOG.info("activate now GO-TO-DANGER-ZONE");
                 enterDangerZone = true;
-                cmdChain = new ArrayList<>();
-                cmdChain.addAll(movesToIgnore);
-                cmdChain.add(cmdToAdd);
             } else if (!enterNoGoZone) {
                 LOG.info("activate now GO-TO-NO-GO-ZONE");
                 enterNoGoZone = true;
-                cmdChain = new ArrayList<>();
-                cmdChain.addAll(movesToIgnore);
-                cmdChain.add(cmdToAdd);
             } else {
                 doomed = true;
                 logState("DOOMED!", true);
@@ -203,6 +209,7 @@ public class Session {
             LOG.info("Check for FOOD! health:" + myHealth + " len:" + myLen +"(-"+getAdvantage()+")"+ "<=" + maxOtherSnakeLen);
 
             boolean resetSaveBounds = !enterBorderZone;
+            boolean resetHazard = !enterHazardZone;
             // ok we need to start to fetch FOOD!
             // we should move into the direction of the next FOOD!
             String possibleFoodMove = checkFoodMove();
@@ -210,10 +217,16 @@ public class Session {
 
             if (possibleFoodMove != null) {
                 return possibleFoodMove;
-            } else if(resetSaveBounds) {
-                // checkFoodMove() might set the MIN/MAX to the total bounds...
-                // this needs to be reset...
-                initSaveBoardBounds();
+            } else {
+                if (resetSaveBounds) {
+                    // checkFoodMove() might set the MIN/MAX to the total bounds...
+                    // this needs to be reset...
+                    initSaveBoardBounds();
+                }
+
+                if (resetHazard) {
+                    // TODO... is there any special hazard avaoid handling?!
+                }
             }
         }
 
@@ -330,6 +343,9 @@ public class Session {
                 }
             }
 
+            //TODO: check if we have to do something special about hazardZone?!
+            //and the hazardZone flags 'escapeFromHazard' & 'enterHazardZone'
+
             if(activeFood == null || !activeFood.equals(closestFood)){
                 lastFoodState = -1;
             }
@@ -436,13 +452,14 @@ public class Session {
 
     private boolean isLocatedAtBorder(Point p) {
         if(wrappedMode){
-            return  hazardNearbyPlaces.contains(p);
+            return  false;//hazardNearbyPlaces.contains(p);
         }else {
-            return  p.y == 0 ||
-                    p.y == Y - 1 ||
-                    p.x == 0 ||
-                    p.x == X - 1 ||
-                    hazardNearbyPlaces.contains(p);
+            return  p.y == 0
+                    || p.y == Y - 1
+                    || p.x == 0
+                    || p.x == X - 1
+                    //|| hazardNearbyPlaces.contains(p)
+                    ;
         }
     }
 
@@ -525,11 +542,14 @@ public class Session {
         try {
             if (escapeFromBorder && (myPos.x == 0 || myPos.x == X - 1)) {
                 return false;
+            } else if(escapeFromHazard && hazardZone[myPos.y][myPos.x] > 0){
+                return false;
             } else {
                 int newY = (myPos.y + 1) % Y;
                 return  (wrappedMode || myPos.y < yMax)
                         && myBody[newY][myPos.x] == 0
                         && snakeBodies[newY][myPos.x] == 0
+                        && (enterHazardZone || myHealth > 50 || hazardZone[newY][myPos.x] == 0)
                         && (enterDangerZone || snakeNextMovePossibleLocations[newY][myPos.x] < myLen)
                         && (enterNoGoZone || !willCreateLoop(Snake.UP, myPos, null,0));
             }
@@ -584,11 +604,14 @@ public class Session {
         try {
             if (escapeFromBorder && (myPos.y == 0 || myPos.y == Y - 1)) {
                 return false;
+            } else if(escapeFromHazard && hazardZone[myPos.y][myPos.x] > 0){
+                return false;
             } else {
                 int newX = (myPos.x + 1) % X;
                 return  (wrappedMode || myPos.x < xMax)
                         && myBody[myPos.y][newX] == 0
                         && snakeBodies[myPos.y][newX] == 0
+                        && (enterHazardZone || myHealth > 50 || hazardZone[myPos.y][newX] == 0)
                         && (enterDangerZone || snakeNextMovePossibleLocations[myPos.y][newX] < myLen)
                         && (enterNoGoZone || !willCreateLoop(Snake.RIGHT, myPos, null, 0))
                         ;
@@ -649,11 +672,14 @@ public class Session {
         try {
             if (escapeFromBorder && (myPos.x == 0 || myPos.x == X - 1)) {
                 return false;
+            } else if(escapeFromHazard && hazardZone[myPos.y][myPos.x] > 0){
+                return false;
             } else {
                 int newY = myPos.y > 0 ? myPos.y - 1 : Y-1;
                 return  (wrappedMode || myPos.y > yMin)
                         && myBody[newY][myPos.x] == 0
                         && snakeBodies[newY][myPos.x] == 0
+                        && (enterHazardZone || myHealth > 50 || hazardZone[newY][myPos.x] == 0)
                         && (enterDangerZone || snakeNextMovePossibleLocations[newY][myPos.x] < myLen)
                         && (enterNoGoZone || !willCreateLoop(Snake.DOWN, myPos, null, 0))
                         ;
@@ -721,11 +747,14 @@ public class Session {
         try {
             if (escapeFromBorder && (myPos.y == 0 || myPos.y == Y - 1)) {
                 return false;
+            } else if(escapeFromHazard && hazardZone[myPos.y][myPos.x] > 0){
+                return false;
             } else {
                 int newX = myPos.x > 0 ? myPos.x - 1 : X-1;
                 return  (wrappedMode || myPos.x > xMin)
                         && myBody[myPos.y][newX] == 0
                         && snakeBodies[myPos.y][newX] == 0
+                        && (enterHazardZone || myHealth > 50 || hazardZone[myPos.y][newX] == 0)
                         && (enterDangerZone || snakeNextMovePossibleLocations[myPos.y][newX] < myLen)
                         && (enterNoGoZone || !willCreateLoop(Snake.LEFT, myPos, null, 0))
                         ;
@@ -860,13 +889,13 @@ public class Session {
 
     void logBoard() {
         if (X == 11) {
-            LOG.info("_____________");
+            LOG.info("┌───────────┐");
         } else {
-            LOG.info("_____________________");
+            LOG.info("┌───────────────────┐");
         }
         for (int y = Y - 1; y >= 0; y--) {
             StringBuffer b = new StringBuffer();
-            b.append('|');
+            b.append('│');
             for (int x = 0; x < X; x++) {
                 if (myPos.x == x && myPos.y == y) {
                     b.append("X");
@@ -874,32 +903,39 @@ public class Session {
                     b.append('c');
                 } else if (snakeBodies[y][x] > 0) {
                     if (snakeBodies[y][x] == 1) {
-                        b.append('-');
-                    } else {
                         b.append('+');
+                    } else {
+                        b.append('O');
                     }
                 } else {
+                    boolean isHazard = hazardZone[y][x] > 0;
                     boolean isFoodPlace = foodPlaces.contains(new Point(y, x));
                     if (snakeNextMovePossibleLocations[y][x] > 0) {
                         if(isFoodPlace){
-                            b.append('O');
+                            b.append('●');
                         }else {
-                            b.append('o');
+                            b.append('◦');
                         }
                     } else if (isFoodPlace) {
-                        b.append('.');
+                        if(isHazard){
+                            b.append('▓');
+                        }else {
+                            b.append('*');
+                        }
+                    } else if(isHazard){
+                        b.append('▒');
                     } else {
                         b.append(' ');
                     }
                 }
             }
-            b.append('|');
+            b.append('│');
             LOG.info(b.toString());
         }
         if (X == 11) {
-            LOG.info("-------------");
+            LOG.info("└───────────┘");
         } else {
-            LOG.info("---------------------");
+            LOG.info("└───────────────────┘");
         }
     }
 
@@ -912,6 +948,8 @@ public class Session {
                 + " Tn:" + turn
                 + " st:" + getMoveIntAsString(state).substring(0, 2).toUpperCase() + "[" + state + "]"
                 + " ph:" + tPhase
+                + (escapeFromHazard ? " GETOUTHAZD" : "")
+                + " goHazd? " + enterHazardZone
                 + (escapeFromBorder ? " GAWYBRD" : "")
                 + " goBorder? " + enterBorderZone
                 + " goDanger? " + enterDangerZone

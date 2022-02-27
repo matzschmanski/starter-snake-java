@@ -310,9 +310,8 @@ public class Snake {
                 int hLen = haz.size();
                 for (int i = 0; i < hLen; i++) {
                     Point h = new Point(haz.get(i));
-                    s.myBody[h.y][h.x] = 1;
-
-                    s.hazardPlaces.add(h);
+                    s.hazardZone[h.y][h.x] = 1;
+                    /*s.hazardPlaces.add(h);
                     // one time around the pudding... (we want to avoid food that
                     // is nearby hazards!
                     s.hazardNearbyPlaces.add(new Point(h.y + 1, h.x + 0));
@@ -323,6 +322,7 @@ public class Snake {
                     s.hazardNearbyPlaces.add(new Point(h.y - 1, h.x - 1));
                     s.hazardNearbyPlaces.add(new Point(h.y + 0, h.x - 1));
                     s.hazardNearbyPlaces.add(new Point(h.y + 1, h.x - 1));
+                     */
                 }
             }
 
