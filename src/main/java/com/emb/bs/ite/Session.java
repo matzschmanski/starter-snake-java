@@ -35,6 +35,8 @@ public class Session {
 
     private boolean goForFood = false;
     ArrayList<Point> foodPlaces = null;
+    ArrayList<Point> hazardPlaces = null;
+    ArrayList<Point> hazardNearbyPlaces = null;
 
     private boolean enterBorderZone = false;
     private boolean enterDangerZone = false;
@@ -84,6 +86,8 @@ public class Session {
 
         goForFood = false;
         foodPlaces = new ArrayList<>();
+        hazardPlaces = new ArrayList();
+        hazardNearbyPlaces = new ArrayList<>();
 
         escapeFromBorder = false;
 
@@ -445,12 +449,13 @@ LOG.error("==============================================");
 
     private boolean isLocatedAtBorder(Point p) {
         if(wrappedMode){
-            return false;
+            return  hazardNearbyPlaces.contains(p);
         }else {
             return  p.y == 0 ||
                     p.y == Y - 1 ||
                     p.x == 0 ||
-                    p.x == X - 1;
+                    p.x == X - 1 ||
+                    hazardNearbyPlaces.contains(p);
         }
     }
 

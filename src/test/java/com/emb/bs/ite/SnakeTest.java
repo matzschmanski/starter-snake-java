@@ -144,6 +144,7 @@ public class SnakeTest {
         board.put("width", X);
 
         board.put("food", replayJson.get("food"));
+        board.put("hazards", replayJson.get("hazards"));
 
         ArrayNode targetSnakes = OBJECT_MAPPER.createArrayNode();
         board.put("snakes", targetSnakes);
