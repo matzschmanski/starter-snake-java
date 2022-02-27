@@ -203,14 +203,14 @@ public class Snake {
             JsonNode you = moveRequest.get("you");
             String myId = you.get("id").asText();
 
-            s.health = you.get("health").asInt();
-            s.len = you.get("length").asInt();
+            s.myHealth = you.get("health").asInt();
+            s.myLen = you.get("length").asInt();
 
             JsonNode head = you.get("head");
-            s.pos = new Point(head);
+            s.myPos = new Point(head);
             // adding also myHead to the boddy array (to allow
             // simple NoGoZone-Detection
-            s.myBody[s.pos.y][s.pos.x] = s.len;
+            s.myBody[s.myPos.y][s.myPos.x] = s.myLen;
 
             JsonNode myBody = you.get("body");
             int myBodyLen = myBody.size();
