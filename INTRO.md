@@ -85,7 +85,8 @@ Now you can start to adjust the code and start the first challenges! https://pla
 
 - https://docs.battlesnake.com/references/api
 - https://docs.battlesnake.com/references/api/sample-move-request
-- The board layout:
+- The board layout:<br/>
+![boardlayout](intro04.png)
 
 ## Typical pitfalls
 
