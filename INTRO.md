@@ -27,7 +27,7 @@ See https://statics.teams.cdn.office.net/evergreen-assets/safelinks/1/atp-safeli
 
 `npm install -g heroku`
 
-### Deploying Your First Battlesnake with Heroku
+### Deploying Your First JAVA Battlesnake with Heroku
 
 1. [Fork this repo](https://github.com/BattlesnakeOfficial/starter-snake-java/fork) into your GitHub Account.
 2. Clone your forked repo into your local environment.<br/>
