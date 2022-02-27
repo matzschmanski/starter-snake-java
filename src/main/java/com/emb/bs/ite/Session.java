@@ -459,16 +459,32 @@ LOG.error("==============================================");
                 Point newPos = aPos.clone();
                 switch (move){
                     case Snake.UP:
-                        newPos.y = (newPos.y + 1)%Y;
+                        if(wrappedMode) {
+                            newPos.y = (newPos.y + 1) % Y;
+                        }else{
+                            newPos.y++;
+                        }
                         break;
                     case Snake.RIGHT:
-                        newPos.x = (newPos.x + 1)%X;
+                        if(wrappedMode) {
+                            newPos.x = (newPos.x + 1) % X;
+                        }else{
+                            newPos.x++;
+                        }
                         break;
                     case Snake.DOWN:
-                        newPos.y = newPos.y > 0 ? newPos.y - 1 : Y-1;
+                        if(wrappedMode) {
+                            newPos.y = newPos.y > 0 ? newPos.y - 1 : Y - 1;
+                        }else{
+                            newPos.y--;
+                        }
                         break;
                     case Snake.LEFT:
-                        newPos.x = newPos.x > 0 ? newPos.x - 1 : X-1;
+                        if(wrappedMode) {
+                            newPos.x = newPos.x > 0 ? newPos.x - 1 : X - 1;
+                        }else{
+                            newPos.x--;
+                        }
                         break;
                 }
 
