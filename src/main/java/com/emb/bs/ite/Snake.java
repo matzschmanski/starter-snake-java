@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import spark.Request;
 import spark.Response;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -167,6 +168,57 @@ public class Snake {
                 readCurrentBoardStatusIntoSession(moveRequest, gameType, s);
 
                 String move = calculateNextMove(s);
+
+                // check if this is a RISKY-Move... and if there are alternatives
+                if(s.enterDangerZone && !s.enterNoGoZone){
+
+                    ArrayList<String> altMoves = new ArrayList<>();
+
+                    while(!s.enterNoGoZone && s.cmdChain.size() < 4){
+                        String aAltMove = calculateNextMove(s);
+                        if(!s.enterNoGoZone && !aAltMove.equals(move) && !altMoves.contains(aAltMove)){
+                            altMoves.add(aAltMove);
+                        }
+                    }
+                    if(altMoves.size() > 0){
+                        // since we want to find the move with the lowest risk, we add the inital move
+                        // as well..
+                        altMoves.add(move);
+
+                        // comparing RISK of "move" with alternative moves
+                        int minRisk = Integer.MAX_VALUE;
+
+                        for(String aMove : altMoves) {
+                            Point altPos = null;
+                            switch (aMove) {
+                                case U:
+                                    altPos = s.getNewPointForDirection(s.myPos, UP);
+                                    break;
+                                case R:
+                                    altPos = s.getNewPointForDirection(s.myPos, RIGHT);
+                                    break;
+                                case D:
+                                    altPos = s.getNewPointForDirection(s.myPos, DOWN);
+                                    break;
+                                case L:
+                                    altPos = s.getNewPointForDirection(s.myPos, LEFT);
+                                    break;
+                            }
+
+                            if(altPos != null){
+                                int risk = s.snakeNextMovePossibleLocations[altPos.y][altPos.x];
+                                minRisk = Math.min(minRisk, risk);
+                                if(risk == minRisk){
+                                    move = aMove;
+                                }
+                            }
+                        }
+
+                    }else{
+                        LOG.info("MOVE INTO DANGER-ZONE is alternativlos");
+                    }
+
+                }
                 if(move.equals(REPEATLAST)){
                     // OK we are DOOMED anyhow - so we can do what ever
                     // we want -> so we just repeat the last move...
@@ -235,7 +287,7 @@ public class Snake {
                 JsonNode aSnake = snakes.get(i);
                 if (!aSnake.get("id").asText().equals(myId)) {
                     String fof = aSnake.get("name").asText().toLowerCase();
-                    if(!s.hungerMode && checkFoF(fof)){
+                    if(!s.hungerMode){// && checkFoF(fof)){
                         s.hungerMode = true;
                     }
                     int len = aSnake.get("length").asInt();
@@ -337,12 +389,12 @@ public class Snake {
             s.logBoard();
         }
 
-        private boolean checkFoF(String fof) {
+        /*private boolean checkFoF(String fof) {
             return  fof.indexOf("tatos") > -1
                     || fof.indexOf("sr2") > -1
                     || fof.indexOf("paranoidba") > -1
                     ;
-        }
+        }*/
 
         private String calculateNextMove(Session s) {
             String move = s.checkSpecialMoves();

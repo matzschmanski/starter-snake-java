@@ -41,8 +41,8 @@ public class Session {
 
     private boolean enterHazardZone = false;
     private boolean enterBorderZone = false;
-    private boolean enterDangerZone = false;
-    private boolean enterNoGoZone = false;
+    boolean enterDangerZone = false;
+    boolean enterNoGoZone = false;
 
     boolean escapeFromBorder = false;
     boolean escapeFromHazard = false;
@@ -539,7 +539,7 @@ public class Session {
         }
     }
 
-    private Point getNewPointForDirection(Point aPos, int move){
+    Point getNewPointForDirection(Point aPos, int move){
         Point newPos = aPos.clone();
         if(wrappedMode) {
             switch (move) {
