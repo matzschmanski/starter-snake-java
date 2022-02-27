@@ -103,7 +103,7 @@ public class SnakeTest {
 
     @Test
     void replayGameWithId() throws Exception{
-        String gameId= "cf841916-e1c6-4d13-bc74-794c3040a646";
+        String gameId= "9c49b1d5-9213-4397-a58d-1a884b33c810";
         String yourNameIdentifier = "lender";
         String gameMode = null;//"wrapped";
         int Y = 11;
@@ -118,9 +118,10 @@ public class SnakeTest {
         Thread.sleep(5000);
 
         handler.start(convertToReq(collector.list.get(0), gameId, gameMode, Y, X, yourNameIdentifier));
-        for(int i=0; i < collector.list.size(); i++){
+        for(int i=0; i < collector.list.size()-1 ; i++){
             handler.move(convertToReq(collector.list.get(i), gameId, gameMode, Y, X, yourNameIdentifier));
         }
+        handler.end(convertToReq(collector.list.get(collector.list.size()-1), gameId, gameMode, Y, X, yourNameIdentifier));
     }
 
     private JsonNode convertToReq(JsonNode replayJson, String gameId, String gameMode, int Y, int X, String selfIdentifier) {
@@ -149,26 +150,28 @@ public class SnakeTest {
         ArrayNode targetSnakes = OBJECT_MAPPER.createArrayNode();
         board.put("snakes", targetSnakes);
 
-        ObjectNode you = OBJECT_MAPPER.createObjectNode();
-        root.put("you", you);
-
         JsonNode srcSnakes = replayJson.get("snakes");
-        for(int i=0; i<srcSnakes.size(); i++){
-            ObjectNode dest = OBJECT_MAPPER.createObjectNode();
-            JsonNode srcS = srcSnakes.get(i);
-            if(srcS.get("name").asText().indexOf(selfIdentifier)>-1){
-                dest = you;
-            }else{
-                targetSnakes.add(dest);
-            }
-            dest.put("id", srcS.get("id").asText());
-            dest.put("name", srcS.get("name").asText());
-            dest.put("body", srcS.get("body"));
-            dest.put("head", srcS.get("body").get(0));
-            dest.put("length", srcS.get("body").size());
-            dest.put("health", srcS.get("health").intValue());
-        }
+        int sLen = srcSnakes.size();
 
+        for(int i=0; i<sLen; i++){
+            JsonNode srcS = srcSnakes.get(i);
+            //if(srcS.get("death").isNull()){
+                ObjectNode dest = OBJECT_MAPPER.createObjectNode();
+                if(srcS.get("name").asText().indexOf(selfIdentifier)>-1){
+                    ObjectNode you = OBJECT_MAPPER.createObjectNode();
+                    root.put("you", you);
+                    dest = you;
+                }else{
+                    targetSnakes.add(dest);
+                }
+                dest.put("id", srcS.get("id").asText());
+                dest.put("name", srcS.get("name").asText());
+                dest.put("body", srcS.get("body"));
+                dest.put("head", srcS.get("body").get(0));
+                dest.put("length", srcS.get("body").size());
+                dest.put("health", srcS.get("health").intValue());
+            //}
+        }
         return root;
     }
 
