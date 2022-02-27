@@ -270,11 +270,11 @@ public class Session {
 
         TreeMap<Integer, ArrayList<Point>> foodTargetsByDistance = new TreeMap<>();
         for (Point f : availableFoods) {
-            int dist = Math.abs(f.x - myPos.x) + Math.abs(f.y - myPos.y);
+            int dist = getFoodDistance(f, myPos);
             if(!isLocatedAtBorder(f) || dist < 3 || (dist < 4 && myHealth < 65) || myHealth < 16) {
                 boolean addFoodAsTarget = true;
                 for (Point h : snakeHeads) {
-                    int otherSnakesDist = Math.abs(f.x - h.x) + Math.abs(f.y - h.y);
+                    int otherSnakesDist = getFoodDistance(f, h);
                     boolean otherIsStronger = snakeBodies[h.y][h.x] >= myLen;
                     if(dist > otherSnakesDist || (dist == otherSnakesDist && otherIsStronger)) {
                         addFoodAsTarget = false;
@@ -306,14 +306,17 @@ public class Session {
                 // ok take the first as default...
                 closestFood = closestFoodList.get(0);
 
-                // need to decided which food is better?!
-                for(Point cfp: closestFoodList){
-                    int blocks = countBlockingsBetweenFoodAndHead(cfp);
-                    minBlocks = Math.min(minBlocks, blocks);
-                    if(minBlocks == blocks){
-                        closestFood = cfp;
-                    } else{
-                        LOG.info("FOOD at "+cfp+" blocked by "+blocks+" - stay on: "+closestFood+ "(blocked by "+minBlocks+")");
+                // TODO: count blockingBlocks in WRAPPED MODE
+                if(!wrappedMode) {
+                    // need to decided which food is better?!
+                    for (Point cfp : closestFoodList) {
+                        int blocks = countBlockingsBetweenFoodAndHead(cfp);
+                        minBlocks = Math.min(minBlocks, blocks);
+                        if (minBlocks == blocks) {
+                            closestFood = cfp;
+                        } else {
+                            LOG.info("FOOD at " + cfp + " blocked by " + blocks + " - stay on: " + closestFood + "(blocked by " + minBlocks + ")");
+                        }
                     }
                 }
             }
@@ -339,15 +342,19 @@ public class Session {
 
             int yDelta = myPos.y - closestFood.y;
             int xDelta = myPos.x - closestFood.x;
-            if(lastFoodState == -1 || yDelta==0 || xDelta == 0) {
+            if (lastFoodState == -1 || yDelta == 0 || xDelta == 0) {
                 if (Math.abs(yDelta) > Math.abs(xDelta)) {
-                    if (yDelta > 0) {
+                    if(wrappedMode && Math.abs(yDelta) > Y/2) {
+                        lastFoodState = Snake.UP;
+                    } else if (yDelta > 0) {
                         lastFoodState = Snake.DOWN;
                     } else {
                         lastFoodState = Snake.UP;
                     }
-                }else{
-                    if (xDelta > 0) {
+                } else {
+                    if((wrappedMode && Math.abs(xDelta) > X/2)){
+                        lastFoodState = Snake.RIGHT;
+                    }else if (xDelta > 0) {
                         lastFoodState = Snake.LEFT;
                     } else {
                         lastFoodState = Snake.RIGHT;
@@ -365,41 +372,21 @@ public class Session {
                 case Snake.RIGHT:
                     return moveRight();
             }
-
-            /*if (Math.abs(yDelta) > Math.abs(xDelta)) {
-                // we have to move more on the Y-axis
-                if (yDelta > 0) {
-                    return moveDown();
-                } else if (yDelta < 0){
-                    return moveUp();
-                }/* else if (xDelta > 0) {
-                    return moveLeft();
-                } else {
-                    return moveRight();
-                }*/ /*
-                else{
-LOG.error("==============================================");
-                }
-            }else{
-                if (xDelta > 0) {
-                    return moveLeft();
-                } else if (xDelta < 0) {
-                    return moveRight();
-                }/* else if (yDelta > 0) {
-                    return moveDown();
-                } else {
-                    return moveUp();
-                }*/ /*
-                else{
-LOG.error("==============================================");
-                }
-            }*/
         } else {
             activeFood = null;
             lastFoodState = -1;
             LOG.info("NO NEARBY FOOD FOUND minDist:" + minDist + " x:" + (X / 3) + "+y:" + (Y / 3) + "=" + ((X / 3) + (Y / 3)));
         }
         return null;
+    }
+
+    private int getFoodDistance(Point food, Point other){
+        if(!wrappedMode){
+            return Math.abs(food.x - other.x) + Math.abs(food.y - other.y);
+        }else{
+            // in wrappedMode: if food.x = 0 & other.x = 11, then distance is 1
+            return Math.min(Math.abs(food.x + X - other.x), Math.abs(food.x - other.x)) + Math.min(Math.abs(food.y + Y - other.y), Math.abs(food.y - other.y));
+        }
     }
 
     private int countBlockingsBetweenFoodAndHead(Point cfp) {
