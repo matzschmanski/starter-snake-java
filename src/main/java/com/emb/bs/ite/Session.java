@@ -3,7 +3,6 @@ package com.emb.bs.ite;
 import java.util.ArrayList;
 import java.util.TreeMap;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -212,11 +211,17 @@ public class Session {
     }
 
     public String checkSpecialMoves() {
+        String killMove = checkKillMoves();
+        if(killMove != null){
+            LOG.info("GO FOR KILL " +killMove);
+            return killMove;
+        }
+
         if (myHealth < 31 || (myLen - getAdvantage() <= maxOtherSnakeLen)) {
             LOG.info("Check for FOOD! health:" + myHealth + " len:" + myLen +"(-"+getAdvantage()+")"+ "<=" + maxOtherSnakeLen);
 
             boolean resetSaveBounds = !enterBorderZone;
-            boolean resetHazard = !enterHazardZone;
+            boolean enterHazardZoneSaved = enterHazardZone;
             // ok we need to start to fetch FOOD!
             // we should move into the direction of the next FOOD!
             String possibleFoodMove = checkFoodMove();
@@ -230,10 +235,7 @@ public class Session {
                     // this needs to be reset...
                     initSaveBoardBounds();
                 }
-
-                if (resetHazard) {
-                    // TODO... is there any special hazard avaoid handling?!
-                }
+                enterHazardZone = enterHazardZoneSaved;
             }
         }
 
@@ -248,6 +250,72 @@ public class Session {
                 return moveDown();
             }
         }*/
+        return null;
+    }
+
+    private String checkKillMoves(){
+        String ret = checkForPossibleKillInDirection(Snake.UP, Snake.U);
+        if(ret == null){
+            ret = checkForPossibleKillInDirection(Snake.RIGHT, Snake.R);
+        }
+        if(ret == null){
+            ret = checkForPossibleKillInDirection(Snake.DOWN, Snake.D);
+        }
+        if(ret == null){
+            ret = checkForPossibleKillInDirection(Snake.LEFT, Snake.L);
+        }
+        return ret;
+    }
+
+    private int[][] generateMap(Point aPos){
+        int[][] aMap = new int[Y][X];
+        aMap[aPos.y][aPos.x] = 1;
+        for (int y = 0; y < X; y++) {
+            for (int x = 0; x < X; x++) {
+                if (myBody[y][x] > 0) {
+                    aMap[y][x] = 1;
+                } else if (snakeBodies[y][x] > 0) {
+                    aMap[y][x] = 1;
+                }
+            }
+        }
+        return aMap;
+    }
+
+    private String checkForPossibleKillInDirection(int move, String retVal) {
+        Point p = getNewPointForDirection(myPos, move);
+        try {
+            int val = snakeNextMovePossibleLocations[p.y][p.x];
+            if (val > 0 && val < myLen) {
+                switch (move){
+                    case Snake.UP:
+                        if(canMoveUp(myPos, generateMap(p),0)){
+                            return retVal;
+                        }
+                        break;
+
+                    case Snake.RIGHT:
+                        if(canMoveRight(myPos, generateMap(p),0)){
+                            return retVal;
+                        }
+                        break;
+
+                    case Snake.DOWN:
+                        if(canMoveDown(myPos, generateMap(p),0)){
+                            return retVal;
+                        }
+                        break;
+
+                    case Snake.LEFT:
+                        if(canMoveLeft(myPos, generateMap(p),0)){
+                            return retVal;
+                        }
+                        break;
+                }
+
+            }
+        }catch(IndexOutOfBoundsException e){
+        }
         return null;
     }
 
@@ -470,45 +538,49 @@ public class Session {
         }
     }
 
+    private Point getNewPointForDirection(Point aPos, int move){
+        Point newPos = aPos.clone();
+        if(wrappedMode) {
+            switch (move) {
+                case Snake.UP:
+                    newPos.y = (newPos.y + 1) % Y;
+                    break;
+                case Snake.RIGHT:
+                    newPos.x = (newPos.x + 1) % X;
+                    break;
+                case Snake.DOWN:
+                    newPos.y = newPos.y > 0 ? newPos.y - 1 : Y - 1;
+                    break;
+                case Snake.LEFT:
+                    newPos.x = newPos.x > 0 ? newPos.x - 1 : X - 1;
+                    break;
+            }
+        }else{
+            switch (move) {
+                case Snake.UP:
+                    newPos.y++;
+                    break;
+                case Snake.RIGHT:
+                    newPos.x++;
+                    break;
+                case Snake.DOWN:
+                    newPos.y--;
+                    break;
+                case Snake.LEFT:
+                    newPos.x--;
+                    break;
+            }
+        }
+        return newPos;
+    }
+
     private boolean willCreateLoop(int move, Point aPos, int[][] finalMap, int count) {
         // OK we have to check, if with the "planed" next move we will create a closed loop structure (either
         // with ourselves, with the border or with any enemy...
         try {
             count++;
             if(count <= MAXDEEP) {
-                Point newPos = aPos.clone();
-                if(wrappedMode) {
-                    switch (move) {
-                        case Snake.UP:
-                            newPos.y = (newPos.y + 1) % Y;
-                            break;
-                        case Snake.RIGHT:
-                            newPos.x = (newPos.x + 1) % X;
-                            break;
-                        case Snake.DOWN:
-                            newPos.y = newPos.y > 0 ? newPos.y - 1 : Y - 1;
-                            break;
-                        case Snake.LEFT:
-                            newPos.x = newPos.x > 0 ? newPos.x - 1 : X - 1;
-                            break;
-                    }
-                }else{
-                    switch (move) {
-                        case Snake.UP:
-                            newPos.y++;
-                            break;
-                        case Snake.RIGHT:
-                            newPos.x++;
-                            break;
-                        case Snake.DOWN:
-                            newPos.y--;
-                            break;
-                        case Snake.LEFT:
-                            newPos.x--;
-                            break;
-                    }
-                }
-
+                Point newPos = getNewPointForDirection(aPos, move);
                 // simple check, if we can move from the new position to any other location
 
                 // so in the finalMap we have the picture of the MOVE RESULT
