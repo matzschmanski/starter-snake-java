@@ -167,7 +167,7 @@ public class Snake {
                 }
                 readCurrentBoardStatusIntoSession(moveRequest, gameType, s);
 
-                String move = calculateNextMove(s);
+                String move = calculateNextMove(s, false);
 
                 // check if this is a RISKY-Move... and if there are alternatives
                 if(s.enterDangerZone && !s.enterNoGoZone){
@@ -175,14 +175,15 @@ public class Snake {
                     ArrayList<String> altMoves = new ArrayList<>();
 
                     while(!s.enterNoGoZone && s.cmdChain.size() < 4){
-                        String aAltMove = calculateNextMove(s);
+                        String aAltMove = calculateNextMove(s, true);
                         if(!s.enterNoGoZone && !aAltMove.equals(move) && !altMoves.contains(aAltMove)){
+                            LOG.info("FOUND an ALTERNATIVE "+aAltMove);
                             altMoves.add(aAltMove);
                         }
                     }
                     if(altMoves.size() > 0){
-                        // since we want to find the move with the lowest risk, we add the inital move
-                        // as well..
+                        // since we want to find the move with the lowest risk, we add the initial move
+                        // so we compare all risks
                         altMoves.add(move);
 
                         // comparing RISK of "move" with alternative moves
@@ -396,8 +397,11 @@ public class Snake {
                     ;
         }*/
 
-        private String calculateNextMove(Session s) {
-            String move = s.checkSpecialMoves();
+        private String calculateNextMove(Session s, boolean skipSpecialMoves) {
+            String move = null;
+            if(!skipSpecialMoves){
+                move = s.checkSpecialMoves();
+            }
             if (move == null) {
                 switch (s.state) {
                     case UP:
