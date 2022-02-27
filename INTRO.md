@@ -1,6 +1,6 @@
 # Short Introduction into the game
 
-Matthias Geiger was so kind to introduce the “Battlesnake Challange” - it is fee & open for everyone. The challenge is
+Matthias G. was so kind to introduce the “Battlesnake Challange” - it is fee & open for everyone. The challenge is
 to provide a public reachable webserver that can reply to four different requests: “info”, “start, “move” and “end”. You
 can choose any language you like to reply to the incoming POST requests in less than 500ms. In theory also a manual
 request processing is possible. There are some simple rules of the game: https://docs.battlesnake.com/references/rules
@@ -36,10 +36,10 @@ See https://statics.teams.cdn.office.net/evergreen-assets/safelinks/1/atp-safeli
    Battlesnake.<br/>`heroku create [YOUR-APP-NAME]`
 4. [Deploy your Battlesnake code to Heroku](https://devcenter.heroku.com/articles/git#deploying-code).<br/>
    `git push heroku master`
-6. Open your new Heroku app in your browser.<br/>`heroku open`
-7. If everything was successful a browser window will open and you should see the following
+5. Open your new Heroku app in your browser.<br/>`heroku open`
+6. If everything was successful a browser window will open and you should see the following
    text<br/>`{"tailType":"default","color":"#888888","headType":"default","author":"","apiversion":"1"}`
-8. Optionally, you can view your server logs using
+7. Optionally, you can view your server logs using
    the [Heroku logs command](https://devcenter.heroku.com/articles/logging#log-retrieval)<br/>
    `heroku logs –-tail`<br/>
    or<br/>
@@ -61,24 +61,25 @@ Once Heroku has updated you can create a new game with your Battlesnake to view 
 
 ### Register your Heroku Snake-Server @ Battlesnake
 
-1. At the Battlesnake website click on the upper right corner on your user icon
+1. At the Battlesnake website click on the upper right corner on your user icon<br/>
    ![intro01](intro01.png)
 2. Select the menu Item “Battlesnakes”
-3. Press the “create new Battlesnake” Button
-   ![intro02](intro02.png)
-4. Now you enter/specify:
-   ![intr03](intro03.png)
+3. Press the “create new Battlesnake” Button<br/>
+   ![intro02](intro02.png)<br/>
+4. Now you enter/specify:<br/>
+   ![intr03](intro03.png)<br/>
     - Any Name you like for your snake
     - The URL where your snake app is hosted (here in this example my Heroku app @ https://marq24.herokuapp.com/ (that’s
       the one the heroku open command will open)
     - _**IMPORTANT**_ Select as Engine Region ’[BETA] GCP US-EAST4 (Virgina) we have the feeling its a little faster =)
     - _**IMPORTANT**_ Check ”Allow anyone to add this Battlesnake to their game”
 
-5. Please be so kind and add your Snake information to the [OT] Battlesnake Channel’s “BattleSnakes List” Now you can
-   start to adjust the code and start the first challenges! https://play.battlesnake.com/challenges/
-    - Avoid Walls
-    - Avoid Yourself
-    - Avoid Others
+5. Please be so kind and add your Snake information to our Teams [OT] Battlesnake Channel’s “BattleSnakes List”
+
+Now you can start to adjust the code and start the first challenges! https://play.battlesnake.com/challenges/
+- Avoid Walls
+- Avoid Yourself
+- Avoid Others
 
 ## Useful additional documentation
 
@@ -104,7 +105,7 @@ Open the Battlesnake Website, Select the ‘battlesnakes’ item from your user 
 #### _You lose a game and do not have a singly clue why?_<br/>
 
 Welcome to my world 😀 for me (marq24) logging was the key. You might like to check my very
-simple [‘replayGameWithId’ Test @github]().
+simple [‘replayGameWithId’ Test @github](https://github.com/marq24/doedel-snake/blob/0e2c02eaf9b4e0d2f1294c5ebd9d7ad67af93ec8/src/test/java/com/emb/bs/ite/SnakeTest.java#L105).
 
 ### Some personal remarks
 
