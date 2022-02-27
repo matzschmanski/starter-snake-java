@@ -267,15 +267,16 @@ public class Session {
         return ret;
     }
 
-    private int[][] generateMap(Point aPos){
+    private int[][] generateMap(){
         int[][] aMap = new int[Y][X];
-        aMap[aPos.y][aPos.x] = 1;
         for (int y = 0; y < X; y++) {
             for (int x = 0; x < X; x++) {
                 if (myBody[y][x] > 0) {
                     aMap[y][x] = 1;
-                } else if (snakeBodies[y][x] > 0) {
-                    aMap[y][x] = 1;
+                } else{
+                    if (snakeBodies[y][x] == 1) {
+                        aMap[y][x] = 1;
+                    }
                 }
             }
         }
@@ -289,25 +290,25 @@ public class Session {
             if (val > 0 && val < myLen) {
                 switch (move){
                     case Snake.UP:
-                        if(canMoveUp(myPos, generateMap(p),0)){
+                        if(canMoveUp(myPos, generateMap(),0)){
                             return retVal;
                         }
                         break;
 
                     case Snake.RIGHT:
-                        if(canMoveRight(myPos, generateMap(p),0)){
+                        if(canMoveRight(myPos, generateMap(),0)){
                             return retVal;
                         }
                         break;
 
                     case Snake.DOWN:
-                        if(canMoveDown(myPos, generateMap(p),0)){
+                        if(canMoveDown(myPos, generateMap(),0)){
                             return retVal;
                         }
                         break;
 
                     case Snake.LEFT:
-                        if(canMoveLeft(myPos, generateMap(p),0)){
+                        if(canMoveLeft(myPos, generateMap(),0)){
                             return retVal;
                         }
                         break;

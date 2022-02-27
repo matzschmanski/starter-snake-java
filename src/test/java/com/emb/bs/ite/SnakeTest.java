@@ -103,7 +103,7 @@ public class SnakeTest {
 
     @Test
     void replayGameWithId() throws Exception{
-        String gameId= "5ee76fa8-fc4b-4418-b700-5e233f21c24e";
+        String gameId= "eca77738-4d91-4689-a467-0e2e55e3de2f";
         String yourNameIdentifier = "lender";
         String gameMode = null;//"wrapped";
         int Y = 11;
