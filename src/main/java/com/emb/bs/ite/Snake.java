@@ -171,7 +171,7 @@ public class Snake {
 
                 // check if this is a RISKY-Move... and if there are alternatives
                 if(s.enterDangerZone && !s.enterNoGoZone){
-
+                    LOG.info("CHECK FOR ALTERNATIVES for: "+move);
                     ArrayList<String> altMoves = new ArrayList<>();
 
                     while(!s.enterNoGoZone && s.cmdChain.size() < 4){
@@ -207,9 +207,9 @@ public class Snake {
                             }
 
                             if(altPos != null){
-                                int risk = s.snakeNextMovePossibleLocations[altPos.y][altPos.x];
-                                minRisk = Math.min(minRisk, risk);
-                                if(risk == minRisk){
+                                int aMoveRisk = s.snakeNextMovePossibleLocations[altPos.y][altPos.x];
+                                minRisk = Math.min(minRisk, aMoveRisk);
+                                if(aMoveRisk == minRisk){
                                     move = aMove;
                                 }
                             }
