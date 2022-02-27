@@ -308,27 +308,31 @@ public class Snake {
             JsonNode haz = board.get("hazards");
             if (haz != null) {
                 int hLen = haz.size();
-                for (int i = 0; i < hLen; i++) {
-                    Point h = new Point(haz.get(i));
-                    s.hazardZone[h.y][h.x] = 1;
-                    /*s.hazardPlaces.add(h);
-                    // one time around the pudding... (we want to avoid food that
-                    // is nearby hazards!
-                    s.hazardNearbyPlaces.add(new Point(h.y + 1, h.x + 0));
-                    s.hazardNearbyPlaces.add(new Point(h.y + 1, h.x + 1));
-                    s.hazardNearbyPlaces.add(new Point(h.y + 0, h.x + 1));
-                    s.hazardNearbyPlaces.add(new Point(h.y - 1, h.x + 1));
-                    s.hazardNearbyPlaces.add(new Point(h.y - 1, h.x + 0));
-                    s.hazardNearbyPlaces.add(new Point(h.y - 1, h.x - 1));
-                    s.hazardNearbyPlaces.add(new Point(h.y + 0, h.x - 1));
-                    s.hazardNearbyPlaces.add(new Point(h.y + 1, h.x - 1));
-                     */
+                if(hLen > 0) {
+                    for (int i = 0; i < hLen; i++) {
+                        Point h = new Point(haz.get(i));
+                        s.hazardZone[h.y][h.x] = 1;
+                        /*s.hazardPlaces.add(h);
+                        // one time around the pudding... (we want to avoid food that
+                        // is nearby hazards!
+                        s.hazardNearbyPlaces.add(new Point(h.y + 1, h.x + 0));
+                        s.hazardNearbyPlaces.add(new Point(h.y + 1, h.x + 1));
+                        s.hazardNearbyPlaces.add(new Point(h.y + 0, h.x + 1));
+                        s.hazardNearbyPlaces.add(new Point(h.y - 1, h.x + 1));
+                        s.hazardNearbyPlaces.add(new Point(h.y - 1, h.x + 0));
+                        s.hazardNearbyPlaces.add(new Point(h.y - 1, h.x - 1));
+                        s.hazardNearbyPlaces.add(new Point(h.y + 0, h.x - 1));
+                        s.hazardNearbyPlaces.add(new Point(h.y + 1, h.x - 1));
+                         */
+                    }
+                }else{
+                    haz = null;
                 }
             }
 
             // after we have read all positions/Objects we might to additionally init the current
             // session status...
-            s.initSessionAfterFullBoardRead();
+            s.initSessionAfterFullBoardRead(haz != null);
             s.logState("MOVE CALLED");
             s.logBoard();
         }

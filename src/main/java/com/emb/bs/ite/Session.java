@@ -2,6 +2,8 @@ package com.emb.bs.ite;
 
 import java.util.ArrayList;
 import java.util.TreeMap;
+
+import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -123,7 +125,7 @@ public class Session {
         }
     }
 
-    public void initSessionAfterFullBoardRead() {
+    public void initSessionAfterFullBoardRead(boolean hazardDataIsPresent) {
         // before we check any special moves, we check, if we are already on the borderline, and if this is the
         // case we can/will disable 'avoid borders' flag...
 
@@ -137,10 +139,15 @@ public class Session {
             }
         }
 
-        if(!enterHazardZone){
-            if(hazardZone[myPos.y][myPos.x] > 0 && myHealth < 50) {
-                escapeFromHazard = true;
+        if(hazardDataIsPresent) {
+            if (!enterHazardZone) {
+                if (hazardZone[myPos.y][myPos.x] > 0 && myHealth < 50) {
+                    escapeFromHazard = true;
+                }
             }
+        }else{
+            // there is no hazard  so we can skip the check in the array...
+            enterHazardZone = true;
         }
     }
 
