@@ -557,7 +557,6 @@ public class Session {
             // and we need to check for alternatives...
             if(possibleFoodMoves.size() > 0 && possibleFoodMoves.get(0).equals(getMoveIntAsString(lastSecondaryFoodDirection))){
                 return possibleFoodMoves.get(0);
-                
             } else {
                 // there is probably more state stuff that need to be reset here...
                 MAXDEEP = myLen;
