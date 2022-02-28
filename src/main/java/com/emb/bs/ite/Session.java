@@ -570,7 +570,7 @@ public class Session {
 
             // ok let's try of we can move in the preferred direction now?
             ArrayList<String> possibleFoodMoves = new ArrayList<>();
-            String possibleFoodMode = getPossibleFoodMove(lastSecondaryFoodDirection, possibleFoodMoves);
+            String possibleFoodMode = getPossibleFoodMove(lastUsedFoodDirection, possibleFoodMoves);
             if (possibleFoodMode != null) {
                 return possibleFoodMode;
             }else{
@@ -583,7 +583,7 @@ public class Session {
                     // the initial value in the 'possibleFoodMoves' List]
 
                     // but first check, IF WE might, can move with a bit more risk?!
-                    String possibleFoodMoveWithMoreRisk = getPossibleFoodMove(lastSecondaryFoodDirection, possibleFoodMoves);
+                    String possibleFoodMoveWithMoreRisk = getPossibleFoodMove(lastUsedFoodDirection, possibleFoodMoves);
                     if(possibleFoodMoveWithMoreRisk != null){
                         return possibleFoodMoveWithMoreRisk;
                     }else if(possibleFoodMoves.size() > 0) {
