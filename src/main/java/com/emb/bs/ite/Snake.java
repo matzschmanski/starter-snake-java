@@ -167,59 +167,47 @@ public class Snake {
                 }
                 readCurrentBoardStatusIntoSession(moveRequest, gameType, s);
 
+                int directionBefore = s.state;
                 String move = calculateNextMove(s, false);
 
                 // check if this is a RISKY-Move... and if there are alternatives
-                if(s.enterDangerZone && !s.enterNoGoZone){
-                    LOG.info("CHECK FOR ALTERNATIVES for: "+move);
-                    ArrayList<String> altMoves = new ArrayList<>();
-
-                    while(!s.enterNoGoZone && s.cmdChain.size() < 4){
-                        String aAltMove = calculateNextMove(s, true);
-                        if(!s.enterNoGoZone && !aAltMove.equals(move) && !altMoves.contains(aAltMove)){
-                            LOG.info("FOUND an ALTERNATIVE "+aAltMove);
-                            altMoves.add(aAltMove);
-                        }
-                    }
-                    if(altMoves.size() > 0){
-                        // since we want to find the move with the lowest risk, we add the initial move
-                        // so we compare all risks
-                        altMoves.add(move);
-
-                        // comparing RISK of "move" with alternative moves
-                        int minRisk = Integer.MAX_VALUE;
-
-                        for(String aMove : altMoves) {
-                            Point altPos = null;
-                            switch (aMove) {
-                                case U:
-                                    altPos = s.getNewPointForDirection(s.myPos, UP);
-                                    break;
-                                case R:
-                                    altPos = s.getNewPointForDirection(s.myPos, RIGHT);
-                                    break;
-                                case D:
-                                    altPos = s.getNewPointForDirection(s.myPos, DOWN);
-                                    break;
-                                case L:
-                                    altPos = s.getNewPointForDirection(s.myPos, LEFT);
-                                    break;
-                            }
-
-                            if(altPos != null){
-                                int aMoveRisk = s.snakeNextMovePossibleLocations[altPos.y][altPos.x];
-                                minRisk = Math.min(minRisk, aMoveRisk);
-                                if(aMoveRisk == minRisk){
-                                    move = aMove;
-                                }
+                if(!s.enterNoGoZone){
+                    if(s.enterDangerZone) {
+                        LOG.info("CHECK FOR ALTERNATIVES for: "+move+" cause of ENTER-DANGER-ZONE");
+                        ArrayList<String> altMoves = new ArrayList<>();
+                        while(!s.enterNoGoZone && s.cmdChain.size() < 4){
+                            s.state = directionBefore;
+                            String aAltMove = calculateNextMove(s, true);
+                            if(!s.enterNoGoZone && !aAltMove.equals(move) && !altMoves.contains(aAltMove)){
+                                LOG.info("FOUND an ALTERNATIVE "+aAltMove);
+                                altMoves.add(aAltMove);
                             }
                         }
-
-                    }else{
-                        LOG.info("MOVE INTO DANGER-ZONE is alternativlos");
+                        if(altMoves.size() == 0){
+                            LOG.info("MOVE INTO DANGER-ZONE is alternativlos");
+                        } else {
+                            move = getMoveWithLowestRiskFromAlternatives(s, move, altMoves);
+                        }
+                    } else if(s.MAXDEEP < s.myLen){
+                        LOG.info("CHECK FOR ALTERNATIVES for: "+move+" cause of MAXDEEP: "+s.MAXDEEP+" < len: "+s.myLen);
+                        int minDeep = s.MAXDEEP;
+                        ArrayList<String> altMoves = new ArrayList<>();
+                        while(!s.enterDangerZone && s.MAXDEEP >= minDeep && s.cmdChain.size() < 4){
+                            s.state = directionBefore;
+                            String aAltMove = calculateNextMove(s, true);
+                            if(!s.enterDangerZone && s.MAXDEEP >= minDeep && !aAltMove.equals(move) && !altMoves.contains(aAltMove)){
+                                LOG.info("FOUND an ALTERNATIVE "+aAltMove);
+                                altMoves.add(aAltMove);
+                            }
+                        }
+                        if(altMoves.size() == 0){
+                            LOG.info("MOVE INTO "+minDeep+" ZONE is alternativlos");
+                        }else{
+                            move = getMoveWithLowestRiskFromAlternatives(s, move, altMoves);
+                        }
                     }
-
                 }
+
                 if(move.equals(REPEATLAST)){
                     // OK we are DOOMED anyhow - so we can do what ever
                     // we want -> so we just repeat the last move...
@@ -245,12 +233,55 @@ public class Snake {
             }
         }
 
+        private String getMoveWithLowestRiskFromAlternatives(Session s, String move, ArrayList<String> altMoves) {
+            // since we want to find the move with the lowest risk, we add the initial move
+            // so we compare all risks
+            altMoves.add(move);
+
+            // comparing RISK of "move" with alternative moves
+            int minRisk = Integer.MAX_VALUE;
+
+            for (String aMove : altMoves) {
+                Point altPos = null;
+                switch (aMove) {
+                    case U:
+                        altPos = s.getNewPointForDirection(s.myPos, UP);
+                        break;
+                    case R:
+                        altPos = s.getNewPointForDirection(s.myPos, RIGHT);
+                        break;
+                    case D:
+                        altPos = s.getNewPointForDirection(s.myPos, DOWN);
+                        break;
+                    case L:
+                        altPos = s.getNewPointForDirection(s.myPos, LEFT);
+                        break;
+                }
+
+                if (altPos != null) {
+                    int aMoveRisk = s.snakeNextMovePossibleLocations[altPos.y][altPos.x];
+                    if (aMoveRisk == 0 && !s.wrappedMode) {
+                        // ok no other snake is here in the area - but if we are a move to the BORDER
+                        // then consider this move as a more risk move...
+                        if (altPos.y == 0 || altPos.y == s.Y - 1) {
+                            aMoveRisk++;
+                        }
+                        if (altPos.x == 0 || altPos.x == s.X - 1) {
+                            aMoveRisk++;
+                        }
+                    }
+                    minRisk = Math.min(minRisk, aMoveRisk);
+                    if (aMoveRisk == minRisk) {
+                        move = aMove;
+                    }
+                }
+            }
+            return move;
+        }
+
         private void readCurrentBoardStatusIntoSession(JsonNode moveRequest, String rulesetName, Session s) {
             s.turn = moveRequest.get("turn").asInt();
             JsonNode board = moveRequest.get("board");
-
-            // clearing the used session fields...
-            s.initSessionForTurn(rulesetName, board.get("height").asInt(), board.get("width").asInt());
 
             // get OWN SnakeID
             JsonNode you = moveRequest.get("you");
@@ -259,6 +290,9 @@ public class Snake {
             s.myHealth = you.get("health").asInt();
             s.myLen = you.get("length").asInt();
 
+            // clearing the used session fields...
+            s.initSessionForTurn(rulesetName, board.get("height").asInt(), board.get("width").asInt());
+
             JsonNode head = you.get("head");
             s.myPos = new Point(head);
             // adding also myHead to the boddy array (to allow
@@ -266,7 +300,7 @@ public class Snake {
             s.myBody[s.myPos.y][s.myPos.x] = s.myLen;
 
             JsonNode myBody = you.get("body");
-            int myBodyLen = myBody.size();
+            int myBodyLen = myBody.size()-1;
             for (int i = 1; i < myBodyLen; i++) {
                 Point p = new Point(myBody.get(i));
                 s.myBody[p.y][p.x] = 1;
