@@ -435,7 +435,8 @@ public class Snake {
          */
         public Map<String, String> end(JsonNode endRequest) {
             LOG.info("END");
-            Session s = sessions.remove(endRequest.get("game").get("id").asText());
+            String gameId = endRequest.get("game").get("id").asText();
+            Session s = sessions.remove(gameId);
 
             // get OWN ID
             JsonNode you = endRequest.get("you");
@@ -450,10 +451,14 @@ public class Snake {
                     JsonNode aSnake = snakes.get(i);
                     if (aSnake.get("id").asText().equals(myId)) {
                         LOG.info("****************");
-                        LOG.info("WE ARE ALIVE!!!!");
+                        LOG.info("WE ARE ALIVE!!!! ");
+                        LOG.info(gameId);
                         LOG.info("****************");
                     } else {
-                        LOG.info("that's not us... " + aSnake);
+                        LOG.info("****************");
+                        LOG.info("that's not us... " + aSnake.get("name").asText());
+                        LOG.info(gameId);
+                        LOG.info("****************");
                     }
                 }
             } else {
