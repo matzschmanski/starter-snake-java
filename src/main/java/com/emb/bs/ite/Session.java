@@ -497,7 +497,7 @@ public class Session {
             }
 
             goForFood = true;
-            if (!enterBorderZone) {
+            if (!enterBorderZone || escapeFromBorder) {
                 if(isLocatedAtBorder(closestFood)){
                     enterBorderZone = true;
                     escapeFromBorder = false;
@@ -586,10 +586,12 @@ public class Session {
                     String possibleFoodMoveWithMoreRisk = getPossibleFoodMove(lastSecondaryFoodDirection, possibleFoodMoves);
                     if(possibleFoodMoveWithMoreRisk != null){
                         return possibleFoodMoveWithMoreRisk;
-                    }else{
+                    }else if(possibleFoodMoves.size() > 0) {
                         String bummerDirection = possibleFoodMoves.get(0);
                         LOG.info("BUMMER - no SECONDARY direction - and no MORE RISKY move - so RETURN: "+bummerDirection);
                         return bummerDirection;
+                    }else{
+                        LOG.info("BUMMER - no SECONDARY direction - and no MORE RISKY move - AND NO ALTERNATIVE FOUND");
                     }
                 }else{
                     if(possibleFoodMoves.size() > 0 && possibleFoodMoves.get(0).equals(getMoveIntAsString(lastSecondaryFoodDirection))){
