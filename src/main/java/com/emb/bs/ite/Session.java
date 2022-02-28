@@ -290,20 +290,29 @@ public class Session {
     }
 
     private String checkKillMoves(){
-        String ret = null;
         if(myHealth > 19 && myPos.y != 0 && myPos.x !=0 && myPos.y != Y-1 && myPos.x != X-1) {
-            ret = checkForPossibleKillInDirection(Snake.UP, Snake.U);
-            if (ret == null) {
-                ret = checkForPossibleKillInDirection(Snake.RIGHT, Snake.R);
-            }
-            if (ret == null) {
-                ret = checkForPossibleKillInDirection(Snake.DOWN, Snake.D);
-            }
-            if (ret == null) {
-                ret = checkForPossibleKillInDirection(Snake.LEFT, Snake.L);
+            ArrayList<String> checkedKills = new ArrayList<>();
+            checkForPossibleKillInDirection(Snake.UP, Snake.U, checkedKills);
+            checkForPossibleKillInDirection(Snake.RIGHT, Snake.R, checkedKills);
+            checkForPossibleKillInDirection(Snake.DOWN, Snake.D, checkedKills);
+            checkForPossibleKillInDirection(Snake.LEFT, Snake.L, checkedKills);
+            int size = checkedKills.size();
+            if(size > 0){
+                if(size == 1){
+                    return checkedKills.get(0);
+                }else{
+                    String preferredKillDirection = getMoveIntAsString(state);
+                    if(checkedKills.contains(preferredKillDirection)) {
+                        return preferredKillDirection;
+                    }else{
+                        return checkedKills.get(0);
+                    }
+                }
+            } else {
+                return null;
             }
         }
-        return ret;
+        return null;
     }
 
     private int[][] generateMap(){
@@ -322,7 +331,7 @@ public class Session {
         return aMap;
     }
 
-    private String checkForPossibleKillInDirection(int move, String retVal) {
+    private void checkForPossibleKillInDirection(int move, String retVal, ArrayList<String> resList) {
         Point p = getNewPointForDirection(myPos, move);
         try {
             int val = snakeNextMovePossibleLocations[p.y][p.x];
@@ -330,25 +339,25 @@ public class Session {
                 switch (move){
                     case Snake.UP:
                         if(canMoveUp(myPos, generateMap(),0)){
-                            return retVal;
+                            resList.add(retVal);
                         }
                         break;
 
                     case Snake.RIGHT:
                         if(canMoveRight(myPos, generateMap(),0)){
-                            return retVal;
+                            resList.add(retVal);
                         }
                         break;
 
                     case Snake.DOWN:
                         if(canMoveDown(myPos, generateMap(),0)){
-                            return retVal;
+                            resList.add(retVal);
                         }
                         break;
 
                     case Snake.LEFT:
                         if(canMoveLeft(myPos, generateMap(),0)){
-                            return retVal;
+                            resList.add(retVal);
                         }
                         break;
                 }
@@ -356,7 +365,6 @@ public class Session {
             }
         }catch(IndexOutOfBoundsException e){
         }
-        return null;
     }
 
     private String checkFoodMove() {
