@@ -662,7 +662,7 @@ public class Session {
                 }
                 finalMap[newPos.y][newPos.x] = 1;
 
-if(turn == 32){logMap(finalMap, count);}
+//if(turn == 32){logMap(finalMap, count);}
 
                 boolean noUP = !canMoveUp(newPos, finalMap, count);
                 boolean noDW = !canMoveDown(newPos, finalMap, count);
