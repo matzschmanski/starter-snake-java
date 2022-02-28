@@ -570,12 +570,21 @@ public class Session {
         if(wrappedMode){
             return  false;//hazardNearbyPlaces.contains(p);
         }else {
-            return  p.y <= yMin
-                    || p.y >= yMax
-                    || p.x <= xMin
-                    || p.x >= xMax
-                    //|| hazardNearbyPlaces.contains(p)
-                    ;
+            if(myLen < maxOtherSnakeLen){
+                return  p.y == 0
+                        || p.y == Y-1
+                        || p.x == 0
+                        || p.x == X - 1
+                        //|| hazardNearbyPlaces.contains(p)
+                        ;
+            }else {
+                return p.y <= yMin
+                        || p.y >= yMax
+                        || p.x <= xMin
+                        || p.x >= xMax
+                        //|| hazardNearbyPlaces.contains(p)
+                        ;
+            }
         }
     }
 
