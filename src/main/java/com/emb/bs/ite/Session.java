@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 public class Session {
 
     private static final Logger LOG = LoggerFactory.getLogger(Session.class);
+    String gameId;
 
     int tPhase = 0;
     int state = 0;
@@ -1280,6 +1281,7 @@ public class Session {
 
     private void logState(String msg, boolean isDoomed) {
         msg = msg
+                + " "+gameId
                 + " Tn:" + turn
                 + " st:" + getMoveIntAsString(state).substring(0, 2).toUpperCase() + "[" + state + "]"
                 + " ph:" + tPhase

@@ -161,6 +161,7 @@ public class Snake {
             String sessId = game.get("id").asText();
             Session s = sessions.get(sessId);
             if(s != null) {
+                s.gameId = sessId;
                 String gameType = null;
                 if(game.has("ruleset")){
                     gameType = game.get("ruleset").get("name").asText().toLowerCase();
