@@ -103,9 +103,9 @@ public class SnakeTest {
 
     @Test
     void replayGameWithId() throws Exception{
-        String gameId= "9c49b1d5-9213-4397-a58d-1a884b33c810";
+        String gameId= "b244d370-ece7-4a96-9cdd-e0f18729c2df";
         String yourNameIdentifier = "lender";
-        String gameMode = null;//"wrapped";
+        String gameMode = /*null;*/"wrapped";
         int Y = 11;
         int X = 11;
 
@@ -155,9 +155,10 @@ public class SnakeTest {
 
         for(int i=0; i<sLen; i++){
             JsonNode srcS = srcSnakes.get(i);
-            //if(srcS.get("death").isNull()){
+            boolean isYou = srcS.get("name").asText().indexOf(selfIdentifier)>-1;
+            if(srcS.get("death").isNull() || isYou){
                 ObjectNode dest = OBJECT_MAPPER.createObjectNode();
-                if(srcS.get("name").asText().indexOf(selfIdentifier)>-1){
+                if(isYou){
                     ObjectNode you = OBJECT_MAPPER.createObjectNode();
                     root.put("you", you);
                     dest = you;
@@ -170,7 +171,7 @@ public class SnakeTest {
                 dest.put("head", srcS.get("body").get(0));
                 dest.put("length", srcS.get("body").size());
                 dest.put("health", srcS.get("health").intValue());
-            //}
+            }
         }
         return root;
     }
