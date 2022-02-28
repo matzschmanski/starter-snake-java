@@ -297,13 +297,9 @@ public class Snake {
                     s.snakeBodies[h.y][h.x] = len;
                     s.snakeHeads.add(h);
 
-                    //boolean isFoodReachableForSnake = false;
                     try {
                         if (s.snakeBodies[h.y - 1][h.x] == 0) {
                             s.snakeNextMovePossibleLocations[h.y - 1][h.x] = Math.max(len, s.snakeNextMovePossibleLocations[h.y - 1][h.x]);
-                            /*if(s.foodPlaces.contains(new Point(h.y - 1, h.x))){
-                                isFoodReachableForSnake = true;
-                            }*/
                         }
                     } catch (IndexOutOfBoundsException e) {
                     }
@@ -312,27 +308,18 @@ public class Snake {
                             // it might be that at the snakeNextMovePossibleLocations we have already a value of another
                             // snake - so we make sure that's the MAX value!
                             s.snakeNextMovePossibleLocations[h.y + 1][h.x] = Math.max(len, s.snakeNextMovePossibleLocations[h.y + 1][h.x]);
-                            /*if(!isFoodReachableForSnake && s.foodPlaces.contains(new Point(h.y + 1, h.x))){
-                                isFoodReachableForSnake = true;
-                            }*/
                         }
                     } catch (IndexOutOfBoundsException e) {
                     }
                     try {
                         if (s.snakeBodies[h.y][h.x - 1] == 0) {
                             s.snakeNextMovePossibleLocations[h.y][h.x - 1] = Math.max(len, s.snakeNextMovePossibleLocations[h.y][h.x - 1]);
-                            /*if(!isFoodReachableForSnake && s.foodPlaces.contains(new Point(h.y, h.x - 1))){
-                                isFoodReachableForSnake = true;
-                            }*/
                         }
                     } catch (IndexOutOfBoundsException e) {
                     }
                     try {
                         if (s.snakeBodies[h.y][h.x + 1] == 0) {
                             s.snakeNextMovePossibleLocations[h.y][h.x + 1] = Math.max(len, s.snakeNextMovePossibleLocations[h.y][h.x + 1]);
-                            /*if(!isFoodReachableForSnake && s.foodPlaces.contains(new Point(h.y, h.x + 1))){
-                                isFoodReachableForSnake = true;
-                            }*/
                         }
                     } catch (IndexOutOfBoundsException e) {
                     }
@@ -340,12 +327,6 @@ public class Snake {
                     // dealing with the bodies of the other snakes...
                     JsonNode body = aSnake.get("body");
                     int bLen = body.size();
-
-                    // IF THERE is NO FOOD directly ahead of the other Snake, we can ignore the last
-                    // PART of the snake as well!!
-                    /*if(!isFoodReachableForSnake) {
-                        bLen--;
-                    }*/
 
                     // a) we start from j=1 here - since we have handled the SneakHEAD's already
                     // b) we also do not have top care about the LAST entry in the body, since this
@@ -365,18 +346,6 @@ public class Snake {
                     for (int i = 0; i < hLen; i++) {
                         Point h = new Point(haz.get(i));
                         s.hazardZone[h.y][h.x] = 1;
-                        /*s.hazardPlaces.add(h);
-                        // one time around the pudding... (we want to avoid food that
-                        // is nearby hazards!
-                        s.hazardNearbyPlaces.add(new Point(h.y + 1, h.x + 0));
-                        s.hazardNearbyPlaces.add(new Point(h.y + 1, h.x + 1));
-                        s.hazardNearbyPlaces.add(new Point(h.y + 0, h.x + 1));
-                        s.hazardNearbyPlaces.add(new Point(h.y - 1, h.x + 1));
-                        s.hazardNearbyPlaces.add(new Point(h.y - 1, h.x + 0));
-                        s.hazardNearbyPlaces.add(new Point(h.y - 1, h.x - 1));
-                        s.hazardNearbyPlaces.add(new Point(h.y + 0, h.x - 1));
-                        s.hazardNearbyPlaces.add(new Point(h.y + 1, h.x - 1));
-                         */
                     }
                 }else{
                     haz = null;

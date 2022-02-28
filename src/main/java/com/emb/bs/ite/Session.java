@@ -291,7 +291,7 @@ public class Session {
 
     private String checkKillMoves(){
         String ret = null;
-        if(myPos.y != 0 && myPos.x !=0 && myPos.y != Y-1 && myPos.x != X-1) {
+        if(myHealth > 19 && myPos.y != 0 && myPos.x !=0 && myPos.y != Y-1 && myPos.x != X-1) {
             ret = checkForPossibleKillInDirection(Snake.UP, Snake.U);
             if (ret == null) {
                 ret = checkForPossibleKillInDirection(Snake.RIGHT, Snake.R);
