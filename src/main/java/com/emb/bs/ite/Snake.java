@@ -175,10 +175,10 @@ public class Snake {
                 if(!s.enterNoGoZone){
                     if(s.enterDangerZone) {
                         LOG.info("CHECK FOR ALTERNATIVES for: "+move+" cause of ENTER-DANGER-ZONE");
+                        s.MAXDEEP = s.myLen;
                         ArrayList<String> altMoves = new ArrayList<>();
                         while(!s.enterNoGoZone && s.cmdChain.size() < 4){
                             s.restoreSimpleState(savedState);
-                            s.MAXDEEP = s.myLen;
                             String aAltMove = calculateNextMove(s, true);
                             if(!s.enterNoGoZone && !aAltMove.equals(move) && !altMoves.contains(aAltMove)){
                                 LOG.info("FOUND an ALTERNATIVE "+aAltMove);

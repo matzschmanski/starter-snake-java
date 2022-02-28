@@ -23,9 +23,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-
 public class SnakeTest {
 
     private static final Logger LOG = LoggerFactory.getLogger(SnakeTest.class);
@@ -103,11 +100,11 @@ public class SnakeTest {
 
     @Test
     void replayGameWithId() throws Exception{
-        String gameId= "7de6fd34-d662-45bb-8018-7ef1505e9a7d";
+        String gameId= "2f941ca6-03de-4559-8213-951b5af4c1a0";
         String yourNameIdentifier = "lender";
-        //String gameMode = null;
+        String gameMode = null;
         //String gameMode = "wrapped";
-        String gameMode = "royal";
+        //String gameMode = "royale";
         int Y = 11;
         int X = 11;
 
