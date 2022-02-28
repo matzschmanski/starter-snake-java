@@ -23,29 +23,39 @@ Basically, clone the repro, install Heroku CLI (or the Heroku npm CLI), create t
 
 See https://statics.teams.cdn.office.net/evergreen-assets/safelinks/1/atp-safelinks.html
 
-#### Install npm cli
+#### Install npm Heroku cli
 
 `npm install -g heroku`
 
 ### Deploying Your First JAVA Battlesnake with Heroku
 
 1. [Fork this repo](https://github.com/BattlesnakeOfficial/starter-snake-java/fork) into your GitHub Account.
-2. Clone your forked repo into your local environment.<br/>
-   `git clone git@github.com:[YOUR-GITHUB-USERNAME]/starter-snake-java.git`
-3. [Create a new Heroku app](https://devcenter.heroku.com/articles/creating-apps) to run your
-   Battlesnake.<br/>`heroku create [YOUR-APP-NAME]`
-4. [Deploy your Battlesnake code to Heroku](https://devcenter.heroku.com/articles/git#deploying-code).<br/>
-   `git push heroku master`
-5. Open your new Heroku app in your browser.<br/>`heroku open`
-6. If everything was successful a browser window will open and you should see the following
-   text<br/>`{"tailType":"default","color":"#888888","headType":"default","author":"","apiversion":"1"}`
-7. Optionally, you can view your server logs using
-   the [Heroku logs command](https://devcenter.heroku.com/articles/logging#log-retrieval)<br/>
-   `heroku logs –-tail`<br/>
-   or<br/>
-   `heroku logs –t –s app`<br/>
-   The --tail option will show a live feed of your logs in real-time. At this point your Battlesnake is live and ready
-   to enter games!
+
+2. [Clone your forked repo](https://help.github.com/en/github/creating-cloning-and-archiving-repositories/cloning-a-repository) into your local environment.
+    ```shell
+    git clone git@github.com:[YOUR-GITHUB-USERNAME]/starter-snake-java.git
+    ```
+
+3. [Create a new Heroku app](https://devcenter.heroku.com/articles/creating-apps) to run your Battlesnake.
+    ```shell
+    heroku create [YOUR-APP-NAME]
+    ```
+
+4. [Deploy your Battlesnake code to Heroku](https://devcenter.heroku.com/articles/git#deploying-code).
+    ```shell
+    git push heroku master
+    ```
+
+5. Open your new Heroku app in your browser.
+    ```shell
+    heroku open
+    ```
+    If everything was successful, you should see the following text:
+    ```JSON
+    {"tailType":"default","color":"#888888","headType":"default","author":"","apiversion":"1"}
+    ```
+
+6. Optionally, you can view your server logs using the [Heroku logs command](https://devcenter.heroku.com/articles/logging#log-retrieval) `heroku logs --tail` or `heroku logs –t –s app`. The `--tail` option will show a live feed of your logs in real-time.
 
 ### Updating Your Battlesnake with Heroku
 
