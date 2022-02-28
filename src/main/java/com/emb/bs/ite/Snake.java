@@ -322,10 +322,10 @@ public class Snake {
             for (int i = 0; i < sLen; i++) {
                 JsonNode aSnake = snakes.get(i);
                 if (!aSnake.get("id").asText().equals(myId)) {
-                    String fof = aSnake.get("name").asText().toLowerCase();
+                    /*String fof = aSnake.get("name").asText().toLowerCase();
                     if(!s.hungerMode){// && checkFoF(fof)){
                         s.hungerMode = true;
-                    }
+                    }*/
                     int len = aSnake.get("length").asInt();
                     s.maxOtherSnakeLen = Math.max(len, s.maxOtherSnakeLen);
                     Point h = new Point(aSnake.get("head"));

@@ -56,6 +56,7 @@ public class Session {
     Point activeFood = null;
 
     boolean wrappedMode = false;
+    boolean royaleMode = false;
 
     String LASTMOVE = null;
 
@@ -136,8 +137,12 @@ public class Session {
         if(gameType != null) {
             switch (gameType) {
                 case "standard":
-                case "royale":
                 case "squad":
+                    break;
+
+                case "royale":
+                    royaleMode = true;
+                    hungerMode = false;
                     break;
 
                 case "wrapped":
@@ -258,7 +263,7 @@ public class Session {
     private int getAdvantage(){
         if( hungerMode ){
             return 8;
-        }else {
+        } else {
             // how many foods-ahead we want to be...
             // is "one" really just enough?
             int advantage = 2;
@@ -289,7 +294,8 @@ public class Session {
             LOG.info("Check for FOOD! health:" + myHealth + " len:" + myLen +"(-"+getAdvantage()+")"+ "<=" + maxOtherSnakeLen);
 
             boolean resetSaveBounds = !enterBorderZone;
-            boolean enterHazardZoneSaved = enterHazardZone;
+            SavedState saveState = saveState();
+
             // ok we need to start to fetch FOOD!
             // we should move into the direction of the next FOOD!
             String possibleFoodMove = checkFoodMove();
@@ -298,12 +304,13 @@ public class Session {
             if (possibleFoodMove != null) {
                 return possibleFoodMove;
             } else {
+                restoreState(saveState);
+                MAXDEEP = myLen;
                 if (resetSaveBounds) {
                     // checkFoodMove() might set the MIN/MAX to the total bounds...
                     // this needs to be reset...
                     initSaveBoardBounds();
                 }
-                enterHazardZone = enterHazardZoneSaved;
             }
         }
 
@@ -347,7 +354,7 @@ public class Session {
         return null;
     }
 
-    private int[][] generateMap(){
+    private int[][] generateKillMap(){
         int[][] aMap = new int[Y][X];
         for (int y = 0; y < X; y++) {
             for (int x = 0; x < X; x++) {
@@ -370,25 +377,25 @@ public class Session {
             if (val > 0 && val < myLen) {
                 switch (move){
                     case Snake.UP:
-                        if(canMoveUp(myPos, generateMap(),0)){
+                        if(canMoveUp(myPos, generateKillMap(),0)){
                             resList.add(retVal);
                         }
                         break;
 
                     case Snake.RIGHT:
-                        if(canMoveRight(myPos, generateMap(),0)){
+                        if(canMoveRight(myPos, generateKillMap(),0)){
                             resList.add(retVal);
                         }
                         break;
 
                     case Snake.DOWN:
-                        if(canMoveDown(myPos, generateMap(),0)){
+                        if(canMoveDown(myPos, generateKillMap(),0)){
                             resList.add(retVal);
                         }
                         break;
 
                     case Snake.LEFT:
-                        if(canMoveLeft(myPos, generateMap(),0)){
+                        if(canMoveLeft(myPos, generateKillMap(),0)){
                             resList.add(retVal);
                         }
                         break;
@@ -563,7 +570,7 @@ public class Session {
 
             // ok let's try of we can move in the preferred direction now?
             ArrayList<String> possibleFoodMoves = new ArrayList<>();
-            String possibleFoodMode = getPossiblePrimaryFoodMove(possibleFoodMoves);
+            String possibleFoodMode = getPossibleFoodMove(lastSecondaryFoodDirection, possibleFoodMoves);
             if (possibleFoodMode != null) {
                 return possibleFoodMode;
             }else{
@@ -576,7 +583,7 @@ public class Session {
                     // the initial value in the 'possibleFoodMoves' List]
 
                     // but first check, IF WE might, can move with a bit more risk?!
-                    String possibleFoodMoveWithMoreRisk = getPossiblePrimaryFoodMove(possibleFoodMoves);
+                    String possibleFoodMoveWithMoreRisk = getPossibleFoodMove(lastSecondaryFoodDirection, possibleFoodMoves);
                     if(possibleFoodMoveWithMoreRisk != null){
                         return possibleFoodMoveWithMoreRisk;
                     }else{
@@ -592,40 +599,28 @@ public class Session {
                         restoreState(savedState);
                         MAXDEEP = myLen;
 
+                        LOG.info("TRY SECONDARY FOOD direction: "+getMoveIntAsString(lastSecondaryFoodDirection));
                         firstMoveToTry = lastSecondaryFoodDirection;
-                        switch (lastSecondaryFoodDirection) {
-                            case Snake.DOWN:
-                                if (checkForPossibleFoodMoveInDirection(Snake.DOWN, Snake.D, possibleFoodMoves)) {
-                                    return Snake.D;
-                                }
-                            case Snake.UP:
-                                if (checkForPossibleFoodMoveInDirection(Snake.UP, Snake.U, possibleFoodMoves)) {
-                                    return Snake.U;
-                                }
-                            case Snake.LEFT:
-                                if (checkForPossibleFoodMoveInDirection(Snake.LEFT, Snake.L, possibleFoodMoves)) {
-                                    return Snake.L;
-                                }
-                            case Snake.RIGHT:
-                                if (checkForPossibleFoodMoveInDirection(Snake.RIGHT, Snake.R, possibleFoodMoves)) {
-                                    return Snake.R;
-                                }
-                        }
-
-                        // if we reached THIS point, then there is no way to go in or preferred direction
-                        int len = possibleFoodMoves.size();
-                        if (len == 1) {
-                            LOG.info("UNHAPPY with direction to food: " + possibleFoodMoves);
-                            return possibleFoodMoves.get(0);
-                        } else if (len > 1) {
-                            // TODO MAKE a decision !!!
-                            LOG.info("UNHAPPY with direction to food: " + possibleFoodMoves);
-                            return possibleFoodMoves.get(0);
+                        String secondaryMove = getPossibleFoodMove(lastSecondaryFoodDirection, possibleFoodMoves);
+                        if(secondaryMove != null){
+                            LOG.info("SECONDARY FOOD MOVE is possible: " + secondaryMove);
+                            return secondaryMove;
                         } else {
-                            activeFood = null;
-                            lastUsedFoodDirection = -1;
-                            lastSecondaryFoodDirection = -1;
-                            LOG.info("COULD NOT FIND a direction to food: " + possibleFoodMoves);
+                            // if we reached THIS point, then there is no way to go in or preferred direction
+                            int len = possibleFoodMoves.size();
+                            if (len == 1) {
+                                LOG.info("UNHAPPY with direction to food: " + possibleFoodMoves);
+                                return possibleFoodMoves.get(0);
+                            } else if (len > 1) {
+                                // TODO MAKE a decision !!!
+                                LOG.info("UNHAPPY with direction to food: " + possibleFoodMoves);
+                                return possibleFoodMoves.get(0);
+                            } else {
+                                activeFood = null;
+                                lastUsedFoodDirection = -1;
+                                lastSecondaryFoodDirection = -1;
+                                LOG.info("COULD NOT FIND a direction to food: " + possibleFoodMoves);
+                            }
                         }
                     }
                 }
@@ -639,8 +634,8 @@ public class Session {
         return null;
     }
 
-    private String getPossiblePrimaryFoodMove(ArrayList<String> possibleFoodMoves) {
-        switch (lastUsedFoodDirection) {
+    private String getPossibleFoodMove(int moveDirectionToCheck, ArrayList<String> possibleFoodMoves) {
+        switch (moveDirectionToCheck) {
             case Snake.DOWN:
                 if (checkForPossibleFoodMoveInDirection(Snake.DOWN, Snake.D, possibleFoodMoves)){
                     return Snake.D;
