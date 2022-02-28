@@ -167,7 +167,7 @@ public class Snake {
                 }
                 readCurrentBoardStatusIntoSession(moveRequest, gameType, s);
 
-                int directionBefore = s.state;
+                Session.SavedState savedState = s.saveState();
                 String move = calculateNextMove(s, false);
 
                 // check if this is a RISKY-Move... and if there are alternatives
@@ -176,7 +176,8 @@ public class Snake {
                         LOG.info("CHECK FOR ALTERNATIVES for: "+move+" cause of ENTER-DANGER-ZONE");
                         ArrayList<String> altMoves = new ArrayList<>();
                         while(!s.enterNoGoZone && s.cmdChain.size() < 4){
-                            s.state = directionBefore;
+                            s.restoreSimpleState(savedState);
+                            s.MAXDEEP = s.myLen;
                             String aAltMove = calculateNextMove(s, true);
                             if(!s.enterNoGoZone && !aAltMove.equals(move) && !altMoves.contains(aAltMove)){
                                 LOG.info("FOUND an ALTERNATIVE "+aAltMove);
@@ -193,7 +194,7 @@ public class Snake {
                         int minDeep = s.MAXDEEP;
                         ArrayList<String> altMoves = new ArrayList<>();
                         while(!s.enterDangerZone && s.MAXDEEP >= minDeep && s.cmdChain.size() < 4){
-                            s.state = directionBefore;
+                            s.restoreSimpleState(savedState);
                             String aAltMove = calculateNextMove(s, true);
                             if(!s.enterDangerZone && s.MAXDEEP >= minDeep && !aAltMove.equals(move) && !altMoves.contains(aAltMove)){
                                 LOG.info("FOUND an ALTERNATIVE "+aAltMove);

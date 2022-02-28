@@ -59,6 +59,37 @@ public class Session {
 
     String LASTMOVE = null;
 
+    class SavedState {
+        int sState = state;
+        int sTPhase = tPhase;
+        boolean sEscapeFromBorder = escapeFromBorder;
+        boolean sEscapeFromHazard = escapeFromHazard;
+        boolean sEnterHazardZone = enterHazardZone;
+        boolean sEnterBorderZone = enterBorderZone;
+        boolean sEnterDangerZone = enterDangerZone;
+        boolean sEnterNoGoZone = enterNoGoZone;
+    }
+
+    SavedState saveState() {
+        return new SavedState();
+    }
+
+    void restoreState(SavedState savedState) {
+        state = savedState.sState;
+        tPhase = savedState.sTPhase;
+        escapeFromBorder = savedState.sEscapeFromBorder;
+        escapeFromHazard = savedState.sEscapeFromHazard;
+        enterHazardZone = savedState.sEnterHazardZone;
+        enterBorderZone = savedState.sEnterBorderZone;
+        enterDangerZone = savedState.sEnterDangerZone;
+        enterNoGoZone = savedState.sEnterNoGoZone;
+    }
+
+    void restoreSimpleState(SavedState savedState) {
+        state = savedState.sState;
+        tPhase = savedState.sTPhase;
+    }
+
     private void setFullBoardBounds() {
         yMin = 0;
         xMin = 0;
@@ -476,7 +507,6 @@ public class Session {
             }
             activeFood = closestFood;
 
-            LOG.info("TRY TO GET FOOD: at: " + closestFood +" moving: "+getMoveIntAsString(lastUsedFoodDirection));
             // TODO:
             // here we have to find a smarter way to decide, in which direction we should
             // go to approach the food -> since currently me are blocked by ourselves
@@ -490,7 +520,7 @@ public class Session {
                     preferredYDirection = Snake.UP;
                 } else if (yDelta > 0) {
                     preferredYDirection = Snake.DOWN;
-                } else {
+                } else if (yDelta < 0) {
                     preferredYDirection = Snake.UP;
                 }
 
@@ -498,7 +528,7 @@ public class Session {
                     preferredXDirection = Snake.RIGHT;
                 }else if (xDelta > 0) {
                     preferredXDirection = Snake.LEFT;
-                } else {
+                } else if (xDelta < 0){
                     preferredXDirection = Snake.RIGHT;
                 }
 
@@ -511,14 +541,20 @@ public class Session {
                 }
             }
 
-            int sState = state;
-            int sTPhase = tPhase;
-            boolean sEscapeFromBorder = escapeFromBorder;
-            boolean sEscapeFromHazard = escapeFromHazard;
-            boolean sEnterHazardZone = enterHazardZone;
-            boolean sEnterBorderZone = enterBorderZone;
-            boolean sEnterDangerZone = enterDangerZone;
-            boolean sEnterNoGoZone = enterNoGoZone;
+            // IF we are LOW on health, and HAZARD is enabled - we skip the hazard check!
+            if(!enterHazardZone || escapeFromHazard) {
+                // two move in hazard takes 2 x 16 health (we we need at least 32 health left)
+                if (myHealth < 34 && (  (xDelta == 0 && Math.abs(yDelta) <= 2) ||
+                                        (yDelta == 0 && Math.abs(xDelta) <= 2) ||
+                                        (Math.abs(yDelta) == 1 && Math.abs(xDelta) == 1))
+                ) {
+                    escapeFromHazard = false;
+                    enterHazardZone = true;
+                }
+            }
+
+            LOG.info("TRY TO GET FOOD: at: " + closestFood +" moving: "+getMoveIntAsString(lastUsedFoodDirection));
+            SavedState savedState = saveState();
 
             // the 'lastFoodState' is the move direction we want to go... so
             // when resetting the already tried cmd - we want to make sure,
@@ -527,82 +563,71 @@ public class Session {
 
             // ok let's try of we can move in the preferred direction now?
             ArrayList<String> possibleFoodMoves = new ArrayList<>();
-            switch (lastUsedFoodDirection) {
-                case Snake.DOWN:
-                    if (checkForPossibleFoodMoveInDirection(Snake.DOWN, Snake.D, possibleFoodMoves)){
-                        return Snake.D;
+            String possibleFoodMode = getPossiblePrimaryFoodMove(possibleFoodMoves);
+            if (possibleFoodMode != null) {
+                return possibleFoodMode;
+            }else{
+                // if we reached this point, then the preferred food direction could not be easily used...
+                // and we need to check for alternatives...
+
+                // do we have an alternative direction?!
+                if( lastSecondaryFoodDirection == -1 ){
+                    // NO -> there is no other option - that really sucks! [we might be forced to return
+                    // the initial value in the 'possibleFoodMoves' List]
+
+                    // but first check, IF WE might, can move with a bit more risk?!
+                    String possibleFoodMoveWithMoreRisk = getPossiblePrimaryFoodMove(possibleFoodMoves);
+                    if(possibleFoodMoveWithMoreRisk != null){
+                        return possibleFoodMoveWithMoreRisk;
+                    }else{
+                        String bummerDirection = possibleFoodMoves.get(0);
+                        LOG.info("BUMMER - no SECONDARY direction - and no MORE RISKY move - so RETURN: "+bummerDirection);
+                        return bummerDirection;
                     }
-                    break;
+                }else{
+                    if(possibleFoodMoves.size() > 0 && possibleFoodMoves.get(0).equals(getMoveIntAsString(lastSecondaryFoodDirection))){
+                        return possibleFoodMoves.get(0);
+                    } else {
+                        // there is probably more state stuff that need to be reset here...
+                        restoreState(savedState);
+                        MAXDEEP = myLen;
 
-                case Snake.UP:
-                    if (checkForPossibleFoodMoveInDirection(Snake.UP, Snake.U, possibleFoodMoves)){
-                        return Snake.U;
+                        firstMoveToTry = lastSecondaryFoodDirection;
+                        switch (lastSecondaryFoodDirection) {
+                            case Snake.DOWN:
+                                if (checkForPossibleFoodMoveInDirection(Snake.DOWN, Snake.D, possibleFoodMoves)) {
+                                    return Snake.D;
+                                }
+                            case Snake.UP:
+                                if (checkForPossibleFoodMoveInDirection(Snake.UP, Snake.U, possibleFoodMoves)) {
+                                    return Snake.U;
+                                }
+                            case Snake.LEFT:
+                                if (checkForPossibleFoodMoveInDirection(Snake.LEFT, Snake.L, possibleFoodMoves)) {
+                                    return Snake.L;
+                                }
+                            case Snake.RIGHT:
+                                if (checkForPossibleFoodMoveInDirection(Snake.RIGHT, Snake.R, possibleFoodMoves)) {
+                                    return Snake.R;
+                                }
+                        }
+
+                        // if we reached THIS point, then there is no way to go in or preferred direction
+                        int len = possibleFoodMoves.size();
+                        if (len == 1) {
+                            LOG.info("UNHAPPY with direction to food: " + possibleFoodMoves);
+                            return possibleFoodMoves.get(0);
+                        } else if (len > 1) {
+                            // TODO MAKE a decision !!!
+                            LOG.info("UNHAPPY with direction to food: " + possibleFoodMoves);
+                            return possibleFoodMoves.get(0);
+                        } else {
+                            activeFood = null;
+                            lastUsedFoodDirection = -1;
+                            lastSecondaryFoodDirection = -1;
+                            LOG.info("COULD NOT FIND a direction to food: " + possibleFoodMoves);
+                        }
                     }
-                    break;
-
-                case Snake.LEFT:
-                    if (checkForPossibleFoodMoveInDirection(Snake.LEFT, Snake.L, possibleFoodMoves)){
-                        return Snake.L;
-                    }
-                    break;
-
-                case Snake.RIGHT:
-                    if (checkForPossibleFoodMoveInDirection(Snake.RIGHT, Snake.R, possibleFoodMoves)){
-                        return Snake.R;
-                    }
-                    break;
-            }
-
-            // if we reached this point, that the preferred food direction could not be used...
-            // and we need to check for alternatives...
-            if(possibleFoodMoves.size() > 0 && possibleFoodMoves.get(0).equals(getMoveIntAsString(lastSecondaryFoodDirection))){
-                return possibleFoodMoves.get(0);
-            } else {
-                // there is probably more state stuff that need to be reset here...
-                MAXDEEP = myLen;
-                state = sState;
-                tPhase = sTPhase;
-                escapeFromBorder = sEscapeFromBorder;
-                escapeFromHazard = sEscapeFromHazard;
-                enterHazardZone = sEnterHazardZone;
-                enterBorderZone = sEnterBorderZone;
-                enterDangerZone = sEnterDangerZone;
-                enterNoGoZone = sEnterNoGoZone;
-
-                firstMoveToTry = lastSecondaryFoodDirection;
-                switch (lastSecondaryFoodDirection) {
-                    case Snake.DOWN:
-                        if (checkForPossibleFoodMoveInDirection(Snake.DOWN, Snake.D, possibleFoodMoves)) {
-                            return Snake.D;
-                        }
-                    case Snake.UP:
-                        if (checkForPossibleFoodMoveInDirection(Snake.UP, Snake.U, possibleFoodMoves)) {
-                            return Snake.U;
-                        }
-                    case Snake.LEFT:
-                        if (checkForPossibleFoodMoveInDirection(Snake.LEFT, Snake.L, possibleFoodMoves)) {
-                            return Snake.L;
-                        }
-                    case Snake.RIGHT:
-                        if (checkForPossibleFoodMoveInDirection(Snake.RIGHT, Snake.R, possibleFoodMoves)) {
-                            return Snake.R;
-                        }
-                }
-
-                // if we reached THIS point, then there is no way to go in or preferred direction
-                int len = possibleFoodMoves.size();
-                if (len == 1) {
-                    LOG.info("UNHAPPY with direction to food: " + possibleFoodMoves);
-                    return possibleFoodMoves.get(0);
-                } else if (len > 1) {
-                    // TODO MAKE a decision !!!
-                    LOG.info("UNHAPPY with direction to food: " + possibleFoodMoves);
-                    return possibleFoodMoves.get(0);
-                } else {
-                    activeFood = null;
-                    lastUsedFoodDirection = -1;
-                    lastSecondaryFoodDirection = -1;
-                    LOG.info("COULD NOT FIND a direction to food: " + possibleFoodMoves);
                 }
             }
         } else {
@@ -610,6 +635,35 @@ public class Session {
             lastUsedFoodDirection = -1;
             lastSecondaryFoodDirection = -1;
             LOG.info("NO NEARBY FOOD FOUND minDist:" + minDist + " x:" + (X / 3) + "+y:" + (Y / 3) + "=" + ((X / 3) + (Y / 3)));
+        }
+        return null;
+    }
+
+    private String getPossiblePrimaryFoodMove(ArrayList<String> possibleFoodMoves) {
+        switch (lastUsedFoodDirection) {
+            case Snake.DOWN:
+                if (checkForPossibleFoodMoveInDirection(Snake.DOWN, Snake.D, possibleFoodMoves)){
+                    return Snake.D;
+                }
+                break;
+
+            case Snake.UP:
+                if (checkForPossibleFoodMoveInDirection(Snake.UP, Snake.U, possibleFoodMoves)){
+                    return Snake.U;
+                }
+                break;
+
+            case Snake.LEFT:
+                if (checkForPossibleFoodMoveInDirection(Snake.LEFT, Snake.L, possibleFoodMoves)){
+                    return Snake.L;
+                }
+                break;
+
+            case Snake.RIGHT:
+                if (checkForPossibleFoodMoveInDirection(Snake.RIGHT, Snake.R, possibleFoodMoves)){
+                    return Snake.R;
+                }
+                break;
         }
         return null;
     }
@@ -1161,14 +1215,15 @@ public class Session {
 
     void logBoard() {
         if (X == 7) {
-            LOG.info("┌───────┐");
+            LOG.info(" ┌───────┐");
         } else if (X == 11) {
-            LOG.info("┌───────────┐");
+            LOG.info(" ┌───────────┐");
         } else {
-            LOG.info("┌───────────────────┐");
+            LOG.info(" ┌───────────────────┐");
         }
         for (int y = Y - 1; y >= 0; y--) {
             StringBuffer b = new StringBuffer();
+            b.append(y % 10);
             b.append('│');
             for (int x = 0; x < X; x++) {
                 if (myPos.x == x && myPos.y == y) {
@@ -1185,18 +1240,18 @@ public class Session {
                     boolean isHazard = hazardZone[y][x] > 0;
                     boolean isFoodPlace = foodPlaces.contains(new Point(y, x));
                     if (snakeNextMovePossibleLocations[y][x] > 0) {
-                        if(isFoodPlace){
+                        if (isFoodPlace) {
                             b.append('●');
-                        }else {
+                        } else {
                             b.append('◦');
                         }
                     } else if (isFoodPlace) {
-                        if(isHazard){
+                        if (isHazard) {
                             b.append('▓');
-                        }else {
+                        } else {
                             b.append('*');
                         }
-                    } else if(isHazard){
+                    } else if (isHazard) {
                         b.append('▒');
                     } else {
                         b.append(' ');
@@ -1207,12 +1262,19 @@ public class Session {
             LOG.info(b.toString());
         }
         if (X == 7) {
-            LOG.info("└───────┘");
-        }else if (X == 11) {
-            LOG.info("└───────────┘");
+            LOG.info(" └───────┘");
+        } else if (X == 11) {
+            LOG.info(" └───────────┘");
         } else {
-            LOG.info("└───────────────────┘");
+            LOG.info(" └───────────────────┘");
         }
+
+        StringBuffer b = new StringBuffer();
+        b.append("  ");
+        for (int x = 0; x < X; x++) {
+            b.append(x % 10);
+        }
+        LOG.info(b.toString());
     }
 
     void logState(final String method) {

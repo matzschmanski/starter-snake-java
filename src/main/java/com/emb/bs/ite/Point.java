@@ -16,7 +16,7 @@ public class Point {
     }
 
     public String toString(){
-        return x+"|"+y;
+        return y+"|"+x;
     }
 
     @Override
