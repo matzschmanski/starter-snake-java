@@ -23,6 +23,8 @@ public class Session {
     int myHealth;
 
     ArrayList<Integer> cmdChain = null;
+    int firstMoveToTry = -1;
+
     int X = -1;
     int Y = -1;
     boolean doomed = false;
@@ -79,6 +81,7 @@ public class Session {
         X = width;
         initSaveBoardBounds();
         doomed = false;
+        firstMoveToTry = -1;
         cmdChain = new ArrayList<>();
 
         snakeHeads = new ArrayList<>();
@@ -150,12 +153,44 @@ public class Session {
         }
     }
 
-    private boolean checkDoomed(int cmdToAdd) {
+    private class DoomedCheckReply{
+        boolean doomed = false;
+        boolean retry = false;
+    }
+
+    private String checkFirstOnRetry(int move){
+        cmdChain.clear();
+        switch (firstMoveToTry){
+            case Snake.UP:
+                return moveUp();
+            case Snake.RIGHT:
+                return moveRight();
+            case Snake.DOWN:
+                return moveDown();
+            case Snake.LEFT:
+                return moveLeft();
+            default:
+                switch (move) {
+                    case Snake.UP:
+                        return moveUp();
+                    case Snake.RIGHT:
+                        return moveRight();
+                    case Snake.DOWN:
+                        return moveDown();
+                    default:
+                    case Snake.LEFT:
+                        return moveLeft();
+                }
+        }
+    }
+
+    private DoomedCheckReply checkDoomed(int cmdToAdd) {
+        DoomedCheckReply reply = new DoomedCheckReply();
         cmdChain.add(cmdToAdd);
         if (cmdChain.size() > 4) {
+            reply.retry = true;
             cmdChain = new ArrayList<>();
             cmdChain.add(cmdToAdd);
-
             if (escapeFromBorder) {
                 LOG.info("deactivate ESCAPE-FROM-BORDER");
                 escapeFromBorder = false;
@@ -181,10 +216,11 @@ public class Session {
             } else {
                 doomed = true;
                 logState("DOOMED!", true);
-                return true;
+                reply.doomed = true;
+                return reply;
             }
         }
-        return false;
+        return reply;
     }
 
     private int getAdvantage(){
@@ -456,12 +492,16 @@ public class Session {
 
             switch (lastFoodState){
                 case Snake.DOWN:
+                    firstMoveToTry = Snake.DOWN;
                     return moveDown();
                 case Snake.UP:
+                    firstMoveToTry = Snake.UP;
                     return moveUp();
                 case Snake.LEFT:
+                    firstMoveToTry = Snake.LEFT;
                     return moveLeft();
                 case Snake.RIGHT:
+                    firstMoveToTry = Snake.RIGHT;
                     return moveRight();
             }
         } else {
@@ -659,8 +699,11 @@ public class Session {
             // here we can generate randomness!
             return moveRight();
         } else {
-            if (checkDoomed(Snake.UP)) {
+            DoomedCheckReply r = checkDoomed(Snake.UP);
+            if (r.doomed) {
                 return Snake.REPEATLAST;
+            }else if(r.retry && firstMoveToTry != -1){
+                return checkFirstOnRetry(Snake.UP);
             }
             logState("UP");
             if (canMoveUp()) {
@@ -721,8 +764,11 @@ public class Session {
         if (cmdChain.size() < 4 && cmdChain.contains(Snake.RIGHT)) {
             return moveDown();
         } else {
-            if (checkDoomed(Snake.RIGHT)) {
+            DoomedCheckReply r = checkDoomed(Snake.RIGHT);
+            if (r.doomed) {
                 return Snake.REPEATLAST;
+            }else if(r.retry && firstMoveToTry != -1){
+                return checkFirstOnRetry(Snake.RIGHT);
             }
             logState("RI");
             if (canMoveRight()) {
@@ -789,8 +835,11 @@ public class Session {
         if (cmdChain.size() < 4 && cmdChain.contains(Snake.DOWN)) {
             return moveLeft();
         } else {
-            if (checkDoomed(Snake.DOWN)) {
+            DoomedCheckReply r = checkDoomed(Snake.DOWN);
+            if (r.doomed) {
                 return Snake.REPEATLAST;
+            }else if(r.retry && firstMoveToTry != -1){
+                return checkFirstOnRetry(Snake.DOWN);
             }
             logState("DO");
             if (canMoveDown()) {
@@ -864,8 +913,11 @@ public class Session {
         if (cmdChain.size() < 4 && cmdChain.contains(Snake.LEFT)) {
             return moveUp();
         } else {
-            if (checkDoomed(Snake.LEFT)) {
+            DoomedCheckReply r = checkDoomed(Snake.LEFT);
+            if (r.doomed) {
                 return Snake.REPEATLAST;
+            }else if(r.retry && firstMoveToTry != -1){
+                return checkFirstOnRetry(Snake.LEFT);
             }
             logState("LE");
             if (canMoveLeft()) {
