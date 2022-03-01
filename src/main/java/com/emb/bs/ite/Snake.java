@@ -175,6 +175,7 @@ public class Snake {
                 s = new Session();
                 s.players = new ArrayList<>();
                 sessions.put(sessId, s);
+                LOG.warn(sessId+" WAS NOT FOUND - probably cause of SERVER-RESTART?! - JUST continue with default");
             }
             if(s != null) {
                 s.gameId = sessId;
