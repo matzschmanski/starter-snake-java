@@ -551,8 +551,9 @@ public class Session {
 
             // IF we are LOW on health, and HAZARD is enabled - we skip the hazard check!
             if(!enterHazardZone || escapeFromHazard) {
-                // two move in hazard takes 2 x 16 health (we we need at least 32 health left)
-                if (myHealth < 34 && (  (xDelta == 0 && Math.abs(yDelta) <= 2) ||
+                // two move in hazard takes 2 x 16 health (we need at least 32 health left)
+                if ((myHealth < 34 || (royaleMode && myHealth < 80))
+                                && (    (xDelta == 0 && Math.abs(yDelta) <= 2) ||
                                         (yDelta == 0 && Math.abs(xDelta) <= 2) ||
                                         (Math.abs(yDelta) == 1 && Math.abs(xDelta) == 1))
                 ) {
