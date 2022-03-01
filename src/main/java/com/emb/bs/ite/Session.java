@@ -186,6 +186,52 @@ public class Session {
                     escapeFromHazard = true;
                 }
             }
+
+            // try to adjust the MIN/MAX values based on the present hazardData...
+            if(royaleMode){
+                ArrayList<Boolean>[] yAxisHazards = new ArrayList[Y];
+                ArrayList<Boolean>[] xAxisHazards = new ArrayList[X];
+
+                for (int y = 0; y < Y; y++) {
+                    for (int x = 0; x < X; x++) {
+                        if(hazardZone[y][x] == 1){
+                            if(yAxisHazards[y] == null){
+                                yAxisHazards[y] = new ArrayList<>(Y);
+                            }
+                            yAxisHazards[y].add(true);
+
+                            if(xAxisHazards[x] == null){
+                                xAxisHazards[x] = new ArrayList<>(X);
+                            }
+                            xAxisHazards[x].add(true);
+                        }
+                    }
+                }
+
+                for (int y = 0; y < yAxisHazards.length; y++) {
+                    if(yAxisHazards[y] != null && yAxisHazards[y].size() == Y){
+                        if(y < Y/2){
+                            yMin = y + 1;
+                        }else if(y> Y/2){
+                            yMax = y - 1;
+                            break;
+                        }
+                    }
+                }
+
+                for (int x = 0; x < xAxisHazards.length; x++) {
+                    if(xAxisHazards[x] != null && xAxisHazards[x].size() == X){
+                        if(x < X/2){
+                            xMin = x + 1;
+                        }else if(x > X/2){
+                            xMax = x - 1;
+                            break;
+                        }
+                    }
+                }
+                LOG.info("For: Tn:"+turn+ "-> ADJUSTED MIN/MAX cause of HAZARD TO Y:"+yMin+"-"+yMax+" and X:"+xMin+"-"+xMax);
+            }
+
         }else{
             // there is no hazard  so we can skip the check in the array...
             enterHazardZone = true;
