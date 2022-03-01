@@ -181,7 +181,7 @@ public class Session {
 
         if(hazardDataIsPresent) {
             if (!enterHazardZone) {
-                if (hazardZone[myPos.y][myPos.x] > 0 && myHealth < 50) {
+                if (hazardZone[myPos.y][myPos.x] > 0 && myHealth < 95) {
                     escapeFromHazard = true;
                 }
             }
@@ -854,13 +854,12 @@ public class Session {
         try {
             if (escapeFromBorder && (myPos.x == 0 || myPos.x == X - 1)) {
                 return false;
-            } else if(escapeFromHazard && hazardZone[myPos.y][myPos.x] > 0){
-                return false;
             } else {
                 int newY = (myPos.y + 1) % Y;
                 return  (wrappedMode || myPos.y < yMax)
                         && myBody[newY][myPos.x] == 0
                         && snakeBodies[newY][myPos.x] == 0
+                        && (!escapeFromHazard || hazardZone[newY][myPos.x] == 0)
                         && (enterHazardZone || myHealth > 50 || hazardZone[newY][myPos.x] == 0)
                         && (enterDangerZone || snakeNextMovePossibleLocations[newY][myPos.x] < myLen)
                         && (enterNoGoZone || !willCreateLoop(Snake.UP, myPos, null,0));
@@ -919,13 +918,12 @@ public class Session {
         try {
             if (escapeFromBorder && (myPos.y == 0 || myPos.y == Y - 1)) {
                 return false;
-            } else if(escapeFromHazard && hazardZone[myPos.y][myPos.x] > 0){
-                return false;
             } else {
                 int newX = (myPos.x + 1) % X;
                 return  (wrappedMode || myPos.x < xMax)
                         && myBody[myPos.y][newX] == 0
                         && snakeBodies[myPos.y][newX] == 0
+                        && (!escapeFromHazard || hazardZone[myPos.y][newX] == 0)
                         && (enterHazardZone || myHealth > 50 || hazardZone[myPos.y][newX] == 0)
                         && (enterDangerZone || snakeNextMovePossibleLocations[myPos.y][newX] < myLen)
                         && (enterNoGoZone || !willCreateLoop(Snake.RIGHT, myPos, null, 0))
@@ -990,13 +988,12 @@ public class Session {
         try {
             if (escapeFromBorder && (myPos.x == 0 || myPos.x == X - 1)) {
                 return false;
-            } else if(escapeFromHazard && hazardZone[myPos.y][myPos.x] > 0){
-                return false;
             } else {
                 int newY = myPos.y > 0 ? myPos.y - 1 : Y-1;
                 return  (wrappedMode || myPos.y > yMin)
                         && myBody[newY][myPos.x] == 0
                         && snakeBodies[newY][myPos.x] == 0
+                        && (!escapeFromHazard || hazardZone[newY][myPos.x] == 0)
                         && (enterHazardZone || myHealth > 50 || hazardZone[newY][myPos.x] == 0)
                         && (enterDangerZone || snakeNextMovePossibleLocations[newY][myPos.x] < myLen)
                         && (enterNoGoZone || !willCreateLoop(Snake.DOWN, myPos, null, 0))
@@ -1068,13 +1065,12 @@ public class Session {
         try {
             if (escapeFromBorder && (myPos.y == 0 || myPos.y == Y - 1)) {
                 return false;
-            } else if(escapeFromHazard && hazardZone[myPos.y][myPos.x] > 0){
-                return false;
             } else {
                 int newX = myPos.x > 0 ? myPos.x - 1 : X-1;
                 return  (wrappedMode || myPos.x > xMin)
                         && myBody[myPos.y][newX] == 0
                         && snakeBodies[myPos.y][newX] == 0
+                        && (!escapeFromHazard || hazardZone[myPos.y][newX] == 0)
                         && (enterHazardZone || myHealth > 50 || hazardZone[myPos.y][newX] == 0)
                         && (enterDangerZone || snakeNextMovePossibleLocations[myPos.y][newX] < myLen)
                         && (enterNoGoZone || !willCreateLoop(Snake.LEFT, myPos, null, 0))
