@@ -331,7 +331,7 @@ public class Session {
     }
 
     private String checkKillMoves(){
-        if(myHealth > 19 && myPos.y != 0 && myPos.x !=0 && myPos.y != Y-1 && myPos.x != X-1) {
+        if(myHealth > 19 && (wrappedMode || myPos.y != 0 && myPos.x !=0 && myPos.y != Y-1 && myPos.x != X-1)) {
             ArrayList<String> checkedKills = new ArrayList<>();
             checkForPossibleKillInDirection(Snake.UP, Snake.U, checkedKills);
             checkForPossibleKillInDirection(Snake.RIGHT, Snake.R, checkedKills);
@@ -375,34 +375,36 @@ public class Session {
     private void checkForPossibleKillInDirection(int move, String retVal, ArrayList<String> resList) {
         Point p = getNewPointForDirection(myPos, move);
         try {
-            int val = snakeNextMovePossibleLocations[p.y][p.x];
-            if (val > 0 && val < myLen) {
-                switch (move){
-                    case Snake.UP:
-                        if(canMoveUp(myPos, generateKillMap(),0)){
-                            resList.add(retVal);
-                        }
-                        break;
+            if(myBody[p.y][p.x] == 0 && snakeBodies[p.y][p.x] == 0) {
+                int val = snakeNextMovePossibleLocations[p.y][p.x];
+                if (val > 0 && val < myLen) {
+                    switch (move) {
+                        case Snake.UP:
+                            if (canMoveUp(myPos, generateKillMap(), 0)) {
+                                resList.add(retVal);
+                            }
+                            break;
 
-                    case Snake.RIGHT:
-                        if(canMoveRight(myPos, generateKillMap(),0)){
-                            resList.add(retVal);
-                        }
-                        break;
+                        case Snake.RIGHT:
+                            if (canMoveRight(myPos, generateKillMap(), 0)) {
+                                resList.add(retVal);
+                            }
+                            break;
 
-                    case Snake.DOWN:
-                        if(canMoveDown(myPos, generateKillMap(),0)){
-                            resList.add(retVal);
-                        }
-                        break;
+                        case Snake.DOWN:
+                            if (canMoveDown(myPos, generateKillMap(), 0)) {
+                                resList.add(retVal);
+                            }
+                            break;
 
-                    case Snake.LEFT:
-                        if(canMoveLeft(myPos, generateKillMap(),0)){
-                            resList.add(retVal);
-                        }
-                        break;
+                        case Snake.LEFT:
+                            if (canMoveLeft(myPos, generateKillMap(), 0)) {
+                                resList.add(retVal);
+                            }
+                            break;
+                    }
+
                 }
-
             }
         }catch(IndexOutOfBoundsException e){
         }
@@ -750,10 +752,10 @@ public class Session {
     }
 
     private boolean isLocatedAtBorder(Point p) {
-        if(wrappedMode){
+        if(turn < 20 || wrappedMode){
             return  false;//hazardNearbyPlaces.contains(p);
         }else {
-            if(myLen < maxOtherSnakeLen){
+            if(turn < 50 || myLen < 15 || myLen - 1 < maxOtherSnakeLen){
                 return  p.y == 0
                         || p.y == Y-1
                         || p.x == 0
@@ -1009,7 +1011,7 @@ public class Session {
 
     private boolean canMoveDown(Point aPos, int[][] map, int c) {
         try {
-            int newY = aPos.y > 0 ? aPos.y - 1 : Y-1;
+            int newY = (aPos.y - 1 + Y) % Y; // aPos.y > 0 ? aPos.y - 1 : Y-1;
             return  (wrappedMode || aPos.y > yMin)
                     && map[newY][aPos.x] == 0
                     && (enterNoGoZone || !willCreateLoop(Snake.DOWN, aPos, map, c))
@@ -1086,7 +1088,7 @@ public class Session {
 
     private boolean canMoveLeft(Point aPos, int[][] map, int c) {
         try {
-            int newX = aPos.x > 0 ? aPos.x - 1 : X-1;
+            int newX = (aPos.x - 1 + X) % X;//aPos.x > 0 ? aPos.x - 1 : X-1;
             return  (wrappedMode || aPos.x > xMin)
                     && map[aPos.y][newX] == 0
                     && (enterNoGoZone || !willCreateLoop(Snake.LEFT, aPos, map, c))
