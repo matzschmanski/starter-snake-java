@@ -168,6 +168,14 @@ public class Snake {
             JsonNode game = moveRequest.get("game");
             String sessId = game.get("id").asText();
             Session s = sessions.get(sessId);
+
+            if(sessions.size() == 0){
+                // ok the server was just restarted during a game session - not so good - but everything is better
+                // than instant death...
+                s = new Session();
+                s.players = new ArrayList<>();
+                sessions.put(sessId, s);
+            }
             if(s != null) {
                 s.gameId = sessId;
                 String gameType = null;
@@ -234,7 +242,7 @@ public class Snake {
                 Map<String, String> response = new HashMap<>();
                 response.put("move", move);
                 return response;
-            }else{
+            } else {
                 // session is null ?!
                 LOG.error("SESSION was not available?! -> "+sessId+" could not be found in: "+sessions);
                 Map<String, String> response = new HashMap<>();
