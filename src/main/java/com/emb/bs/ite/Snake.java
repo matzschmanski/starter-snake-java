@@ -440,14 +440,25 @@ public class Snake {
          */
         public Map<String, String> end(JsonNode endRequest) {
             LOG.info("END");
-            String gameId = endRequest.get("game").get("id").asText();
+            JsonNode game = endRequest.get("game");
+            String gameId = game.get("id").asText();
             Session s = sessions.remove(gameId);
+
+            String gameType = "UNKNOWN";
+            if(game.has("ruleset")){
+                gameType = game.get("ruleset").get("name").asText().toLowerCase();
+            }
+
+            JsonNode board = endRequest.get("board");
+            JsonNode haz = board.get("hazards");
+            if (haz != null && haz.size()>0) {
+                gameType = gameType+" with HAZARD";
+            }
 
             // get OWN ID
             JsonNode you = endRequest.get("you");
             String myId = you.get("id").asText();
 
-            JsonNode board = endRequest.get("board");
             // get the locations of all snakes...
             JsonNode snakes = board.get("snakes");
             int sLen = snakes.size();
@@ -457,11 +468,13 @@ public class Snake {
                     if (aSnake.get("id").asText().equals(myId)) {
                         LOG.info("****************");
                         LOG.info("WE ARE ALIVE!!!! ");
+                        LOG.info(gameType);
                         LOG.info(gameId);
                         LOG.info("****************");
                     } else {
                         LOG.info("****************");
                         LOG.info("that's not us... " + aSnake.get("name").asText());
+                        LOG.info(gameType);
                         LOG.info(gameId);
                         LOG.info("****************");
                     }
