@@ -222,7 +222,7 @@ public class Snake {
                     s.LASTMOVE = move;
                 }
 
-                s.logState("=> RESULTING MOVE: "+move, false, LOG);
+                LOG.info("=> RESULTING MOVE: "+move+" ["+s.state+"]");
                 Map<String, String> response = new HashMap<>();
                 response.put("move", move);
                 return response;
@@ -333,29 +333,34 @@ public class Snake {
                     s.snakeBodies[h.y][h.x] = len;
                     s.snakeHeads.add(h);
 
+                    int newYDown = /*(h.y - 1 + s.Y) % s.Y;*/ h.y > 0 ? h.y - 1 : s.Y-1;
+                    int newYUp = (h.y + 1) % s.Y;
+                    int newXLeft = /*(h.x - 1 + s.X) % s.X; */ h.x > 0 ? h.x - 1 : s.X-1;
+                    int newXRight = (h.x + 1) % s.X;
+
                     try {
-                        if (s.snakeBodies[h.y - 1][h.x] == 0) {
-                            s.snakeNextMovePossibleLocations[h.y - 1][h.x] = Math.max(len, s.snakeNextMovePossibleLocations[h.y - 1][h.x]);
+                        if (s.snakeBodies[newYDown][h.x] == 0) {
+                            s.snakeNextMovePossibleLocations[newYDown][h.x] = Math.max(len, s.snakeNextMovePossibleLocations[newYDown][h.x]);
                         }
                     } catch (IndexOutOfBoundsException e) {
                     }
                     try {
-                        if (s.snakeBodies[h.y + 1][h.x] == 0) {
+                        if (s.snakeBodies[newYUp][h.x] == 0) {
                             // it might be that at the snakeNextMovePossibleLocations we have already a value of another
                             // snake - so we make sure that's the MAX value!
-                            s.snakeNextMovePossibleLocations[h.y + 1][h.x] = Math.max(len, s.snakeNextMovePossibleLocations[h.y + 1][h.x]);
+                            s.snakeNextMovePossibleLocations[newYUp][h.x] = Math.max(len, s.snakeNextMovePossibleLocations[newYUp][h.x]);
                         }
                     } catch (IndexOutOfBoundsException e) {
                     }
                     try {
-                        if (s.snakeBodies[h.y][h.x - 1] == 0) {
-                            s.snakeNextMovePossibleLocations[h.y][h.x - 1] = Math.max(len, s.snakeNextMovePossibleLocations[h.y][h.x - 1]);
+                        if (s.snakeBodies[h.y][newXLeft] == 0) {
+                            s.snakeNextMovePossibleLocations[h.y][newXLeft] = Math.max(len, s.snakeNextMovePossibleLocations[h.y][newXLeft]);
                         }
                     } catch (IndexOutOfBoundsException e) {
                     }
                     try {
-                        if (s.snakeBodies[h.y][h.x + 1] == 0) {
-                            s.snakeNextMovePossibleLocations[h.y][h.x + 1] = Math.max(len, s.snakeNextMovePossibleLocations[h.y][h.x + 1]);
+                        if (s.snakeBodies[h.y][newXRight] == 0) {
+                            s.snakeNextMovePossibleLocations[h.y][newXRight] = Math.max(len, s.snakeNextMovePossibleLocations[h.y][newXRight]);
                         }
                     } catch (IndexOutOfBoundsException e) {
                     }
@@ -440,25 +445,14 @@ public class Snake {
          */
         public Map<String, String> end(JsonNode endRequest) {
             LOG.info("END");
-            JsonNode game = endRequest.get("game");
-            String gameId = game.get("id").asText();
+            String gameId = endRequest.get("game").get("id").asText();
             Session s = sessions.remove(gameId);
-
-            String gameType = "UNKNOWN";
-            if(game.has("ruleset")){
-                gameType = game.get("ruleset").get("name").asText().toLowerCase();
-            }
-
-            JsonNode board = endRequest.get("board");
-            JsonNode haz = board.get("hazards");
-            if (haz != null && haz.size()>0) {
-                gameType = gameType+" with HAZARD";
-            }
 
             // get OWN ID
             JsonNode you = endRequest.get("you");
             String myId = you.get("id").asText();
 
+            JsonNode board = endRequest.get("board");
             // get the locations of all snakes...
             JsonNode snakes = board.get("snakes");
             int sLen = snakes.size();
@@ -468,13 +462,11 @@ public class Snake {
                     if (aSnake.get("id").asText().equals(myId)) {
                         LOG.info("****************");
                         LOG.info("WE ARE ALIVE!!!! ");
-                        LOG.info(gameType);
                         LOG.info(gameId);
                         LOG.info("****************");
                     } else {
                         LOG.info("****************");
                         LOG.info("that's not us... " + aSnake.get("name").asText());
-                        LOG.info(gameType);
                         LOG.info(gameId);
                         LOG.info("****************");
                     }
