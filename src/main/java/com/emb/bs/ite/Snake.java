@@ -486,21 +486,23 @@ public class Snake {
                     if (aSnake.get("id").asText().equals(myId)) {
                         LOG.info("****************");
                         LOG.info("WE ARE ALIVE!!!! ");
-                        LOG.info(gameType);
-                        LOG.info(s.players.toString());
+                        LOG.info(gameType+" "+s.players.toString());
                         LOG.info(gameId);
                         LOG.info("****************");
                     } else {
                         LOG.info("****************");
                         LOG.info("that's not us... " + aSnake.get("name").asText());
-                        LOG.info(gameType);
-                        LOG.info(s.players.toString());
+                        LOG.info(gameType+" "+s.players.toString());
                         LOG.info(gameId);
                         LOG.info("****************");
                     }
                 }
             } else {
-                LOG.info("that's not us... ");
+                LOG.info("****************");
+                LOG.info("that's not us... ???");
+                LOG.info(gameType+" "+s.players.toString());
+                LOG.info(gameId);
+                LOG.info("****************");
             }
             return EMPTY;
         }

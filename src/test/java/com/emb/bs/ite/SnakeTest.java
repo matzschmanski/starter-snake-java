@@ -100,10 +100,12 @@ public class SnakeTest {
 
     @Test
     void replayGameWithId() throws Exception{
-        String gameId= "2f941ca6-03de-4559-8213-951b5af4c1a0";
+        String gameId= "4ae871cc-fd2b-43c1-a5e4-b4c34ac0e6b1";
+        int turn = 389;
+
         String yourNameIdentifier = "lender";
-        String gameMode = null;
-        //String gameMode = "wrapped";
+        //String gameMode = null;
+        String gameMode = "wrapped";
         //String gameMode = "royale";
         int Y = 11;
         int X = 11;
@@ -118,7 +120,11 @@ public class SnakeTest {
 
         handler.start(convertToReq(collector.list.get(0), gameId, gameMode, Y, X, yourNameIdentifier));
         for(int i=0; i < collector.list.size()-1 ; i++){
-            handler.move(convertToReq(collector.list.get(i), gameId, gameMode, Y, X, yourNameIdentifier));
+            JsonNode req = convertToReq(collector.list.get(i), gameId, gameMode, Y, X, yourNameIdentifier);
+            if(i == turn){
+                LOG.info("DEBUG NOW");
+            }
+            handler.move(req);
         }
         handler.end(convertToReq(collector.list.get(collector.list.size()-1), gameId, gameMode, Y, X, yourNameIdentifier));
     }
