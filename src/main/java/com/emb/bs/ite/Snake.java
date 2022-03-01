@@ -134,7 +134,15 @@ public class Snake {
          */
         public Map<String, String> start(JsonNode startRequest) {
             LOG.info("START");
-            sessions.put(startRequest.get("game").get("id").asText(), new Session());
+            Session s = new Session();
+            sessions.put(startRequest.get("game").get("id").asText(), s);
+
+            s.players = new ArrayList<>();
+            JsonNode snakes = startRequest.get("board").get("snakes");
+            int sLen = snakes.size();
+            for (int i = 0; i < sLen; i++) {
+                s.players.add(snakes.get(i).get("name").asText());
+            }
             return EMPTY;
         }
 
@@ -479,12 +487,14 @@ public class Snake {
                         LOG.info("****************");
                         LOG.info("WE ARE ALIVE!!!! ");
                         LOG.info(gameType);
+                        LOG.info(s.players.toString());
                         LOG.info(gameId);
                         LOG.info("****************");
                     } else {
                         LOG.info("****************");
                         LOG.info("that's not us... " + aSnake.get("name").asText());
                         LOG.info(gameType);
+                        LOG.info(s.players.toString());
                         LOG.info(gameId);
                         LOG.info("****************");
                     }

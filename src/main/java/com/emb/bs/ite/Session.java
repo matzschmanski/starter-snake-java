@@ -9,21 +9,24 @@ import org.slf4j.LoggerFactory;
 public class Session {
 
     private static final Logger LOG = LoggerFactory.getLogger(Session.class);
-    String gameId;
 
+    // just for logging...
+    ArrayList<String> players;
+    String gameId;
+    int turn;
+
+    // stateful stuff
     int tPhase = 0;
     int state = 0;
     int lastUsedFoodDirection = -1;
     int lastSecondaryFoodDirection = -1;
-
-    int MAXDEEP = 0;
-
-    int turn;
+    String LASTMOVE = null;
 
     Point myPos;
     int myLen;
     int myHealth;
 
+    int MAXDEEP = 0;
     ArrayList<Integer> cmdChain = null;
     int firstMoveToTry = -1;
 
@@ -58,8 +61,6 @@ public class Session {
 
     boolean wrappedMode = false;
     boolean royaleMode = false;
-
-    String LASTMOVE = null;
 
     class SavedState {
         int sState = state;
@@ -641,25 +642,25 @@ public class Session {
     private String getPossibleFoodMove(int moveDirectionToCheck, ArrayList<String> possibleFoodMoves) {
         switch (moveDirectionToCheck) {
             case Snake.DOWN:
-                if (checkForPossibleFoodMoveInDirection(Snake.DOWN, Snake.D, possibleFoodMoves)){
+                if (checkForPossibleFoodInDirection(Snake.DOWN, Snake.D, possibleFoodMoves)){
                     return Snake.D;
                 }
                 break;
 
             case Snake.UP:
-                if (checkForPossibleFoodMoveInDirection(Snake.UP, Snake.U, possibleFoodMoves)){
+                if (checkForPossibleFoodInDirection(Snake.UP, Snake.U, possibleFoodMoves)){
                     return Snake.U;
                 }
                 break;
 
             case Snake.LEFT:
-                if (checkForPossibleFoodMoveInDirection(Snake.LEFT, Snake.L, possibleFoodMoves)){
+                if (checkForPossibleFoodInDirection(Snake.LEFT, Snake.L, possibleFoodMoves)){
                     return Snake.L;
                 }
                 break;
 
             case Snake.RIGHT:
-                if (checkForPossibleFoodMoveInDirection(Snake.RIGHT, Snake.R, possibleFoodMoves)){
+                if (checkForPossibleFoodInDirection(Snake.RIGHT, Snake.R, possibleFoodMoves)){
                     return Snake.R;
                 }
                 break;
@@ -667,7 +668,7 @@ public class Session {
         return null;
     }
 
-    private boolean checkForPossibleFoodMoveInDirection(int move, String expectedReturnValue, ArrayList<String> possibleFoodMoves) {
+    private boolean checkForPossibleFoodInDirection(int move, String expectedReturnValue, ArrayList<String> possibleFoodMoves) {
         String retVal = null;
         switch (move){
             case Snake.UP:
