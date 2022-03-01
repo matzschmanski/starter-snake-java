@@ -333,36 +333,41 @@ public class Snake {
                     s.snakeBodies[h.y][h.x] = len;
                     s.snakeHeads.add(h);
 
-                    int newYDown = /*(h.y - 1 + s.Y) % s.Y;*/ h.y > 0 ? h.y - 1 : s.Y-1;
-                    int newYUp = (h.y + 1) % s.Y;
-                    int newXLeft = /*(h.x - 1 + s.X) % s.X; */ h.x > 0 ? h.x - 1 : s.X-1;
-                    int newXRight = (h.x + 1) % s.X;
+                    int newYDown = -1;
+                    int newYUp = -1;
+                    int newXLeft = -1;
+                    int newXRight = -1;
+                    if(s.wrappedMode){
+                        newYDown = (h.y - 1 + s.Y) % s.Y;
+                        newYUp = (h.y + 1) % s.Y;
+                        newXLeft = (h.x - 1 + s.X) % s.X;
+                        newXRight = (h.x + 1) % s.X;
+                    }else{
+                        if(h.y > 0){
+                            newYDown = h.y - 1;
+                        }
+                        if(h.y < s.Y - 1){
+                            newYUp = h.y +1;
+                        }
+                        if(h.x > 0){
+                            newXLeft = h.x - 1;
+                        }
+                        if(h.x < s.X - 1 ){
+                            newXRight = h.x + 1;
+                        }
+                    }
 
-                    try {
-                        if (s.snakeBodies[newYDown][h.x] == 0) {
-                            s.snakeNextMovePossibleLocations[newYDown][h.x] = Math.max(len, s.snakeNextMovePossibleLocations[newYDown][h.x]);
-                        }
-                    } catch (IndexOutOfBoundsException e) {
+                    if (newYDown > -1 && s.snakeBodies[newYDown][h.x] == 0) {
+                        s.snakeNextMovePossibleLocations[newYDown][h.x] = Math.max(len, s.snakeNextMovePossibleLocations[newYDown][h.x]);
                     }
-                    try {
-                        if (s.snakeBodies[newYUp][h.x] == 0) {
-                            // it might be that at the snakeNextMovePossibleLocations we have already a value of another
-                            // snake - so we make sure that's the MAX value!
-                            s.snakeNextMovePossibleLocations[newYUp][h.x] = Math.max(len, s.snakeNextMovePossibleLocations[newYUp][h.x]);
-                        }
-                    } catch (IndexOutOfBoundsException e) {
+                    if (newYUp > -1 && s.snakeBodies[newYUp][h.x] == 0) {
+                        s.snakeNextMovePossibleLocations[newYUp][h.x] = Math.max(len, s.snakeNextMovePossibleLocations[newYUp][h.x]);
                     }
-                    try {
-                        if (s.snakeBodies[h.y][newXLeft] == 0) {
-                            s.snakeNextMovePossibleLocations[h.y][newXLeft] = Math.max(len, s.snakeNextMovePossibleLocations[h.y][newXLeft]);
-                        }
-                    } catch (IndexOutOfBoundsException e) {
+                    if (newXLeft > -1 && s.snakeBodies[h.y][newXLeft] == 0) {
+                        s.snakeNextMovePossibleLocations[h.y][newXLeft] = Math.max(len, s.snakeNextMovePossibleLocations[h.y][newXLeft]);
                     }
-                    try {
-                        if (s.snakeBodies[h.y][newXRight] == 0) {
-                            s.snakeNextMovePossibleLocations[h.y][newXRight] = Math.max(len, s.snakeNextMovePossibleLocations[h.y][newXRight]);
-                        }
-                    } catch (IndexOutOfBoundsException e) {
+                    if (newXRight > -1 && s.snakeBodies[h.y][newXRight] == 0) {
+                        s.snakeNextMovePossibleLocations[h.y][newXRight] = Math.max(len, s.snakeNextMovePossibleLocations[h.y][newXRight]);
                     }
 
                     // dealing with the bodies of the other snakes...
