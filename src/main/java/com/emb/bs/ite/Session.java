@@ -1275,13 +1275,16 @@ public class Session {
         LOG.info(b.toString());
     }
 
-    void logState(final String method) {
+    private void logState(final String method) {
         logState(method, false);
     }
+    private void logState(final String method, final boolean isDoomed) {
+        logState(method, isDoomed, LOG);
+    }
 
-    private void logState(String msg, boolean isDoomed) {
+    void logState(String msg, boolean isDoomed, Logger LOG) {
         msg = msg
-                + " "+gameId
+                //+ " "+gameId
                 + " Tn:" + turn
                 + " st:" + getMoveIntAsString(state).substring(0, 2).toUpperCase() + "[" + state + "]"
                 + " ph:" + tPhase

@@ -222,7 +222,7 @@ public class Snake {
                     s.LASTMOVE = move;
                 }
 
-                LOG.info("=> RESULTING MOVE: "+move+" ["+s.state+"]");
+                s.logState("=> RESULTING MOVE: "+move, false, LOG);
                 Map<String, String> response = new HashMap<>();
                 response.put("move", move);
                 return response;
@@ -391,7 +391,7 @@ public class Snake {
             // after we have read all positions/Objects we might to additionally init the current
             // session status...
             s.initSessionAfterFullBoardRead(haz != null);
-            s.logState("MOVE CALLED");
+            s.logState("MOVE CALLED", false, LOG);
             s.logBoard();
         }
 
