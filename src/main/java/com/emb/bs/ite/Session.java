@@ -501,17 +501,6 @@ public class Session {
             }
 
             goForFood = true;
-            if (!enterBorderZone || escapeFromBorder) {
-                if(isLocatedAtBorder(closestFood)){
-                    enterBorderZone = true;
-                    escapeFromBorder = false;
-                    setFullBoardBounds();
-                }
-            }
-
-            //TODO: check if we have to do something special about hazardZone?!
-            //and the hazardZone flags 'escapeFromHazard' & 'enterHazardZone'
-
             if(activeFood == null || !activeFood.equals(closestFood)){
                 lastUsedFoodDirection = -1;
                 lastSecondaryFoodDirection = -1;
@@ -553,6 +542,7 @@ public class Session {
             }
 
             // IF we are LOW on health, and HAZARD is enabled - we skip the hazard check!
+            boolean goFullBorder = false;
             if(!enterHazardZone || escapeFromHazard) {
                 // two move in hazard takes 2 x 16 health (we need at least 32 health left)
                 if ((myHealth < 34 || (royaleMode && myHealth < 80))
@@ -562,6 +552,16 @@ public class Session {
                 ) {
                     escapeFromHazard = false;
                     enterHazardZone = true;
+
+                    goFullBorder = true;
+                }
+            }
+
+            if (!enterBorderZone || escapeFromBorder) {
+                if(goFullBorder || turn < 50 || myLen < 15 || myLen - 1 < maxOtherSnakeLen || isLocatedAtBorder(closestFood)){
+                    escapeFromBorder = false;
+                    enterBorderZone = true;
+                    setFullBoardBounds();
                 }
             }
 
@@ -784,10 +784,10 @@ public class Session {
                     newPos.x = (newPos.x + 1) % X;
                     break;
                 case Snake.DOWN:
-                    newPos.y = newPos.y > 0 ? newPos.y - 1 : Y - 1;
+                    newPos.y = (newPos.y - 1 + Y) % Y;//newPos.y > 0 ? newPos.y - 1 : Y - 1;
                     break;
                 case Snake.LEFT:
-                    newPos.x = newPos.x > 0 ? newPos.x - 1 : X - 1;
+                    newPos.x = (newPos.x -1 + X) % X;//newPos.x > 0 ? newPos.x - 1 : X - 1;
                     break;
             }
         }else{
@@ -1212,13 +1212,13 @@ public class Session {
     }
 
     void logBoard() {
-        if (X == 7) {
-            LOG.info(" ┌───────┐");
-        } else if (X == 11) {
-            LOG.info(" ┌───────────┐");
-        } else {
-            LOG.info(" ┌───────────────────┐");
-        }
+
+        StringBuffer z = new StringBuffer();
+        z.append(" ┌");
+        for(int i=0; i< X; i++){z.append('─');}
+        z.append("┐");
+        LOG.info(z.toString());
+
         for (int y = Y - 1; y >= 0; y--) {
             StringBuffer b = new StringBuffer();
             b.append(y % 10);
@@ -1259,18 +1259,17 @@ public class Session {
             b.append('│');
             LOG.info(b.toString());
         }
-        if (X == 7) {
-            LOG.info(" └───────┘");
-        } else if (X == 11) {
-            LOG.info(" └───────────┘");
-        } else {
-            LOG.info(" └───────────────────┘");
-        }
+
+        StringBuffer y = new StringBuffer();
+        y.append(" └");
+        for(int i=0; i< X; i++){y.append('─');}
+        y.append("┘");
+        LOG.info(y.toString());
 
         StringBuffer b = new StringBuffer();
         b.append("  ");
-        for (int x = 0; x < X; x++) {
-            b.append(x % 10);
+        for (int i = 0; i < X; i++) {
+            b.append(i % 10);
         }
         LOG.info(b.toString());
     }
@@ -1322,16 +1321,15 @@ public class Session {
 
     private void logMap(int[][] aMap, int c) {
         LOG.info("XXL TurnNo:"+turn+" MAXDEEP:"+MAXDEEP+" len:"+ myLen +" loopCount:"+c);
-        if(X == 7) {
-            LOG.info("_________");
-        } else if(X == 11){
-            LOG.info("_____________");
-        }else{
-            LOG.info("_____________________");
-        }
+        StringBuffer z = new StringBuffer();
+        z.append('┌');
+        for(int i=0; i< X; i++){z.append('─');}
+        z.append('┐');
+        LOG.info(z.toString());
+
         for (int y = Y - 1; y >= 0; y--) {
             StringBuffer b = new StringBuffer();
-            b.append('|');
+            b.append('│');
             for (int x = 0; x < X; x++) {
                 if(aMap[y][x]>0){
                     b.append('X');
@@ -1339,15 +1337,13 @@ public class Session {
                     b.append(' ');
                 }
             }
-            b.append('|');
+            b.append('│');
             LOG.info(b.toString());
         }
-        if(X == 7) {
-            LOG.info("---------");
-        }else if(X == 11){
-            LOG.info("-------------");
-        }else {
-            LOG.info("---------------------");
-        }
+        StringBuffer y = new StringBuffer();
+        y.append('└');
+        for(int i=0; i< X; i++){y.append('─');}
+        y.append('┘');
+        LOG.info(y.toString());
     }
 }
