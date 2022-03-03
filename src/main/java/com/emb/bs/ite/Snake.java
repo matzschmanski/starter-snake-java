@@ -356,6 +356,19 @@ public class Snake {
                     s.snakeBodies[h.y][h.x] = len;
                     s.snakeHeads.add(h);
 
+                    // dealing with the bodies of the other snakes...
+                    JsonNode body = aSnake.get("body");
+                    int bLen = body.size();
+
+                    // a) we start from j=1 here - since we have handled the SneakHEAD's already
+                    // b) we also do not have top care about the LAST entry in the body, since this
+                    // we be always FREE after "this" turn (if the snake grows, that the last
+                    // and the prev record of the body contain the same position!)
+                    for (int j = 1; j < bLen-1; j++) {
+                        Point p = new Point(body.get(j));
+                        s.snakeBodies[p.y][p.x] = 1;
+                    }
+
                     int newYDown = -1;
                     int newYUp = -1;
                     int newXLeft = -1;
@@ -391,19 +404,6 @@ public class Snake {
                     }
                     if (newXRight > -1 && s.snakeBodies[h.y][newXRight] == 0) {
                         s.snakeNextMovePossibleLocations[h.y][newXRight] = Math.max(len, s.snakeNextMovePossibleLocations[h.y][newXRight]);
-                    }
-
-                    // dealing with the bodies of the other snakes...
-                    JsonNode body = aSnake.get("body");
-                    int bLen = body.size();
-
-                    // a) we start from j=1 here - since we have handled the SneakHEAD's already
-                    // b) we also do not have top care about the LAST entry in the body, since this
-                    // we be always FREE after "this" turn (if the snake grows, that the last
-                    // and the prev record of the body contain the same position!)
-                    for (int j = 1; j < bLen-1; j++) {
-                        Point p = new Point(body.get(j));
-                        s.snakeBodies[p.y][p.x] = 1;
                     }
                 }
             }
