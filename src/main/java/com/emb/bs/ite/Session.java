@@ -863,10 +863,10 @@ public class Session {
             count++;
             if(count <= MAXDEEP) {
                 Point newPos = getNewPointForDirection(aPos, move);
-                if(newPos.equals(myTail)){
+                /*if(newPos.equals(myTail)){
                     return false;
-                }
-                    // simple check, if we can move from the new position to any other location
+                }*/
+                // simple check, if we can move from the new position to any other location
 
                 // so in the finalMap we have the picture of the MOVE RESULT
                 if(finalMap == null) {
@@ -874,9 +874,9 @@ public class Session {
                     finalMap[myPos.y][myPos.x] = 1;
                     for (int y = 0; y < X; y++) {
                         for (int x = 0; x < X; x++) {
-                            if(myTail.y == y && myTail.x == x) {
+                            /*if(myTail.y == y && myTail.x == x) {
                                 finalMap[y][x] = 2;
-                            } else if (myBody[y][x] > 0) {
+                            } else*/ if (myBody[y][x] > 0) {
                                 finalMap[y][x] = 1;
                             } else if (snakeBodies[y][x] > 0) {
                                 finalMap[y][x] = 1;
