@@ -320,6 +320,7 @@ public class Snake {
 
             JsonNode myBody = you.get("body");
             int myBodyLen = myBody.size()-1;
+            s.myTail = new Point(myBody.get(myBodyLen-1));
             for (int i = 1; i < myBodyLen; i++) {
                 Point p = new Point(myBody.get(i));
                 s.myBody[p.y][p.x] = 1;

@@ -23,6 +23,7 @@ public class Session {
     String LASTMOVE = null;
 
     Point myPos;
+    Point myTail;
     int myLen;
     int myHealth;
 
@@ -862,7 +863,10 @@ public class Session {
             count++;
             if(count <= MAXDEEP) {
                 Point newPos = getNewPointForDirection(aPos, move);
-                // simple check, if we can move from the new position to any other location
+                if(newPos.equals(myTail)){
+                    return false;
+                }
+                    // simple check, if we can move from the new position to any other location
 
                 // so in the finalMap we have the picture of the MOVE RESULT
                 if(finalMap == null) {
@@ -870,7 +874,9 @@ public class Session {
                     finalMap[myPos.y][myPos.x] = 1;
                     for (int y = 0; y < X; y++) {
                         for (int x = 0; x < X; x++) {
-                            if (myBody[y][x] > 0) {
+                            if(myTail.y == y && myTail.x == x) {
+                                finalMap[y][x] = 2;
+                            } else if (myBody[y][x] > 0) {
                                 finalMap[y][x] = 1;
                             } else if (snakeBodies[y][x] > 0) {
                                 finalMap[y][x] = 1;
@@ -924,7 +930,7 @@ public class Session {
         try {
             int newY = (aPos.y + 1) % Y;
             return  (wrappedMode || aPos.y < yMax)
-                    && map[newY][aPos.x] == 0
+                    && (map[newY][aPos.x] == 0 || map[newY][aPos.x] == 2)
                     && (enterNoGoZone || !willCreateLoop(Snake.UP, aPos, map, c))
                     ;
         } catch (IndexOutOfBoundsException e) {
@@ -989,7 +995,7 @@ public class Session {
         try {
             int newX = (aPos.x + 1) % X;
             return  (wrappedMode || aPos.x < xMax)
-                    && map[aPos.y][newX] == 0
+                    && (map[aPos.y][newX] == 0 || map[aPos.y][newX] == 2)
                     && (enterNoGoZone || !willCreateLoop(Snake.RIGHT, aPos, map, c))
                     ;
         } catch (IndexOutOfBoundsException e) {
@@ -1059,7 +1065,7 @@ public class Session {
         try {
             int newY = (aPos.y - 1 + Y) % Y; // aPos.y > 0 ? aPos.y - 1 : Y-1;
             return  (wrappedMode || aPos.y > yMin)
-                    && map[newY][aPos.x] == 0
+                    && (map[newY][aPos.x] == 0 || map[newY][aPos.x] == 2)
                     && (enterNoGoZone || !willCreateLoop(Snake.DOWN, aPos, map, c))
                     ;
         } catch (IndexOutOfBoundsException e) {
@@ -1136,7 +1142,7 @@ public class Session {
         try {
             int newX = (aPos.x - 1 + X) % X;//aPos.x > 0 ? aPos.x - 1 : X-1;
             return  (wrappedMode || aPos.x > xMin)
-                    && map[aPos.y][newX] == 0
+                    && (map[aPos.y][newX] == 0 || map[aPos.y][newX] == 2)
                     && (enterNoGoZone || !willCreateLoop(Snake.LEFT, aPos, map, c))
                     ;
         } catch (IndexOutOfBoundsException e) {
