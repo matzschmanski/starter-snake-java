@@ -237,6 +237,7 @@ public class Snake {
                     }
                 }else{
                     s.LASTMOVE = move;
+                    s.lastTurnTail = s.myTail;
                 }
 
                 s.logState("=> RESULTING MOVE: "+move, false, LOG);
@@ -321,6 +322,7 @@ public class Snake {
             JsonNode myBody = you.get("body");
             int myBodyLen = myBody.size()-1;
             s.myTail = new Point(myBody.get(myBodyLen-1));
+            s.myTailAfterFood = new Point(myBody.get(myBodyLen));
             for (int i = 1; i < myBodyLen; i++) {
                 Point p = new Point(myBody.get(i));
                 s.myBody[p.y][p.x] = 1;
