@@ -100,15 +100,15 @@ public class SnakeTest {
 
     @Test
     void replayGameWithId() throws Exception{
-        String gameId= "6e361317-df56-49f4-a9c3-67ab27890152";
-        int turn = 790;
+        String gameId= "40df15aa-6cbd-4a31-86a5-a13fc581767a";
+        int turn = 202;
 
         String yourNameIdentifier = "lender";
         String gameMode = null;
         //String gameMode = "wrapped";
         //String gameMode = "royale";
-        int Y = 11;
-        int X = 11;
+        int Y = 7;
+        int X = 7;
 
         SimpleWSSHandler collector = new SimpleWSSHandler();
         URI uri = new URI("wss://engine.battlesnake.com/games/"+gameId+"/events");

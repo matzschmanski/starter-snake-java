@@ -237,6 +237,10 @@ public class Snake {
                     }
                 }else{
                     s.LASTMOVE = move;
+                }
+
+                Point resultPos = s.getNewPointForDirection(s.myPos, s.getMoveStringAsInt(move));
+                if(!s.foodPlaces.contains(resultPos)){
                     s.lastTurnTail = s.myTail;
                 }
 
@@ -322,7 +326,6 @@ public class Snake {
             JsonNode myBody = you.get("body");
             int myBodyLen = myBody.size()-1;
             s.myTail = new Point(myBody.get(myBodyLen-1));
-            s.myTailAfterFood = new Point(myBody.get(myBodyLen));
             for (int i = 1; i < myBodyLen; i++) {
                 Point p = new Point(myBody.get(i));
                 s.myBody[p.y][p.x] = 1;

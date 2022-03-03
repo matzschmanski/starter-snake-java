@@ -26,7 +26,6 @@ public class Session {
 
     Point myPos;
     Point myTail;
-    Point myTailAfterFood;
     int myLen;
     int myHealth;
 
@@ -859,7 +858,6 @@ public class Session {
         return newPos;
     }
 
-    Point tailToResore;
     private boolean willCreateLoop(int move, Point aPos, int[][] finalMap, int count) {
         // OK we have to check, if with the "planed" next move we will create a closed loop structure (either
         // with ourselves, with the border or with any enemy...
@@ -867,25 +865,7 @@ public class Session {
             count++;
             if(count <= MAXDEEP) {
                 Point newPos = getNewPointForDirection(aPos, move);
-                if(aPos.equals(myPos) && foodPlaces.contains(newPos)){
-                    myTail = lastTurnTail;
-                    tailToResore = myTail;
-                    /*
-                    // ok we going to consume food, so out tail will get longer
-                    //myTail = new Point(-1, -1);//myTailAfterFood;
-                    if(turn == 790){
-                        tailToResore = myTail;
-                        myTail = new Point(-1, -1);//myTailAfterFood;
-                    }*/
-                    finalMap = null;
-                }else{
-                    if(tailToResore != null){
-                        myTail = tailToResore;
-                        tailToResore = null;
-                        finalMap = null;
-                    }
-                }
-                if(newPos.equals(myTail)){
+                if(lastTurnTail != null && newPos.equals(lastTurnTail)){
                     return false;
                 }
                 // simple check, if we can move from the new position to any other location
@@ -896,7 +876,7 @@ public class Session {
                     finalMap[myPos.y][myPos.x] = 1;
                     for (int y = 0; y < X; y++) {
                         for (int x = 0; x < X; x++) {
-                            if(myTail.y == y && myTail.x == x) {
+                            if(lastTurnTail != null && lastTurnTail.y == y && lastTurnTail.x == x) {
                                 finalMap[y][x] = 2;
                             } else if (myBody[y][x] > 0) {
                                 finalMap[y][x] = 1;
@@ -910,7 +890,7 @@ public class Session {
                 }
                 finalMap[newPos.y][newPos.x] = 1;
 
-if(turn == 790){logMap(finalMap, count);}
+//if(turn == 202){logMap(finalMap, count);}
 
                 boolean noUP = !canMoveUp(newPos, finalMap, count);
                 boolean noDW = !canMoveDown(newPos, finalMap, count);
@@ -1300,6 +1280,8 @@ if(turn == 790){logMap(finalMap, count);}
             for (int x = 0; x < X; x++) {
                 if (myPos.x == x && myPos.y == y) {
                     b.append("X");
+                } else if(lastTurnTail!=null && lastTurnTail.x == x && lastTurnTail.y == y){
+                    b.append('y');
                 } else if (myBody[y][x] == 1) {
                     b.append('c');
                 } else if (snakeBodies[y][x] > 0) {
@@ -1390,6 +1372,21 @@ if(turn == 790){logMap(finalMap, count);}
                 return Snake.L;
             default:
                 return "UNKNOWN";
+        }
+    }
+
+    public int getMoveStringAsInt(String move) {
+        switch (move) {
+            case Snake.U:
+                return Snake.UP;
+            case Snake.R:
+                return Snake.RIGHT;
+            case Snake.D:
+                return Snake.DOWN;
+            case Snake.L:
+                return Snake.LEFT;
+            default:
+                return -1;
         }
     }
 
