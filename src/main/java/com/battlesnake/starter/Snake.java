@@ -64,6 +64,7 @@ public class Snake {
          * For the start/end request
          */
         private static final Map<String, String> EMPTY = new HashMap<>();
+        public static final String LENGTH = "length";
 
         private static QItem minDistance(char[][] grid, QItem source,QItem destination)
         {
@@ -288,7 +289,6 @@ public class Snake {
             JsonNode head = moveRequest.get(YOU).get(HEAD);
             QItem source = new QItem(Util.snakeToBoard(board,head.get(Y).asInt()),Util.snakeToBoard(board,head.get(X).asInt()) , 0);
 
-            System.out.println();
 
             List<QItem> foundFood = StreamSupport.stream(food.spliterator(), true)
                     .map(coordinate -> new QItem(Util.snakeToBoard(board,coordinate.get(X).asInt()), coordinate.get(Y).asInt(), 0))
@@ -349,7 +349,7 @@ public class Snake {
             JsonNode snakes = board.get(SNAKES);
             JsonNode head = moveRequest.get(YOU).get(HEAD);
             JsonNode body = moveRequest.get(YOU).get(BODY);
-            int myLength = moveRequest.get("you").get("length").asInt();
+            int myLength = moveRequest.get(YOU).get(LENGTH).asInt();
             Map<String, Point> nextPositions = generateNextPositions(head);
 
             possibleMoves = avoidMyNeck(head, body, possibleMoves);
@@ -361,15 +361,15 @@ public class Snake {
         }
 
         public ArrayList<String> avoidBiggerHeads(JsonNode head,int myLength, JsonNode snakes, ArrayList<String> possibleMoves, Map<String, Point> nextPositions){
-            //TODO for survive calculate possible next head moves for other snakes, remove those fields if snake has more points
             for(JsonNode snake : snakes){
-                JsonNode potentialEnemyHead = snake.get("head");
+                JsonNode potentialEnemyHead = snake.get(HEAD);
                 if(!potentialEnemyHead.equals(head)){
-                    if(snake.get("length").asInt()>=myLength){
+                    if(snake.get(LENGTH).asInt()>=myLength){
                         //avoid!
                         Map<String, Point> nextPositionsForEnemy = generateNextPositions(potentialEnemyHead);
                         for (Map.Entry<String, Point> entry : nextPositionsForEnemy.entrySet()) {
                             if(entry.getValue().equals(nextPositions.get(entry.getKey()))){
+                                LOG.info("removing "+ entry.getKey());
                                 possibleMoves.remove(entry.getKey());
                             }
                         }
